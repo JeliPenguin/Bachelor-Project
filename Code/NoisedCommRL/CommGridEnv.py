@@ -2,30 +2,19 @@ import numpy as np
 from enum import Enum
 import sys
 import time
+from const import *
 
-EMPTY = "-"
-TREAT = "$"
-AGENT = "*"
-
-class GridAction(Enum):
-    UP = (-1,0)
-    LEFT = (0,-1)
-    RIGHT = (0,1)
-    DOWN = (1,0)
-    STAY = (0,0)
-
-def encodeAction(num):
+def decodeAction(num):
     mapping = {
-        0:GridAction.UP,
-        1:GridAction.LEFT,
-        2:GridAction.RIGHT,
-        3:GridAction.DOWN,
-        4:GridAction.STAY
+        0:(-1,0),
+        1:(0,-1),
+        2:(0,1),
+        3:(1,0),
+        4:(0,0)
     }
     return mapping[num]
 
-
-class GridEnv():
+class CommGridEnv():
     def __init__(self, row, column, agents, treatNum=2) -> None:
         self.row = row
         self.column = column
@@ -33,7 +22,7 @@ class GridEnv():
         self.agents = agents
         self.agentNum = len(agents)
         self.agentSymbol = [str(i) for i in range(self.agentNum)]
-        self.action_space = list(GridAction)
+        self.action_space = ACTIONSPACE
         self.state_space = self.row * self.column
         self.time_penalty = -1
         self.treat_penalty = -1
@@ -51,6 +40,7 @@ class GridEnv():
 
     def initGrid(self):
         self.done = False
+        self.steps = 0
         self.treatCount = self.treatNum
         self.initLoc = set()
         self.agentInfo = {}
@@ -94,8 +84,8 @@ class GridEnv():
 
     def takeAction(self, state: tuple, action: int):
         def tupleAdd(xs, ys): return tuple(x + y for x, y in zip(xs, ys))
-        encodedAction = encodeAction(action)
-        newState = tupleAdd(state, encodedAction.value)
+        movement = decodeAction(action)
+        newState = tupleAdd(state, movement)
         #print(newState, (self.row, self.column))
         # print(action)
         ''' If the new state is outside then remain at same state
@@ -134,6 +124,7 @@ class GridEnv():
             sPrime, reward = self.agentStep(agentID, agentAction)
             sPrimes.append(sPrime)
             rewards.append(reward)
+        self.steps += 1
         return sPrimes, rewards, self.done
 
     def write(self,content):
@@ -155,13 +146,13 @@ class GridEnv():
         toWrite = ""
         for agentID in range(self.agentNum):
             agentState = self.agentInfo[agentID]["state"]
-            lastAction = encodeAction(self.agentInfo[agentID]["last-action"])
+            lastAction = ACTIONSPACE[self.agentInfo[agentID]["last-action"]]
             reward = self.agentInfo[agentID]["reward"]
             toWrite += f"Agent ID: {agentID}, Current State: {agentState}, Last chose action: {lastAction}, Reward: {reward}\n"
         return toWrite
 
     def render(self,inplace=False):
-        toWrite = f"{self.formatGridInfo()}\n{self.formatAgentInfo()}"
+        toWrite = f"Step: {self.steps}\n{self.formatGridInfo()}\n{self.formatAgentInfo()}"
         if inplace:
             sys.stdout.write("\r%s"%toWrite)
             sys.stdout.flush()

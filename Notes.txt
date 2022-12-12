@@ -1,0 +1,5 @@
+Noises:
+Binary Symmetric channel
+Additive white gaussian noise
+bursty noise
+

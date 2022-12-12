@@ -1,17 +1,17 @@
 import numpy as np
-from Enums import Action
 
 
-class Agent():
-    def __init__(self, id, obs_dim, learning_rate=0.1, discount=0.9, epsilon_decay=0.9) -> None:
+class GridAgent():
+    def __init__(self, id, obs_dim,actionSpace, learning_rate=0.1, discount=0.9, epsilon_decay=0.9) -> None:
         self.id = id
         self.learning_rate = learning_rate
         self.discount = discount
         self.epsilon = 1
         self.epsilon_decay = epsilon_decay
-        self.action_space = list(Action)
+        self.actionSpace = actionSpace
+        self.actionSpace_n = len(actionSpace)
         self.q_table = np.random.uniform(
-            low=-2, high=0, size=obs_dim+(len(self.action_space),))
+            low=-2, high=0, size=obs_dim+(self.actionSpace_n,))
 
     def policy(s):
         pass
@@ -25,5 +25,8 @@ class Agent():
     def choose_eps_action(self, s) -> int:
         p = np.random.random()
         if p < self.epsilon:
-            return np.random.randint(len(self.action_space))
+            return np.random.randint(self.actionSpace_n)
         return self.choose_greedy_action(s)
+
+    def choose_random_action(self):
+        return np.random.randint(0,self.actionSpace_n)
