@@ -4,15 +4,17 @@ import sys
 import time
 from const import *
 
+
 def decodeAction(num):
     mapping = {
-        0:(-1,0),
-        1:(0,-1),
-        2:(0,1),
-        3:(1,0),
-        4:(0,0)
+        0: (-1, 0),
+        1: (0, -1),
+        2: (0, 1),
+        3: (1, 0),
+        4: (0, 0)
     }
     return mapping[num]
+
 
 class CommGridEnv():
     def __init__(self, row, column, agents, treatNum=2) -> None:
@@ -21,7 +23,7 @@ class CommGridEnv():
         self.treatNum = treatNum
         self.agents = agents
         self.agentNum = len(agents)
-        self.agentSymbol = [str(i) for i in range(self.agentNum)]
+        self.agentSymbol = set([str(agent.symbol) for agent in self.agents])
         self.action_space = ACTIONSPACE
         self.state_space = self.row * self.column
         self.time_penalty = -1
@@ -38,22 +40,43 @@ class CommGridEnv():
         self.initLoc.add(loc)
         return loc
 
+    def numpifiedGrid(self):
+        # Returns numpy array of shape (numComponents,row,column) for DQN
+        # numComponents being number of agents + 1 (treat)
+        grid = np.zeros((self.agentNum+1, self.row, self.column))
+        layer = 0
+
+        for info in self.agentInfo.values():
+            agentLoc = info["state"]
+            x = agentLoc[1]
+            y = agentLoc[0]
+            grid[layer][y][x] = 1
+            layer += 1
+
+        for treatLoc in self.treatLocations:
+            x = treatLoc[1]
+            y = treatLoc[0]
+            grid[layer][y][x] = 1
+
+        return grid
+
     def initGrid(self):
         self.done = False
         self.steps = 0
         self.treatCount = self.treatNum
         self.initLoc = set()
         self.agentInfo = {}
-        self.treatLocations = []
+        self.treatLocations = set()
         self.grid = [([EMPTY]*self.column) for _ in range(self.row)]
         initState = []
         for _ in range(self.treatNum):
             loc = self.addComponent(TREAT)
-            self.treatLocations.append(loc)
+            self.treatLocations.add(loc)
         for agent in self.agents:
-            loc = self.addComponent(self.agentSymbol[agent.id])
+            loc = self.addComponent(agent.symbol)
             initState.append(loc)
-            self.agentInfo[agent.id] = {"state": loc,"last-action":-1,"reward":0}
+            self.agentInfo[agent.id] = {
+                "state": loc, "last-action": -1, "reward": 0, "symbol": agent.symbol}
         return initState
 
     def distanceToTreats(self):
@@ -69,7 +92,7 @@ class CommGridEnv():
             distances.append(sumDist)
         return min(distances)
 
-    def rewardFunction(self,ateTreat,done):
+    def rewardFunction(self, ateTreat, done):
         reward = self.time_penalty
         if ateTreat:
             reward += self.treatReward
@@ -100,7 +123,7 @@ class CommGridEnv():
         sPrime = self.takeAction(s, action)
         ateTreat = False
         reward = self.time_penalty
-        agentSymbol = self.agentSymbol[agentID]
+        agentSymbol = self.agentInfo[agentID]["symbol"]
         if s != sPrime:
             self.agentInfo[agentID]["state"] = sPrime
             self.grid[s[0]][s[1]] = EMPTY
@@ -112,23 +135,23 @@ class CommGridEnv():
             self.done = self.treatCount <= 0
             self.grid[sPrime[0]][sPrime[1]] = agentSymbol
 
-        reward = self.rewardFunction(ateTreat,self.done)
+        reward = self.rewardFunction(ateTreat, self.done)
         self.agentInfo[agentID]["reward"] = reward
         return sPrime, reward
 
     def step(self, actions: list):
         sPrimes = []
         rewards = []
-        for agentID,agentAction in enumerate(actions):
+        for agentID, agentAction in enumerate(actions):
             self.agentInfo[agentID]["last-action"] = agentAction
             sPrime, reward = self.agentStep(agentID, agentAction)
             sPrimes.append(sPrime)
             rewards.append(reward)
         self.steps += 1
-        return sPrimes, rewards, self.done
+        return sPrimes, rewards, self.done,self.agentInfo
 
-    def write(self,content):
-        sys.stdout.write("\r%s"%content)
+    def write(self, content):
+        sys.stdout.write("\r%s" % content)
 
     def formatGridInfo(self):
         toWrite = "-"*(self.column * 2 + 3) + "\n"
@@ -141,24 +164,26 @@ class CommGridEnv():
         toWrite += "-"*(self.column * 2 + 3)+"\n"
         toWrite += f"Treats: {self.treatCount}"
         return toWrite
-    
+
     def formatAgentInfo(self):
         toWrite = ""
         for agentID in range(self.agentNum):
             agentState = self.agentInfo[agentID]["state"]
             lastAction = ACTIONSPACE[self.agentInfo[agentID]["last-action"]]
             reward = self.agentInfo[agentID]["reward"]
-            toWrite += f"Agent ID: {agentID}, Current State: {agentState}, Last chose action: {lastAction}, Reward: {reward}\n"
+            symbol = self.agentInfo[agentID]["symbol"]
+            toWrite += f"Agent: {symbol}, Current State: {agentState}, Last chose action: {lastAction}, Reward: {reward}\n"
         return toWrite
 
-    def render(self,inplace=False):
+    def render(self, inplace=False):
         toWrite = f"Step: {self.steps}\n{self.formatGridInfo()}\n{self.formatAgentInfo()}"
         if inplace:
-            sys.stdout.write("\r%s"%toWrite)
+            sys.stdout.write("\r%s" % toWrite)
             sys.stdout.flush()
         else:
             print(toWrite)
-        #time.sleep(1)
+            print(self.agentInfo)
+        # time.sleep(1)
 
     def reset(self):
         return self.initGrid()
