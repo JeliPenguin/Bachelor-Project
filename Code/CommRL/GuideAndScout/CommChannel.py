@@ -1,25 +1,29 @@
+from CommAgent import CommAgent
+from typing import List
+
 class CommChannel():
-    def __init__(self,agentNum,noised=False) -> None:
+    def __init__(self,agents:List[CommAgent],noised=False) -> None:
         self.noised = noised
-        self.messages = {}
+        self.agents = agents
 
     def addNoise(self,message):
-        noisedMsg = None
+        noisedMsg = message
 
         return noisedMsg
 
     def encodeMessage(self,msg):
-        pass
+        return msg
+
+    def decodeMessage(self,msg):
+        return msg
 
     def sendMessage(self,senderID,receiverID,msg):
+        receiver = self.agents[receiverID]
         encoded = self.encodeMessage(msg)
         if self.noised:
             encoded = self.addNoise(encoded)
-        
-        pass
+        decoded = self.decodeMessage(encoded)
+        receiver.recieveMessage(senderID,decoded)
 
-    def recieveMessage(self,senderID,receiverID):
-        pass
 
-    def decodeMessage(self):
-        pass
+    

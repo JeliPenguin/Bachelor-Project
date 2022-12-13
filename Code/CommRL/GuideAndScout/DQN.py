@@ -3,6 +3,7 @@ import torch
 from collections import deque, namedtuple
 import numpy as np
 import random
+from typing import List
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -26,7 +27,7 @@ class DeepNetwork(nn.Module):
         return self.model(x)
 
 
-class ReplayMemory(object):
+class ReplayMemory():
 
     def __init__(self, capacity):
         self.memory = deque([], maxlen=capacity)
@@ -43,7 +44,7 @@ class ReplayMemory(object):
 
 
 class DQNAgent():
-    def __init__(self, id, n_observations, actionSpace, batchSize=32, gamma=0.99, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=1e-4) -> None:
+    def __init__(self, id:int, n_observations:int, actionSpace:List[str], batchSize=32, gamma=0.99, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=1e-4) -> None:
         self.id = id
         self.symbol = str(id)
         self.n_observations = n_observations
@@ -64,17 +65,16 @@ class DQNAgent():
 
     # Convert to tensors
 
-    def choose_greedy_action(self, s) -> int:
+    def choose_greedy_action(self, s:torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
             #return np.argmax(self.q_table[s])
             return self.policy_net(s).max(1)[1].view(1,1)
 
-    def choose_random_action(self):
-        #return np.random.randint(0, self.n_actions)
+    def choose_random_action(self)->torch.Tensor:
         randAction = np.random.randint(0, self.n_actions)
         return torch.tensor([[randAction]],device=device)
 
-    def choose_action(self,s):
+    def choose_action(self,s:torch.Tensor)-> torch.Tensor:
         p = np.random.random()
         epsThresh = self.epsEnd + (self.epsStart - self.epsEnd) * np.exp(-1. * self.steps_done / self.epsDecay)
         self.steps_done += 1
@@ -96,7 +96,7 @@ class DQNAgent():
                                                     if s is not None])
         state_batch = torch.cat(batch.state)
         action_batch = torch.cat(batch.action)
-        reward_batch = torch.cat(batch.reward).reshape(-1,)
+        reward_batch = torch.cat(batch.reward)
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken

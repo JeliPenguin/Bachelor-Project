@@ -143,7 +143,6 @@ class CommGridEnv():
         s = self.agentInfo[agentID]["state"]
         sPrime = self.takeAction(s, action)
         ateTreat = False
-        reward = self.time_penalty
         agentSymbol = self.agentInfo[agentID]["symbol"]
         if s != sPrime:
             self.agentInfo[agentID]["state"] = sPrime
@@ -169,9 +168,10 @@ class CommGridEnv():
             sPrimes.append(sPrime)
             rewards.append(reward)
         self.steps += 1
+        teamReward = np.mean(rewards)
         if self.toRender:
             self.render()
-        return sPrimes, rewards, self.done,self.agentInfo
+        return sPrimes, teamReward, self.done,self.agentInfo
 
     def write(self, content):
         sys.stdout.write("\r%s" % content)

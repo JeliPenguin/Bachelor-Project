@@ -1,6 +1,6 @@
 import torch
 from CommGridEnv import CommGridEnv
-from CommAgent import ScoutAgent
+from DQN import DQNAgent
 from const import *
 from joblib import dump,load
 
@@ -12,7 +12,7 @@ treatNum = 2
 n_obs = 2 * (agentNum + treatNum)
 
 def train():
-    agent = ScoutAgent(0, n_obs, ACTIONSPACE)
+    agent = DQNAgent(0, n_obs, ACTIONSPACE)
     agents = [agent]
     env = CommGridEnv(row, column, agents, treatNum=treatNum,render=False)
     num_episode = 5000
@@ -42,7 +42,7 @@ def train():
 
             # Perform one step of the optimization (on the policy network)
             agent.optimize()
-            episodicReward += sum(reward)
+            episodicReward += (reward)
             if done:
                 break
         episodicRewards.append(episodicReward)
@@ -52,6 +52,7 @@ def train():
 
 def test():
     agent = load("singleAgent")
+    agent.symbol = "G"
     agents = [agent]
     env = CommGridEnv(row, column, agents, treatNum=treatNum,render=True)
     env.reset()
