@@ -1,5 +1,4 @@
 import numpy as np
-from enum import Enum
 import sys
 import time
 from const import *
@@ -19,7 +18,7 @@ def decodeAction(num:int):
 
 
 class CommGridEnv():
-    def __init__(self, row:int, column:int, agents:List[CommAgent], treatNum=2,render=False) -> None:
+    def __init__(self, row:int, column:int, agents:Tuple[CommAgent], treatNum=2,render=False,numpify=False) -> None:
         self.row = row
         self.column = column
         self.treatNum = treatNum
@@ -33,6 +32,7 @@ class CommGridEnv():
         self.treatReward = 5
         self.teamReward = None
         self.toRender = render
+        self.toNumpify = numpify
 
     def addComponent(self, compSymbol:str):
         """ Add specified component to random location on the grid"""
@@ -101,6 +101,9 @@ class CommGridEnv():
                 "state": loc, "last-action": -1, "reward": 0, "symbol": agent.symbol}
         if self.toRender:
             self.render()
+
+        if self.toNumpify:
+            return self.numpifiedState()
         return initState
 
     def distanceToTreats(self)->float:
@@ -126,7 +129,7 @@ class CommGridEnv():
         reward = self.time_penalty
         if ateTreat:
             reward += self.treatReward
-        # Penalise for remaining treats
+        # # Penalise for remaining treats
         reward -= self.distanceToTreats()
         # Penalised for number of remaining treats and wasted time
         reward += self.treat_penalty * self.treatCount
@@ -164,7 +167,7 @@ class CommGridEnv():
         
         return sPrime, reward
 
-    def step(self, actions: list):
+    def step(self, actions: List[int]):
         sPrimes:List[tuple] = []
         rewards:List[float] = []
         for agentID, agentAction in enumerate(actions):
@@ -180,6 +183,9 @@ class CommGridEnv():
 
         if self.toRender:
             self.render()
+
+        if self.toNumpify:
+            sPrimes = self.numpifiedState()
         return sPrimes, teamReward, self.done,self.agentInfo
 
     def write(self, content):

@@ -65,6 +65,9 @@ class DQNAgent():
 
     # Convert to tensors
 
+    def memorize(self,stateTensor:torch.Tensor, actionTensor:torch.Tensor, sPrimeTensor:torch.Tensor, rewardTensor:torch.Tensor):
+        self.memory.push(stateTensor, actionTensor, sPrimeTensor, rewardTensor)
+
     def choose_greedy_action(self, s:torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
             #return np.argmax(self.q_table[s])

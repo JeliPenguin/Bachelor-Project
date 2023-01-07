@@ -1,8 +1,7 @@
-from CommAgent import CommAgent
-from typing import List
+from typing import Tuple
 
 class CommChannel():
-    def __init__(self,agents:List[CommAgent],noised=False) -> None:
+    def __init__(self,agents,noised=False) -> None:
         self.noised = noised
         self.agents = agents
 
@@ -17,13 +16,13 @@ class CommChannel():
     def decodeMessage(self,msg):
         return msg
 
-    def sendMessage(self,senderID,receiverID,msg):
+    def sendMessage(self,senderID,receiverID,msg,tag):
         receiver = self.agents[receiverID]
         encoded = self.encodeMessage(msg)
         if self.noised:
             encoded = self.addNoise(encoded)
         decoded = self.decodeMessage(encoded)
-        receiver.recieveMessage(senderID,decoded)
+        receiver.recieveMessage(senderID,decoded,tag)
 
 
     
