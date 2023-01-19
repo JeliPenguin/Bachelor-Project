@@ -16,6 +16,9 @@ class Run():
         self.column = envSetting["column"]
         self.treatNum = envSetting["treatNum"]
         self.noised = envSetting["noised"]
+        self.scoutSaveDir = "./Saves/scout"
+        self.guideSaveDir = "./Saves/guide"
+        self.rewardsSaveDir = "./Saves/episodicRewards"
 
     def setup(self, setupType):
         render = setupType != "train"
@@ -24,8 +27,8 @@ class Run():
             guide = agents[GUIDEID]
             scout = agents[SCOUTID]
         else:
-            scout = load("scout")
-            guide = load("guide")
+            scout = load(self.scoutSaveDir)
+            guide = load(self.guideSaveDir)
             agents = tuple([scout, guide])
         env = CommGridEnv(self.row, self.column, agents, self.treatNum,
                           render)
@@ -34,7 +37,8 @@ class Run():
         scout.setChannel(channel)
         return guide, scout, env, channel
 
-    def doStep(self, guide, scout, channel, env, stateTensor):
+    def doStep(self, guide: GuideAgent, scout: ScoutAgent, channel: CommChannel, env: CommGridEnv, stateTensor):
+        print("------------------------------------------------------\n\n\n")
         channel.sendMessage(GUIDEID, SCOUTID, stateTensor, "state")
         # Scout chooses epsilon greedy action solely on recieved message
         scoutAction = scout.choose_action()
@@ -50,11 +54,6 @@ class Run():
             sPrimeTensor = torch.tensor(
                 numpifiedSPrime, dtype=torch.float32, device=device).unsqueeze(0)
 
-        # for agent,actionTensor in zip(agents,actionTensors):
-        #     # Store the transition in memory
-        #     agent.memorize(stateTensor, actionTensor, sPrimeTensor, rewardTensor)
-        #     # Perform one step of the optimization (on the policy network)
-        #     agent.optimize()
         channel.sendMessage(GUIDEID, SCOUTID, actionTensor, "action")
         channel.sendMessage(GUIDEID, SCOUTID, rewardTensor, "reward")
         channel.sendMessage(GUIDEID, SCOUTID, sPrimeTensor, "sPrime")
@@ -85,9 +84,9 @@ class Run():
 
             episodicRewards.append(episodicReward)
             #print(f"Episode {eps} done, Eps Reward: {episodicReward}")
-        dump(scout, "scout")
-        dump(guide, "guide")
-        dump(episodicRewards, "episodicRewards")
+        dump(scout, self.scoutSaveDir)
+        dump(guide, self.guideSaveDir)
+        dump(episodicRewards, self.rewardsSaveDir)
 
     def test(self):
         guide, scout, env, channel = self.setup("test")
@@ -103,7 +102,7 @@ class Run():
 
     def randomRun(self):
         guide, scout, env, channel = self.setup("rand")
-        steps = 10
+        steps = 3
         stp = 0
         env.reset()
         numpifiedState = env.numpifiedState()

@@ -17,7 +17,7 @@ class CommChannel():
         return msg
 
     def sendMessage(self,senderID,receiverID,msg,tag):
-        # print(msg)
+        # print(tag,msg)
         receiver = self.agents[receiverID]
         encoded = self.encodeMessage(msg)
         if self.noised:
