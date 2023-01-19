@@ -21,4 +21,4 @@ envInfo = {
 
 myRun = Run(envInfo)
 
-myRun.test()
+myRun.randomRun()
