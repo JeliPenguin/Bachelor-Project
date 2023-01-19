@@ -2,11 +2,11 @@ import numpy as np
 import sys
 import time
 from const import *
-from typing import List,Tuple
+from typing import List, Tuple
 from CommAgent import CommAgent
 
 
-def decodeAction(num:int):
+def decodeAction(num: int):
     mapping = {
         0: (-1, 0),
         1: (0, -1),
@@ -18,7 +18,7 @@ def decodeAction(num:int):
 
 
 class CommGridEnv():
-    def __init__(self, row:int, column:int, agents:Tuple[CommAgent], treatNum=2,render=False,numpify=False) -> None:
+    def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True) -> None:
         self.row = row
         self.column = column
         self.treatNum = treatNum
@@ -34,7 +34,7 @@ class CommGridEnv():
         self.toRender = render
         self.toNumpify = numpify
 
-    def addComponent(self, compSymbol:str):
+    def addComponent(self, compSymbol: str):
         """ Add specified component to random location on the grid"""
         loc = tuple(np.random.randint(0, self.row, 2))
         while loc in self.initLoc:
@@ -62,7 +62,7 @@ class CommGridEnv():
     #         state[layer][y][x] = 1
 
     #     return state
-    def numpifiedState(self)->np.ndarray:
+    def numpifiedState(self) -> np.ndarray:
         state = np.zeros((self.agentNum*2+self.treatNum*2,))
         index = 0
         for info in self.agentInfo.values():
@@ -72,17 +72,17 @@ class CommGridEnv():
             state[index] = y
             state[index+1] = x
             index += 2
-        
+
         for treatLoc in self.treatLocations:
             x = treatLoc[1]
             y = treatLoc[0]
             state[index] = y
             state[index+1] = x
             index += 2
-        
+
         return state
 
-    def initGrid(self)->List[tuple]:
+    def initGrid(self) -> List[tuple]:
         self.done = False
         self.steps = 0
         self.treatCount = self.treatNum
@@ -106,7 +106,7 @@ class CommGridEnv():
             return self.numpifiedState()
         return initState
 
-    def distanceToTreats(self)->float:
+    def distanceToTreats(self) -> float:
         """ Returns minimum of all agent's euclidean distance to closest treat """
         distances = []
         for treatLoc in self.treatLocations:
@@ -119,20 +119,20 @@ class CommGridEnv():
             distances.append(sumDist)
         return min(distances)
 
-    def rewardFunction(self, ateTreat:bool, done:bool)->float:
+    def rewardFunction(self, ateTreat: bool, done: bool) -> float:
         """
             ateTreat: Boolean indicating whether a treat has been eaten
             done: Boolean indicating state of the game
         """
-        if done:
+        if done or ateTreat:
             return self.treatReward
         reward = self.time_penalty
-        if ateTreat:
-            reward += self.treatReward
+        # if ateTreat:
+        #     reward += self.treatReward
         # # Penalise for remaining treats
-        reward -= self.distanceToTreats()
+        #reward -= self.distanceToTreats()
         # Penalised for number of remaining treats and wasted time
-        reward += self.treat_penalty * self.treatCount
+        #reward += self.treat_penalty * self.treatCount
         return reward
 
     def takeAction(self, state: tuple, action: int):
@@ -164,19 +164,18 @@ class CommGridEnv():
         reward = self.rewardFunction(ateTreat, self.done)
         self.agentInfo[agentID]["reward"] = reward
 
-        
         return sPrime, reward
 
     def step(self, actions: List[int]):
-        sPrimes:List[tuple] = []
-        rewards:List[float] = []
+        sPrimes: List[tuple] = []
+        rewards: List[float] = []
         for agentID, agentAction in enumerate(actions):
             self.agentInfo[agentID]["last-action"] = agentAction
             sPrime, reward = self.agentStep(agentID, agentAction)
             sPrimes.append(sPrime)
             rewards.append(reward)
         self.steps += 1
-        
+
         # Guide scout modification
         # Team reward is solely the reward of the scout
         teamReward = rewards[0]
@@ -186,7 +185,7 @@ class CommGridEnv():
 
         if self.toNumpify:
             sPrimes = self.numpifiedState()
-        return sPrimes, teamReward, self.done,self.agentInfo
+        return sPrimes, teamReward, self.done, self.agentInfo
 
     def write(self, content):
         sys.stdout.write("\r%s" % content)

@@ -8,6 +8,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 SCOUTID = 0
 GUIDEID = 1
 
+
 class ScoutAgent(CommAgent):
     def __init__(self, id, obs_dim, actionSpace) -> None:
         super().__init__(id, obs_dim, actionSpace)
@@ -16,11 +17,13 @@ class ScoutAgent(CommAgent):
     def choose_greedy_action(self) -> torch.Tensor:
         s = self.messageReceived[GUIDEID]["state"]
         with torch.no_grad():
-            return self.policy_net(s).max(1)[1].view(1,1)
+            return self.policy_net(s).max(1)[1].view(1, 1)
 
-    def choose_action(self)-> torch.Tensor:
+    def choose_action(self) -> torch.Tensor:
         p = np.random.random()
-        epsThresh = self.epsEnd + (self.epsStart - self.epsEnd) * np.exp(-1. * self.steps_done / self.epsDecay)
+        epsThresh = self.epsEnd + \
+            (self.epsStart - self.epsEnd) * \
+            np.exp(-1. * self.steps_done / self.epsDecay)
         self.steps_done += 1
         if p > epsThresh:
             return self.choose_greedy_action()
@@ -43,15 +46,19 @@ class GuideAgent(CommAgent):
         super().__init__(id, obs_dim, actionSpace)
         self.symbol = "G"
 
-    def choose_action(self)->torch.Tensor:
+    def choose_action(self) -> torch.Tensor:
         """ Returns STAY as Guide can only stay at allocated position"""
-        return torch.tensor([[STAY]],device=device)
+        return torch.tensor([[STAY]], device=device)
+
+    def choose_random_action(self) -> torch.Tensor:
+        randAction = STAY
+        return torch.tensor([[randAction]], device=device)
 
 
-def instantiateAgents(treatNum:int)->Tuple[ScoutAgent,GuideAgent]:
+def instantiateAgents(treatNum: int) -> Tuple[ScoutAgent, GuideAgent]:
     agentNum = 2
     n_obs = 2 * (agentNum + treatNum)
     scout = ScoutAgent(SCOUTID, n_obs, ACTIONSPACE)
-    guide = GuideAgent(GUIDEID,n_obs,ACTIONSPACE)
-    agents: Tuple[ScoutAgent,GuideAgent] = tuple([scout,guide])
+    guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
+    agents: Tuple[ScoutAgent, GuideAgent] = tuple([scout, guide])
     return agents
