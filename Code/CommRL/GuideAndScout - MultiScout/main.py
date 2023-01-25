@@ -13,11 +13,11 @@ Communication currently with no noise added
 """
 
 envInfo = {
-    "row": 5,
-    "column": 5,
+    "row": 8,
+    "column": 8,
     "treatNum": 2,
     "noised": False,
-    "TRAIN_EPS": 5000,
+    "TRAIN_EPS": 10,
     "TEST_MAX_EPS": 30,
     "RAND_EPS": 3,
 }
