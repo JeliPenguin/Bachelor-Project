@@ -7,7 +7,6 @@ from typing import Tuple
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 GUIDEID = 0
-SCOUTID = 1
 
 class ScoutAgent(CommAgent):
     def __init__(self, id, obs_dim, actionSpace) -> None:

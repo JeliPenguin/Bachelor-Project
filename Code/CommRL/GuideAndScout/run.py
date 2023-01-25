@@ -9,13 +9,14 @@ from tqdm import tqdm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
+SCOUTID = GUIDEID + 1
 class Run():
     def __init__(self, envSetting) -> None:
         self.row = envSetting["row"]
         self.column = envSetting["column"]
         self.treatNum = envSetting["treatNum"]
         self.noised = envSetting["noised"]
+        self.TRAIN_EPS = envSetting["TRAIN_EPS"]
         self.scoutSaveDir = "./Saves/scout"
         self.guideSaveDir = "./Saves/guide"
         self.rewardsSaveDir = "./Saves/episodicRewards"
@@ -52,7 +53,7 @@ class Run():
         scoutAction = scout.choose_action()
         guideAction = guide.choose_action()
         actionTensor: torch.Tensor = scoutAction
-        actions: List[int] = [scoutAction.item(), guideAction.item()]
+        actions: List[int] = [guideAction.item(),scoutAction.item()]
         numpifiedSPrime, reward, done, info = env.step(actions)
         rewardTensor = torch.tensor(
             [reward], dtype=torch.float32, device=device)
@@ -71,9 +72,8 @@ class Run():
     def train(self):
         guide, scout, env, channel = self.setup("train")
         episodicRewards = []
-        num_episode = 5000
-        print(f"Running {num_episode} epochs:")
-        for eps in tqdm(range(num_episode)):
+        print(f"Running {self.TRAIN_EPS} epochs:")
+        for eps in tqdm(range(self.TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State observerd by guide
             numpifiedState = env.reset()
@@ -103,10 +103,13 @@ class Run():
         stateTensor = torch.tensor(
             numpifiedState, dtype=torch.float32, device=device).unsqueeze(0)
         done = False
-        while not done:
+        maxStep = 30
+        step = 0
+        while not done and step < maxStep:
             sPrimeTensor, reward, done, _ = self.doStep(
                 guide, scout, channel, env, stateTensor)
             stateTensor = sPrimeTensor
+            step+=1
 
     def randomRun(self):
         guide, scout, env, channel = self.setup("rand")

@@ -16,11 +16,13 @@ envInfo = {
     "row": 5,
     "column": 5,
     "treatNum": 2,
-    "noised": False
+    "noised": False,
+    "TRAIN_EPS": 10
 }
 
 myRun = Run(envInfo)
 
 # myRun.randomRun()
-# myRun.test()
+
 myRun.train()
+myRun.test()
