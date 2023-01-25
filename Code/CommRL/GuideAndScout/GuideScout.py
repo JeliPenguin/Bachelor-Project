@@ -5,9 +5,9 @@ import numpy as np
 from typing import Tuple
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-SCOUTID = 0
-GUIDEID = 1
 
+GUIDEID = 0
+SCOUTID = 1
 
 class ScoutAgent(CommAgent):
     def __init__(self, id, obs_dim, actionSpace) -> None:
@@ -55,10 +55,4 @@ class GuideAgent(CommAgent):
         return torch.tensor([[randAction]], device=device)
 
 
-def instantiateAgents(treatNum: int) -> Tuple[ScoutAgent, GuideAgent]:
-    agentNum = 2
-    n_obs = 2 * (agentNum + treatNum)
-    scout = ScoutAgent(SCOUTID, n_obs, ACTIONSPACE)
-    guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
-    agents: Tuple[ScoutAgent, GuideAgent] = tuple([scout, guide])
-    return agents
+

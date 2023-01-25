@@ -20,10 +20,18 @@ class Run():
         self.guideSaveDir = "./Saves/guide"
         self.rewardsSaveDir = "./Saves/episodicRewards"
 
+    def instantiateAgents(self, treatNum: int) -> Tuple[GuideAgent, ScoutAgent]:
+        agentNum = 2
+        n_obs = 2 * (agentNum + treatNum)
+        scout = ScoutAgent(SCOUTID, n_obs, ACTIONSPACE)
+        guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
+        agents: Tuple[GuideAgent, ScoutAgent] = tuple([guide, scout])
+        return agents
+
     def setup(self, setupType):
         render = setupType != "train"
         if setupType == "train" or setupType == "rand":
-            agents = instantiateAgents(self.treatNum)
+            agents = self.instantiateAgents(self.treatNum)
             guide = agents[GUIDEID]
             scout = agents[SCOUTID]
         else:
@@ -38,7 +46,7 @@ class Run():
         return guide, scout, env, channel
 
     def doStep(self, guide: GuideAgent, scout: ScoutAgent, channel: CommChannel, env: CommGridEnv, stateTensor):
-        print("------------------------------------------------------\n\n\n")
+        # print("------------------------------------------------------\n\n\n")
         channel.sendMessage(GUIDEID, SCOUTID, stateTensor, "state")
         # Scout chooses epsilon greedy action solely on recieved message
         scoutAction = scout.choose_action()

@@ -21,4 +21,6 @@ envInfo = {
 
 myRun = Run(envInfo)
 
-myRun.randomRun()
+# myRun.randomRun()
+# myRun.test()
+myRun.train()
