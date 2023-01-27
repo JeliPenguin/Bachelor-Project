@@ -1,5 +1,6 @@
 from DQN import DQNAgent
 from CommChannel import CommChannel
+import numpy as np
 import torch
 from const import device
 
@@ -10,6 +11,7 @@ class CommAgent(DQNAgent):
                          batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
         self.messageReceived = {}
         self.messageSent = {}
+        self.messageMemory = {}
 
     def setChannel(self, channel: CommChannel):
         self.channel = channel
@@ -19,28 +21,44 @@ class CommAgent(DQNAgent):
         return encodedMsg
 
     def decodeMessage(self, encodedMsg):
-        return encodedMsg
+        decodedMsg = encodedMsg
+        parse = {}
+        parse["state"] = decodedMsg[:8]
+        parse["action"] = decodedMsg[8]
+        parse["reward"] = decodedMsg[9]
+        parse["sPrime"] = decodedMsg[10:]
+        if parse["sPrime"][0] == [-1]:
+            parse["sPrime"] = None
+        return parse
 
-    def sendMessage(self, recieverID: int, msg, tag: str):
-        if tag == "action":
-            msg = torch.tensor([[msg]], dtype=torch.int64, device=device)
-        elif tag == "state" or tag == "sPrime":
-            if msg is not None:
-                msg = torch.tensor(msg, dtype=torch.float32,
-                                   device=device).unsqueeze(0)
-        elif tag == "reward":
-            msg = torch.tensor([msg], dtype=torch.float32, device=device)
-        msg = self.encodeMessage(msg)
-        self.channel.sendMessage(self.id, recieverID, msg, tag)
-        # if recieverID not in self.messageSent:
-        #     self.messageSent[recieverID] = {tag: msg}
-        # else:
-        #     self.messageSent[recieverID][tag] = (msg)
+    def prepareMessage(self, msg, tag: str):
+        self.messageMemory[tag] = msg
 
-    def recieveMessage(self, senderID: int, msg, tag: str):
+    def sendMessage(self, recieverID: int):
+        """
+        Sending Order:
+        State - Action - Reward - sPrime
+        """
+        msgString = np.concatenate(
+            (self.messageMemory["state"], self.messageMemory["action"], self.messageMemory["reward"], self.messageMemory["sPrime"]))
+        msgString = self.encodeMessage(msgString)
+        self.channel.sendMessage(self.id, recieverID, msgString)
+
+    def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder
-        msg = self.decodeMessage(msg)
-        if senderID not in self.messageReceived:
-            self.messageReceived[senderID] = {tag: msg}
-        else:
-            self.messageReceived[senderID][tag] = (msg)
+        parse = self.decodeMessage(msg)
+        for tag, content in parse.items():
+            if tag == "action":
+                content = torch.tensor(
+                    [[content]], dtype=torch.int64, device=device)
+            elif tag == "state" or tag == "sPrime":
+                if content is not None:
+                    content = torch.tensor(content, dtype=torch.float32,
+                                           device=device).unsqueeze(0)
+            elif tag == "reward":
+                content = torch.tensor(
+                    [content], dtype=torch.float32, device=device)
+            if senderID not in self.messageReceived:
+                self.messageReceived[senderID] = {tag: content}
+            else:
+                self.messageReceived[senderID][tag] = (content)

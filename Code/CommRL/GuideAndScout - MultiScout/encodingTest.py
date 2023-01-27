@@ -1,34 +1,39 @@
 import torch
+import numpy as np
+from typing import *
 
 
-def addNoise(msg, p=0.005):
-    pass
+def addNoise(msg, p=0.01):
+    noise = np.random.random(msg.shape) < p
+    noiseAdded = []
+    for m, n in zip(msg, noise):
+        if n == 0:
+            noiseAdded.append(m)
+        else:
+            noiseAdded.append(1-m)
+    noiseAdded = np.array(noiseAdded)
+    print(noiseAdded)
+    return (noiseAdded)
 
 
-def encoder(msg, type):
-    """
-    Encoding Scheme
-    - First 2 bits indicate message type
-       = 0: state
-       = 1: sPrime
-       = 2: action
-       = 3: reward
-    - Following
-    """
-    typeMap = {
-        "state": 0,
-        "sPrime": 1,
-        "action": 2,
-        "reward": 3
-    }
-    encoded = format(typeMap[type], "02b")
-    encoded += msg
+def encoder(msg: List[int]):
+    formatted = np.array(msg, dtype=np.uint8)
+    encoded = np.unpackbits(formatted)
 
     return encoded
 
 
 def decoder(msg):
-    pass
+    decoded = np.packbits(msg)
+    return decoded
 
 
-print(torch.tensor([1, 2, 3]))
+def simulateChannel():
+    msg = [1, 2, 3]
+    encoded = encoder(msg)
+    encoded = addNoise(encoded)
+    decoded = decoder(encoded)
+    print(decoded)
+
+
+simulateChannel()

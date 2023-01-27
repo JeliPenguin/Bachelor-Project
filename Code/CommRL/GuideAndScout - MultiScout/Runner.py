@@ -63,22 +63,22 @@ class Runner():
         return agents, env
 
     def doStep(self, agents, env: CommGridEnv, state):
-        # print("------------------------------------------------------\n\n\n")
-        guide = agents[GUIDEID]
-        for scoutID in range(1, len(agents)):
-            guide.sendMessage(scoutID, state, "state")
         # Guide only chooses action STAY
         # Scouts choose epsilon greedy action solely on recieved message
         actions: List[int] = [a.choose_action().item() for a in agents]
         # One timestep forward in the environment based on agents' actions
         sPrime, reward, done, info = env.step(actions)
         if done:
-            sPrime = None
+            # -1  Reserved for indication of termination
+            sPrime = [-1]
 
+        guide: GuideAgent = agents[GUIDEID]
         for scoutID in range(GUIDEID+1, len(agents)):
-            guide.sendMessage(scoutID, actions[scoutID], "action")
-            guide.sendMessage(scoutID, reward, "reward")
-            guide.sendMessage(scoutID, sPrime, "sPrime")
+            guide.prepareMessage(state, "state")
+            guide.prepareMessage([actions[scoutID]], "action")
+            guide.prepareMessage([reward], "reward")
+            guide.prepareMessage(sPrime, "sPrime")
+            guide.sendMessage(scoutID)
 
         return sPrime, reward, done, info
 
