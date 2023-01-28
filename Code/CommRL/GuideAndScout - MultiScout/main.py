@@ -1,5 +1,5 @@
 from Runner import Runner
-
+import sys
 """
 Gridworld with treats, a Guide agent and a Scout agent
 
@@ -25,19 +25,21 @@ defaultEnvSetting = {
     "RAND_EPS": 1,
 }
 """
-envSetting = {
-    "row": 5,
-    "column": 5,
-    "scoutsNum": 1,
-    "RAND_EPS": 10,
-    "TEST_MAX_EPS": 10
-}
-
-myRun = Runner(envSetting)
 
 
 if __name__ == "__main__":
-    myRun.randomRun()
+    envSetting = {
+        "row": 5,
+        "column": 5,
+        "scoutsNum": 1,
+        "RAND_EPS": 10,
+        "TEST_MAX_EPS": 10
+    }
 
+    if len(sys.argv) > 1:
+        envSetting["TRAIN_EPS"] = int(sys.argv[1])
+
+    myRun = Runner(envSetting)
+    # myRun.randomRun()
     # myRun.train()
-    # myRun.test()
+    myRun.test()
