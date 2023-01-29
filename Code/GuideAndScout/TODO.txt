@@ -1,0 +1,3 @@
+Encode messages into single stream
+Encode message using binary
+Add binary symmetric noise
