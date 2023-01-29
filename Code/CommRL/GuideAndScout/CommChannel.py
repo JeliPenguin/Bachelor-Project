@@ -4,6 +4,8 @@ class CommChannel():
     def __init__(self,agents,noised=False) -> None:
         self.noised = noised
         self.agents = agents
+        for agent in self.agents:
+            agent.setChannel(self)
 
     def addNoise(self,message):
         noisedMsg = message

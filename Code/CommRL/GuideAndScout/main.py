@@ -17,7 +17,9 @@ envInfo = {
     "column": 5,
     "treatNum": 2,
     "noised": False,
-    "TRAIN_EPS": 10
+    "TRAIN_EPS": 5000,
+    "TEST_MAX_EPS": 30,
+    "RAND_EPS": 3,
 }
 
 myRun = Run(envInfo)
@@ -25,4 +27,4 @@ myRun = Run(envInfo)
 # myRun.randomRun()
 
 myRun.train()
-myRun.test()
+# myRun.test()

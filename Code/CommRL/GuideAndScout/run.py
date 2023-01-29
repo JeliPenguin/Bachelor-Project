@@ -6,10 +6,14 @@ from joblib import dump, load
 from CommChannel import CommChannel
 from typing import List
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 SCOUTID = GUIDEID + 1
+SCOUT2ID = GUIDEID + 2
+
+
 class Run():
     def __init__(self, envSetting) -> None:
         self.row = envSetting["row"]
@@ -17,16 +21,19 @@ class Run():
         self.treatNum = envSetting["treatNum"]
         self.noised = envSetting["noised"]
         self.TRAIN_EPS = envSetting["TRAIN_EPS"]
+        self.TEST_MAX_EPS = envSetting["TEST_MAX_EPS"]
+        self.RAND_EPS = envSetting["RAND_EPS"]
         self.scoutSaveDir = "./Saves/scout"
         self.guideSaveDir = "./Saves/guide"
         self.rewardsSaveDir = "./Saves/episodicRewards"
 
-    def instantiateAgents(self, treatNum: int) -> Tuple[GuideAgent, ScoutAgent]:
+    def instantiateAgents(self, treatNum: int) -> Tuple[GuideAgent, ScoutAgent, ScoutAgent]:
         agentNum = 2
         n_obs = 2 * (agentNum + treatNum)
-        scout = ScoutAgent(SCOUTID, n_obs, ACTIONSPACE)
         guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
-        agents: Tuple[GuideAgent, ScoutAgent] = tuple([guide, scout])
+        scout1 = ScoutAgent(SCOUTID, n_obs, ACTIONSPACE)
+        # scout2 = ScoutAgent(SCOUT2ID, n_obs, ACTIONSPACE)
+        agents: Tuple[GuideAgent, ScoutAgent] = tuple([guide, scout1])
         return agents
 
     def setup(self, setupType):
@@ -35,15 +42,15 @@ class Run():
             agents = self.instantiateAgents(self.treatNum)
             guide = agents[GUIDEID]
             scout = agents[SCOUTID]
+            # scout2 = agents[SCOUT2ID]
         else:
             scout = load(self.scoutSaveDir)
             guide = load(self.guideSaveDir)
             agents = tuple([scout, guide])
+        channel = CommChannel(agents, self.noised)
         env = CommGridEnv(self.row, self.column, agents, self.treatNum,
                           render)
-        channel = CommChannel(agents, self.noised)
-        guide.setChannel(channel)
-        scout.setChannel(channel)
+
         return guide, scout, env, channel
 
     def doStep(self, guide: GuideAgent, scout: ScoutAgent, channel: CommChannel, env: CommGridEnv, stateTensor):
@@ -53,7 +60,7 @@ class Run():
         scoutAction = scout.choose_action()
         guideAction = guide.choose_action()
         actionTensor: torch.Tensor = scoutAction
-        actions: List[int] = [guideAction.item(),scoutAction.item()]
+        actions: List[int] = [guideAction.item(), scoutAction.item()]
         numpifiedSPrime, reward, done, info = env.step(actions)
         rewardTensor = torch.tensor(
             [reward], dtype=torch.float32, device=device)
@@ -96,31 +103,34 @@ class Run():
         dump(guide, self.guideSaveDir)
         dump(episodicRewards, self.rewardsSaveDir)
 
-    def test(self):
+    def test(self, plot=False):
         guide, scout, env, channel = self.setup("test")
         env.reset()
         numpifiedState = env.numpifiedState()
         stateTensor = torch.tensor(
             numpifiedState, dtype=torch.float32, device=device).unsqueeze(0)
         done = False
-        maxStep = 30
         step = 0
-        while not done and step < maxStep:
+        while not done and step < self.TEST_MAX_EPS:
             sPrimeTensor, reward, done, _ = self.doStep(
                 guide, scout, channel, env, stateTensor)
             stateTensor = sPrimeTensor
-            step+=1
+            step += 1
+
+        if plot:
+            rewardPlot = load(self.rewardsSaveDir)
+            plt.plot(rewardPlot)
+            plt.show()
 
     def randomRun(self):
         guide, scout, env, channel = self.setup("rand")
-        steps = 3
         stp = 0
         env.reset()
         numpifiedState = env.numpifiedState()
         stateTensor = torch.tensor(
             numpifiedState, dtype=torch.float32, device=device).unsqueeze(0)
         done = False
-        while not done and stp < steps:
+        while not done and stp < self.RAND_EPS:
             sPrimeTensor, reward, done, _ = self.doStep(
                 guide, scout, channel, env, stateTensor)
             stateTensor = sPrimeTensor

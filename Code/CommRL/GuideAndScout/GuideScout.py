@@ -11,7 +11,7 @@ GUIDEID = 0
 class ScoutAgent(CommAgent):
     def __init__(self, id, obs_dim, actionSpace) -> None:
         super().__init__(id, obs_dim, actionSpace)
-        self.symbol = "S"
+        self.symbol = str(id)
 
     def choose_greedy_action(self) -> torch.Tensor:
         s = self.messageReceived[GUIDEID]["state"]
