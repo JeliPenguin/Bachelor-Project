@@ -1,2 +1,1 @@
-Restrict scout obs
-Guide send message
+Fix Communicatio architecture

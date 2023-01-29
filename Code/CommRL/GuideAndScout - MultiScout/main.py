@@ -31,9 +31,9 @@ if __name__ == "__main__":
     envSetting = {
         "row": 5,
         "column": 5,
-        "scoutsNum": 1,
+        "scoutsNum": 2,
         "RAND_EPS": 10,
-        "TEST_MAX_EPS": 10
+        "TEST_MAX_EPS": 30
     }
 
     if len(sys.argv) > 1:
@@ -41,5 +41,5 @@ if __name__ == "__main__":
 
     myRun = Runner(envSetting)
     # myRun.randomRun()
-    # myRun.train()
-    myRun.test()
+    myRun.train()
+    # myRun.test(plot=True)
