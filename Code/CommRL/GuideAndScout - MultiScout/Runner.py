@@ -74,11 +74,10 @@ class Runner():
         sPrime, reward, done, info = env.step(actions)
         if done:
             # -1  Reserved for indication of termination
-            sPrime = [-1]
+            sPrime = None
 
         guide: GuideAgent = agents[GUIDEID]
         for scoutID in range(GUIDEID+1, len(agents)):
-            guide.prepareMessage(state, "state")
             guide.prepareMessage([actions[scoutID]], "action")
             guide.prepareMessage([reward], "reward")
             guide.prepareMessage(sPrime, "sPrime")
