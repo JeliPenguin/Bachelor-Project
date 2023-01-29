@@ -25,17 +25,6 @@ class CommAgent(DQNAgent):
         encodedMsg = msg
         return encodedMsg
 
-    def decodeMessage(self, encodedMsg):
-        decodedMsg = encodedMsg
-        parse = {}
-        parse["state"] = decodedMsg[:8]
-        parse["action"] = decodedMsg[8]
-        parse["reward"] = decodedMsg[9]
-        parse["sPrime"] = decodedMsg[10:]
-        if parse["sPrime"][0] == [-1]:
-            parse["sPrime"] = None
-        return parse
-
     def prepareMessage(self, msg, tag: str):
         self.messageMemory[tag] = msg
 
@@ -47,6 +36,17 @@ class CommAgent(DQNAgent):
         # msgString = np.concatenate((self.messageMemory["state"], self.messageMemory["action"], self.messageMemory["reward"], self.messageMemory["sPrime"]))
         # msgString = self.encodeMessage(msgString)
         self.channel.sendMessage(self.id, recieverID, self.messageMemory)
+
+    def decodeMessage(self, encodedMsg):
+        decodedMsg = encodedMsg
+        parse = {}
+        parse["state"] = decodedMsg[:8]
+        parse["action"] = decodedMsg[8]
+        parse["reward"] = decodedMsg[9]
+        parse["sPrime"] = decodedMsg[10:]
+        if parse["sPrime"][0] == [-1]:
+            parse["sPrime"] = None
+        return parse
 
     def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder

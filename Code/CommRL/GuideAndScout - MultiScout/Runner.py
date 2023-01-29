@@ -74,6 +74,8 @@ class Runner():
         sPrime, reward, done, info = env.step(actions)
         if done:
             # -1  Reserved for indication of termination
+
+            #sPrime = [None]
             sPrime = None
 
         guide: GuideAgent = agents[GUIDEID]

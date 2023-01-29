@@ -29,9 +29,9 @@ defaultEnvSetting = {
 
 if __name__ == "__main__":
     envSetting = {
-        "row": 5,
-        "column": 5,
-        "scoutsNum": 1,
+        "row": 10,
+        "column": 10,
+        "scoutsNum": 2,
         "RAND_EPS": 10,
         "TEST_MAX_EPS": 30
     }
