@@ -123,6 +123,7 @@ class CommGridEnv():
         """
             ateTreat: Boolean indicating whether a treat has been eaten
             done: Boolean indicating state of the game
+            Cannot set reward >= 255 due to message encodings
         """
         if done or ateTreat:
             return self.treatReward

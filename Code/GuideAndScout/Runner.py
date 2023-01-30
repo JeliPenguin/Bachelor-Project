@@ -7,10 +7,14 @@ from CommChannel import CommChannel
 from typing import List
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import os
+from datetime import datetime
+
+startingScoutID = GUIDEID + 1
 
 
 class Runner():
-    def __init__(self, envSetting) -> None:
+    def __init__(self, envSetting, saveName="Default") -> None:
         envSetting = self.setupEnvSetting(envSetting)
         self.row = envSetting["row"]
         self.column = envSetting["column"]
@@ -20,8 +24,19 @@ class Runner():
         self.TRAIN_EPS = envSetting["TRAIN_EPS"]
         self.TEST_MAX_EPS = envSetting["TEST_MAX_EPS"]
         self.RAND_EPS = envSetting["RAND_EPS"]
-        self.agentsSaveDir = "./Saves/agents"
-        self.rewardsSaveDir = "./Saves/episodicRewards"
+        self.constructSaves(saveName, envSetting)
+
+    def constructSaves(self, saveName, envSetting):
+        now = datetime.now()
+        dt_string = now.strftime("-%m-%d_%H-%M")
+        saveFolderDir = "./Saves/" + saveName + dt_string + "/"
+        if not os.path.exists(saveFolderDir):
+            os.mkdir(saveFolderDir)
+        self.agentsSaveDir = saveFolderDir + "agents"
+        self.rewardsSaveDir = saveFolderDir + "episodicRewards"
+        self.stepsSaveDir = saveFolderDir + "episodicSteps"
+        envSaveDir = saveFolderDir + "envSetting"
+        dump(envSetting, envSaveDir)
 
     def setupEnvSetting(self, envSetting):
         defaultEnvSetting = {
@@ -42,7 +57,7 @@ class Runner():
         agentNum = 1 + self.scoutsNum
         n_obs = 2 * (agentNum + treatNum)
         guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
-        startingScoutID = GUIDEID + 1
+
         agents = [guide]
         for i in range(self.scoutsNum):
             scout = ScoutAgent(startingScoutID + i, n_obs, ACTIONSPACE)
@@ -66,7 +81,7 @@ class Runner():
         # Guide only chooses action STAY
         # Scouts choose epsilon greedy action solely on recieved message
         guide = agents[GUIDEID]
-        for scoutID in range(1, len(agents)):
+        for scoutID in range(startingScoutID, len(agents)):
             # Other part of the message kept as None
             guide.prepareMessage(state, "state")
             guide.sendMessage(scoutID)
@@ -78,7 +93,7 @@ class Runner():
             sPrime = None
 
         guide: GuideAgent = agents[GUIDEID]
-        for scoutID in range(GUIDEID+1, len(agents)):
+        for scoutID in range(startingScoutID, len(agents)):
             guide.prepareMessage([actions[scoutID]], "action")
             guide.prepareMessage([reward], "reward")
             guide.prepareMessage(sPrime, "sPrime")
@@ -88,9 +103,9 @@ class Runner():
 
     def train(self):
         agents, env = self.setupRun("train")
-        guide = agents[0]
-        scouts = agents[1:]
+        scouts = agents[startingScoutID:]
         episodicRewards = []
+        episodicSteps = []
         print(f"Running {self.TRAIN_EPS} epochs:")
         for _ in tqdm(range(self.TRAIN_EPS)):
             # Initialize the environment and get it's state
@@ -98,6 +113,7 @@ class Runner():
             state = env.reset()
             done = False
             episodicReward = 0
+            step = 0
             while not done:
                 sPrime, reward, done, _ = self.doStep(
                     agents, env, state)
@@ -107,11 +123,13 @@ class Runner():
                 # Move to the next state
                 state = sPrime
                 episodicReward += reward
+                step += 1
 
+            episodicSteps.append(step)
             episodicRewards.append(episodicReward)
-            #print(f"Episode {eps} done, Eps Reward: {episodicReward}")
         dump(agents, self.agentsSaveDir)
         dump(episodicRewards, self.rewardsSaveDir)
+        dump(episodicSteps, self.stepsSaveDir)
 
     def test(self, plot=False):
         agents, env = self.setupRun("test")

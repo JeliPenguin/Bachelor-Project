@@ -23,13 +23,9 @@ class CommAgent(DQNAgent):
 
     def encodeMessage(self):
         """
-        Sending Order:
-        State - Action - Reward - sPrime
-        Encoded each as unsigned 8 bits
-        255 represents -1
+        Message Order: State - Action - Reward - sPrime each as unsigned 8 bits
+        Unsigned 255 used to represents -1
         """
-        # msgString = np.concatenate((self.messageMemory["state"], self.messageMemory["action"], self.messageMemory["reward"], self.messageMemory["sPrime"]))
-        # msgString = self.encodeMessage(msgString)
         if self.messageMemory["action"] is None and self.messageMemory["reward"] is None and self.messageMemory["sPrime"] is None:
             # Case state only
             msgString = self.messageMemory["state"]
@@ -49,24 +45,24 @@ class CommAgent(DQNAgent):
 
     def sendMessage(self, recieverID: int):
         msgString = self.encodeMessage()
-        # print(msgString)
         self.channel.sendMessage(self.id, recieverID, msgString)
 
     def decodeMessage(self, encodedMsg):
         decodedMsg = np.packbits(encodedMsg)
         msgLen = len(decodedMsg)
+        obsLen = self.n_observations
         parse = {
             "state": None,
             "action": None,
             "reward": None,
             "sPrime": None
         }
-        parse["state"] = decodedMsg[:self.n_observations]
+        parse["state"] = decodedMsg[:obsLen]
         if msgLen > self.n_observations:
-            parse["action"] = [decodedMsg[self.n_observations]]
-            parse["reward"] = [decodedMsg[self.n_observations+1]]
+            parse["action"] = [decodedMsg[obsLen]]
+            parse["reward"] = [decodedMsg[obsLen+1]]
             if msgLen > self.n_observations + 2:
-                parse["sPrime"] = decodedMsg[self.n_observations+2:]
+                parse["sPrime"] = decodedMsg[obsLen+2:]
         if parse["reward"] == [255]:
             parse["reward"] = [-1]
         return parse
