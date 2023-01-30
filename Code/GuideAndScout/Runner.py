@@ -9,6 +9,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
+import wandb
 
 startingScoutID = GUIDEID + 1
 
@@ -32,7 +33,7 @@ class Runner():
         dump(envSetting, self.envSaveDir)
 
     def setupEnvSetting(self, envSetting):
-        configuredEnvSetting = {
+        self.configuredEnvSetting = {
             "row": 5,
             "column": 5,
             "treatNum": 2,
@@ -43,16 +44,16 @@ class Runner():
             "RAND_EPS": 1,
         }
         for key in envSetting.keys():
-            configuredEnvSetting[key] = envSetting[key]
+            self.configuredEnvSetting[key] = envSetting[key]
 
-        self.row = configuredEnvSetting["row"]
-        self.column = configuredEnvSetting["column"]
-        self.treatNum = configuredEnvSetting["treatNum"]
-        self.scoutsNum = configuredEnvSetting["scoutsNum"]
-        self.noised = configuredEnvSetting["noised"]
-        self.TRAIN_EPS = configuredEnvSetting["TRAIN_EPS"]
-        self.TEST_MAX_EPS = configuredEnvSetting["TEST_MAX_EPS"]
-        self.RAND_EPS = configuredEnvSetting["RAND_EPS"]
+        self.row = self.configuredEnvSetting["row"]
+        self.column = self.configuredEnvSetting["column"]
+        self.treatNum = self.configuredEnvSetting["treatNum"]
+        self.scoutsNum = self.configuredEnvSetting["scoutsNum"]
+        self.noised = self.configuredEnvSetting["noised"]
+        self.TRAIN_EPS = self.configuredEnvSetting["TRAIN_EPS"]
+        self.TEST_MAX_EPS = self.configuredEnvSetting["TEST_MAX_EPS"]
+        self.RAND_EPS = self.configuredEnvSetting["RAND_EPS"]
 
     def instantiateAgents(self, treatNum: int):
         agentNum = 1 + self.scoutsNum
@@ -103,12 +104,14 @@ class Runner():
         return sPrime, reward, done, info
 
     def train(self):
+        wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
+        wandb.config = self.configuredEnvSetting
         agents, env = self.setupRun("train")
         scouts = agents[startingScoutID:]
         episodicRewards = []
         episodicSteps = []
         print(f"Running {self.TRAIN_EPS} epochs:")
-        for _ in tqdm(range(self.TRAIN_EPS)):
+        for episode in tqdm(range(self.TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State only observerd by the guide
             state = env.reset()
@@ -126,6 +129,8 @@ class Runner():
                 episodicReward += reward
                 step += 1
 
+            wandb.log({"episodicStep": step})
+            wandb.log({"episodicReward": episodicReward})
             episodicSteps.append(step)
             episodicRewards.append(episodicReward)
         dump(agents, self.agentsSaveDir)

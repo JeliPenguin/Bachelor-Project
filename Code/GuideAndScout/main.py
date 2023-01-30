@@ -34,13 +34,13 @@ if __name__ == "__main__":
         "scoutsNum": 2,
         "RAND_EPS": 1,
         "TEST_MAX_EPS": 30,
-        "TRAIN_EPS": 1,
+        "TRAIN_EPS": 8000,
     }
 
     if len(sys.argv) > 1:
         envSetting["TRAIN_EPS"] = int(sys.argv[1])
 
     myRun = Runner(envSetting, saveName="DoubleScout")
-    myRun.randomRun()
-    # myRun.train()
+    # myRun.randomRun()
+    myRun.train()
     # myRun.test()
