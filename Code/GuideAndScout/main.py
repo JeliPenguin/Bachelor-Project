@@ -29,11 +29,12 @@ defaultEnvSetting = {
 
 if __name__ == "__main__":
     envSetting = {
-        "row": 10,
-        "column": 10,
-        "scoutsNum": 2,
-        "RAND_EPS": 10,
-        "TEST_MAX_EPS": 30
+        "row": 5,
+        "column": 5,
+        "scoutsNum": 1,
+        "RAND_EPS": 1,
+        "TEST_MAX_EPS": 30,
+        "TRAIN_EPS": 1,
     }
 
     if len(sys.argv) > 1:

@@ -67,15 +67,14 @@ class Runner():
         # Scouts choose epsilon greedy action solely on recieved message
         guide = agents[GUIDEID]
         for scoutID in range(1, len(agents)):
+            # Other part of the message kept as None
             guide.prepareMessage(state, "state")
             guide.sendMessage(scoutID)
         actions: List[int] = [a.choose_action().item() for a in agents]
         # One timestep forward in the environment based on agents' actions
         sPrime, reward, done, info = env.step(actions)
         if done:
-            # -1  Reserved for indication of termination
-
-            #sPrime = [None]
+            # indicates end of episode
             sPrime = None
 
         guide: GuideAgent = agents[GUIDEID]
