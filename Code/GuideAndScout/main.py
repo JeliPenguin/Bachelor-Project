@@ -40,7 +40,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         envSetting["TRAIN_EPS"] = int(sys.argv[1])
 
-    myRun = Runner(envSetting,saveName="DoubleScout")
-    # myRun.randomRun()
-    myRun.train()
-    myRun.test()
+    myRun = Runner(envSetting, saveName="DoubleScout")
+    myRun.randomRun()
+    # myRun.train()
+    # myRun.test()

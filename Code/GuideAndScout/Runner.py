@@ -15,31 +15,24 @@ startingScoutID = GUIDEID + 1
 
 class Runner():
     def __init__(self, envSetting, saveName="Default") -> None:
-        envSetting = self.setupEnvSetting(envSetting)
-        self.row = envSetting["row"]
-        self.column = envSetting["column"]
-        self.treatNum = envSetting["treatNum"]
-        self.scoutsNum = envSetting["scoutsNum"]
-        self.noised = envSetting["noised"]
-        self.TRAIN_EPS = envSetting["TRAIN_EPS"]
-        self.TEST_MAX_EPS = envSetting["TEST_MAX_EPS"]
-        self.RAND_EPS = envSetting["RAND_EPS"]
+        self.setupEnvSetting(envSetting)
         self.constructSaves(saveName, envSetting)
 
     def constructSaves(self, saveName, envSetting):
-        now = datetime.now()
-        dt_string = now.strftime("-%m-%d_%H-%M")
-        saveFolderDir = "./Saves/" + saveName + dt_string + "/"
+        # now = datetime.now()
+        # dt_string = now.strftime("-%m-%d_%H-%M")
+        # saveFolderDir = "./Saves/" + saveName + dt_string + "/"
+        saveFolderDir = "./Saves/" + saveName + "/"
         if not os.path.exists(saveFolderDir):
             os.mkdir(saveFolderDir)
         self.agentsSaveDir = saveFolderDir + "agents"
         self.rewardsSaveDir = saveFolderDir + "episodicRewards"
         self.stepsSaveDir = saveFolderDir + "episodicSteps"
-        envSaveDir = saveFolderDir + "envSetting"
-        dump(envSetting, envSaveDir)
+        self.envSaveDir = saveFolderDir + "envSetting"
+        dump(envSetting, self.envSaveDir)
 
     def setupEnvSetting(self, envSetting):
-        defaultEnvSetting = {
+        configuredEnvSetting = {
             "row": 5,
             "column": 5,
             "treatNum": 2,
@@ -50,8 +43,16 @@ class Runner():
             "RAND_EPS": 1,
         }
         for key in envSetting.keys():
-            defaultEnvSetting[key] = envSetting[key]
-        return defaultEnvSetting
+            configuredEnvSetting[key] = envSetting[key]
+
+        self.row = configuredEnvSetting["row"]
+        self.column = configuredEnvSetting["column"]
+        self.treatNum = configuredEnvSetting["treatNum"]
+        self.scoutsNum = configuredEnvSetting["scoutsNum"]
+        self.noised = configuredEnvSetting["noised"]
+        self.TRAIN_EPS = configuredEnvSetting["TRAIN_EPS"]
+        self.TEST_MAX_EPS = configuredEnvSetting["TEST_MAX_EPS"]
+        self.RAND_EPS = configuredEnvSetting["RAND_EPS"]
 
     def instantiateAgents(self, treatNum: int):
         agentNum = 1 + self.scoutsNum
@@ -132,6 +133,8 @@ class Runner():
         dump(episodicSteps, self.stepsSaveDir)
 
     def test(self, plot=False):
+        envSetting = load(self.envSaveDir)
+        self.setupEnvSetting(envSetting)
         agents, env = self.setupRun("test")
         env.reset()
         state = env.numpifiedState()
