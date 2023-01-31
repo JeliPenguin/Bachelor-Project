@@ -3,7 +3,7 @@ import sys
 import time
 from const import *
 from typing import List, Tuple
-from CommAgent import CommAgent
+from Agents.CommAgent import CommAgent
 
 
 def decodeAction(num: int):

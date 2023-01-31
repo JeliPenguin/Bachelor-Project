@@ -1,9 +1,9 @@
 import torch
-from CommGridEnv import CommGridEnv
-from GuideScout import *
+from Environment.CommGridEnv import CommGridEnv
+from Agents.GuideScout import *
 from const import *
 from joblib import dump, load
-from CommChannel import CommChannel
+from Environment.CommChannel import CommChannel
 from typing import List
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -92,7 +92,7 @@ class Runner():
         # Scouts choose epsilon greedy action solely on recieved message
         guide = agents[GUIDEID]
         if getVerbose() >= 2:
-            print("Sending only state")
+            print("SENDING ONLY STATE")
         for scoutID in range(startingScoutID, len(agents)):
             # Other part of the message kept as None
             guide.prepareMessage(state, "state")
@@ -106,7 +106,7 @@ class Runner():
 
         guide: GuideAgent = agents[GUIDEID]
         if getVerbose() >= 2:
-            print("Sending remaining")
+            print("SENDING REWARD AND SPRIME")
         for scoutID in range(startingScoutID, len(agents)):
             # Action not included in the message as the agent themselves already
             # know what action they performed and shouldn't be noised

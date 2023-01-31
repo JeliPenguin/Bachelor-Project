@@ -2,7 +2,6 @@ import torch
 
 EMPTY = "-"
 TREAT = "$"
-AGENT = "*"
 
 UP = 0
 LEFT = 1
@@ -15,9 +14,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 VERBOSE = 0
 
+
 def setVerbose(num):
     global VERBOSE
     VERBOSE = num
+
 
 def getVerbose():
     return VERBOSE

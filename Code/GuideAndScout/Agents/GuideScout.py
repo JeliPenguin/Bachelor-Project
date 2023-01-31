@@ -1,5 +1,5 @@
 from const import *
-from CommAgent import CommAgent
+from Agents.CommAgent import CommAgent
 import torch
 import numpy as np
 from typing import Tuple

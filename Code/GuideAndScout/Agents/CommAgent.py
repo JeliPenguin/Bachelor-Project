@@ -1,5 +1,5 @@
-from DQN import DQNAgent
-from CommChannel import CommChannel
+from Agents.DQN import DQNAgent
+from Environment.CommChannel import CommChannel
 import numpy as np
 import torch
 from const import *
