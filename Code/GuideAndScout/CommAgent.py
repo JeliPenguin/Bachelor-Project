@@ -14,9 +14,9 @@ class CommAgent(DQNAgent):
     def reset(self):
         self.messageReceived = {}
         self.messageSent = {}
+        self.action = None
         self.messageMemory = {
             "state": None,
-            "action": None,
             "reward": None,
             "sPrime": None
         }
@@ -27,19 +27,19 @@ class CommAgent(DQNAgent):
 
     def encodeMessage(self):
         """
-        Message Order: State - Action - Reward - sPrime each as unsigned 8 bits
+        Message Order: State - Reward - sPrime each as unsigned 8 bits
         Unsigned 255 used to represents -1
         """
-        if self.messageMemory["action"] is None and self.messageMemory["reward"] is None and self.messageMemory["sPrime"] is None:
+        if self.messageMemory["reward"] is None and self.messageMemory["sPrime"] is None:
             # Case state only
             msgString = self.messageMemory["state"]
         elif self.messageMemory["sPrime"] is None:
             # Case termination
             msgString = np.concatenate(
-                (self.messageMemory["state"], self.messageMemory["action"], self.messageMemory["reward"]))
+                (self.messageMemory["state"], self.messageMemory["reward"]))
         else:
             msgString = np.concatenate(
-                (self.messageMemory["state"], self.messageMemory["action"], self.messageMemory["reward"], self.messageMemory["sPrime"]))
+                (self.messageMemory["state"], self.messageMemory["reward"], self.messageMemory["sPrime"]))
         formatted = np.array(msgString, dtype=np.uint8)
         encoded = np.unpackbits(formatted)
         return encoded
@@ -47,9 +47,12 @@ class CommAgent(DQNAgent):
     def prepareMessage(self, msg, tag: str):
         self.messageMemory[tag] = msg
 
+    def rememberAction(self, action):
+        self.action = action
+
     def sendMessage(self, recieverID: int):
-        print("Agent: ",recieverID)
-        print("Original: ",self.messageMemory)
+        print("Agent: ", recieverID)
+        print("Sent To: ", self.messageMemory)
         msgString = self.encodeMessage()
         self.channel.sendMessage(self.id, recieverID, msgString)
 
@@ -59,16 +62,14 @@ class CommAgent(DQNAgent):
         obsLen = self.n_observations
         parse = {
             "state": None,
-            "action": None,
             "reward": None,
             "sPrime": None
         }
         parse["state"] = decodedMsg[:obsLen]
         if msgLen > self.n_observations:
-            parse["action"] = [decodedMsg[obsLen]]
-            parse["reward"] = [decodedMsg[obsLen+1]]
-            if msgLen > self.n_observations + 2:
-                parse["sPrime"] = decodedMsg[obsLen+2:]
+            parse["reward"] = [decodedMsg[obsLen]]
+            if msgLen > self.n_observations + 1:
+                parse["sPrime"] = decodedMsg[obsLen+1:]
         if parse["reward"] == [255]:
             parse["reward"] = [-1]
         return parse
@@ -76,6 +77,7 @@ class CommAgent(DQNAgent):
     def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder
         parse = self.decodeMessage(msg)
+        parse["action"] = self.action
         for tag, content in parse.items():
             if content is not None:
                 if tag == "action":

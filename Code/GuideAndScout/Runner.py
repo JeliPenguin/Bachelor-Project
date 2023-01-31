@@ -9,6 +9,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
+from typing import List
 import wandb
 
 startingScoutID = GUIDEID + 1
@@ -107,7 +108,9 @@ class Runner():
         if VERBOSE >= 2:
             print("Sending remaining")
         for scoutID in range(startingScoutID, len(agents)):
-            guide.prepareMessage([actions[scoutID]], "action")
+            # Action not included in the message as the agent themselves already
+            # know what action they performed and shouldn't be noised
+            agents[scoutID].rememberAction([actions[scoutID]])
             guide.prepareMessage([reward], "reward")
             guide.prepareMessage(sPrime, "sPrime")
             guide.sendMessage(scoutID)
@@ -123,7 +126,7 @@ class Runner():
         episodicRewards = []
         episodicSteps = []
         print(f"Running {self.TRAIN_EPS} epochs:")
-        for episode in tqdm(range(self.TRAIN_EPS)):
+        for eps in tqdm(range(self.TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State only observerd by the guide
             state = env.reset()

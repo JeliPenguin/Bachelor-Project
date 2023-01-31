@@ -35,7 +35,7 @@ if __name__ == "__main__":
         "RAND_EPS": 1,
         "TEST_MAX_EPS": 1,
         "TRAIN_EPS": 2,
-        "noised": True
+        "noised": False
     }
 
     if len(sys.argv) > 1:
@@ -43,5 +43,5 @@ if __name__ == "__main__":
 
     myRun = Runner(envSetting, saveName="DoubleScout")
     # myRun.randomRun()
-    # myRun.train(log=False)
+    myRun.train(log=False)
     myRun.test()
