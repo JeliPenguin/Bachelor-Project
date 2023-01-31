@@ -1,5 +1,5 @@
 from typing import Tuple
-from const import device
+from const import *
 import torch
 import numpy as np
 
@@ -25,8 +25,15 @@ class CommChannel():
         return (noiseAdded)
 
     def sendMessage(self, senderID, receiverID, msg):
-        # print(tag, msg)
         receiver = self.agents[receiverID]
+        noised = None
         if self.noised:
-            msg = self.addNoise(msg)
+            noised = self.addNoise(msg)
+        if VERBOSE >= 2:
+            # print("Originial Encoded: ", msg)
+            # print("Original Decoded: ", receiver.decodeMessage(msg))
+            # print("Noised Encoded: ", noised)
+            print("Noised Decoded: ", receiver.decodeMessage(noised))
+            print("\n")
+
         receiver.recieveMessage(senderID, msg)

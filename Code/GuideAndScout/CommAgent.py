@@ -9,6 +9,9 @@ class CommAgent(DQNAgent):
     def __init__(self, id, n_observations, actionSpace, batchSize=32, gamma=0.99, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
         super().__init__(id, n_observations, actionSpace,
                          batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
+        self.reset()
+
+    def reset(self):
         self.messageReceived = {}
         self.messageSent = {}
         self.messageMemory = {
@@ -20,6 +23,7 @@ class CommAgent(DQNAgent):
 
     def setChannel(self, channel: CommChannel):
         self.channel = channel
+        self.reset()
 
     def encodeMessage(self):
         """
@@ -44,6 +48,8 @@ class CommAgent(DQNAgent):
         self.messageMemory[tag] = msg
 
     def sendMessage(self, recieverID: int):
+        print("Agent: ",recieverID)
+        print("Original: ",self.messageMemory)
         msgString = self.encodeMessage()
         self.channel.sendMessage(self.id, recieverID, msgString)
 
