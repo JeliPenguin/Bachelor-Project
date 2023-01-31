@@ -2,7 +2,7 @@ from DQN import DQNAgent
 from CommChannel import CommChannel
 import numpy as np
 import torch
-from const import device
+from const import *
 
 
 class CommAgent(DQNAgent):
@@ -51,8 +51,9 @@ class CommAgent(DQNAgent):
         self.action = action
 
     def sendMessage(self, recieverID: int):
-        print("Agent: ", recieverID)
-        print("Sent To: ", self.messageMemory)
+        if getVerbose() >= 2:
+            print("Sending to Agent: ", recieverID)
+            print("Message sent: ", self.messageMemory)
         msgString = self.encodeMessage()
         self.channel.sendMessage(self.id, recieverID, msgString)
 
@@ -78,6 +79,12 @@ class CommAgent(DQNAgent):
         # Assumes message recieved in inorder
         parse = self.decodeMessage(msg)
         parse["action"] = self.action
+        if getVerbose() >= 2:
+            # print("Originial Encoded: ", msg)
+            # print("Original Decoded: ", receiver.decodeMessage(msg))
+            # print("Noised Encoded: ", noised)
+            print("Message Received: ", parse)
+            print("\n")
         for tag, content in parse.items():
             if content is not None:
                 if tag == "action":

@@ -33,9 +33,9 @@ if __name__ == "__main__":
         "column": 5,
         "scoutsNum": 2,
         "RAND_EPS": 1,
-        "TEST_MAX_EPS": 1,
+        "TEST_MAX_EPS": 5,
         "TRAIN_EPS": 2,
-        "noised": False
+        "noised": True
     }
 
     if len(sys.argv) > 1:

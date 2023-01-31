@@ -63,9 +63,9 @@ class Runner():
         self.crtEnvSetting = envSetting
         dump(envSetting, self.envSaveDir)
 
-    def instantiateAgents(self, treatNum: int):
+    def instantiateAgents(self):
         agentNum = 1 + self.scoutsNum
-        n_obs = 2 * (agentNum + treatNum)
+        n_obs = 2 * (agentNum + self.treatNum)
         guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
 
         agents = [guide]
@@ -77,7 +77,7 @@ class Runner():
     def setupRun(self, setupType):
         render = setupType != "train"
         if setupType == "train" or setupType == "rand":
-            agents = self.instantiateAgents(self.treatNum)
+            agents = self.instantiateAgents()
         else:
             agents = load(self.agentsSaveDir)
         channel = CommChannel(agents, self.noised)
@@ -91,7 +91,7 @@ class Runner():
         # Guide only chooses action STAY
         # Scouts choose epsilon greedy action solely on recieved message
         guide = agents[GUIDEID]
-        if VERBOSE >= 2:
+        if getVerbose() >= 2:
             print("Sending only state")
         for scoutID in range(startingScoutID, len(agents)):
             # Other part of the message kept as None
@@ -105,7 +105,7 @@ class Runner():
             sPrime = None
 
         guide: GuideAgent = agents[GUIDEID]
-        if VERBOSE >= 2:
+        if getVerbose() >= 2:
             print("Sending remaining")
         for scoutID in range(startingScoutID, len(agents)):
             # Action not included in the message as the agent themselves already
@@ -118,6 +118,7 @@ class Runner():
         return sPrime, reward, done, info
 
     def train(self, log=True):
+        setVerbose(0)
         if log:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
             wandb.config = self.configuredEnvSetting
@@ -153,7 +154,8 @@ class Runner():
         dump(episodicRewards, self.rewardsSaveDir)
         dump(episodicSteps, self.stepsSaveDir)
 
-    def test(self, loadSavedEnvSetting=False, plot=False):
+    def test(self, loadSavedEnvSetting=True, plot=False):
+        setVerbose(2)
         self.setupEnvSetting(loadSave=loadSavedEnvSetting)
         agents, env = self.setupRun("test")
         env.reset()

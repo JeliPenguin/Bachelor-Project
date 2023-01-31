@@ -28,11 +28,5 @@ class CommChannel():
         receiver = self.agents[receiverID]
         if self.noised:
             msg = self.addNoise(msg)
-        if VERBOSE >= 2:
-            # print("Originial Encoded: ", msg)
-            # print("Original Decoded: ", receiver.decodeMessage(msg))
-            # print("Noised Encoded: ", noised)
-            print("Decoded: ", receiver.decodeMessage(msg))
-            print("\n")
 
         receiver.recieveMessage(senderID, msg)
