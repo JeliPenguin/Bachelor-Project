@@ -1,0 +1,15 @@
+Data integrity Verification Methods: E.g. Checksum
+
+Communication with other scouts about recieved data
+
+History of recieved messages: See if currently recieved message make sense
+- E.g. Detection of a skip in states
+
+Check if data recieved is in predefined range:
+- If agent/treat position are within the grid
+- If reward is within certain range 
+  (Maybe want to fix reward to fix binary, e.g. either -1 or 5, but not robust method)
+
+Training an inner "Message unnoising DL model"?
+- But would be difficult recovering the original message
+- Better approach would be detection of corruption in sent data, then requesting resending
