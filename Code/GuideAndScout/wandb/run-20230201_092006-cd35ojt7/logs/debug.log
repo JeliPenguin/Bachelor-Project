@@ -1,0 +1,25 @@
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_setup.py:_flush():68] Configure stats pid to 1412
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_setup.py:_flush():68] Loading settings from C:\Users\jeffb\.config\wandb\settings
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_setup.py:_flush():68] Loading settings from D:\Bachelor-Project\Code\GuideAndScout\wandb\settings
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_setup.py:_flush():68] Loading settings from environment variables: {'_require_service': 'True'}
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_setup.py:_flush():68] Inferring run settings from compute environment: {'program_relpath': 'Code\\GuideAndScout\\main.py', 'program': 'D:\\Bachelor-Project\\Code\\GuideAndScout\\main.py'}
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_init.py:_log_setup():478] Logging user logs to D:\Bachelor-Project\Code\GuideAndScout\wandb\run-20230201_092006-cd35ojt7\logs\debug.log
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_init.py:_log_setup():479] Logging internal logs to D:\Bachelor-Project\Code\GuideAndScout\wandb\run-20230201_092006-cd35ojt7\logs\debug-internal.log
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_init.py:init():518] calling init triggers
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_init.py:init():521] wandb.init called with sweep_config: {}
+config: {}
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_init.py:init():571] starting backend
+2023-02-01 09:20:06,323 INFO    MainThread:1412 [wandb_init.py:init():575] setting up manager
+2023-02-01 09:20:06,339 INFO    MainThread:1412 [backend.py:_multiprocessing_setup():106] multiprocessing start_methods=spawn, using: spawn
+2023-02-01 09:20:06,345 INFO    MainThread:1412 [wandb_init.py:init():582] backend started and connected
+2023-02-01 09:20:06,345 INFO    MainThread:1412 [wandb_init.py:init():670] updated telemetry
+2023-02-01 09:20:06,376 INFO    MainThread:1412 [wandb_init.py:init():710] communicating run to backend with 60.0 second timeout
+2023-02-01 09:20:06,879 INFO    MainThread:1412 [wandb_run.py:_on_init():2121] communicating current version
+2023-02-01 09:20:07,209 INFO    MainThread:1412 [wandb_run.py:_on_init():2125] got version response 
+2023-02-01 09:20:07,209 INFO    MainThread:1412 [wandb_init.py:init():758] starting run threads in backend
+2023-02-01 09:20:18,236 INFO    MainThread:1412 [wandb_run.py:_console_start():2101] atexit reg
+2023-02-01 09:20:18,236 INFO    MainThread:1412 [wandb_run.py:_redirect():1959] redirect: SettingsConsole.WRAP_RAW
+2023-02-01 09:20:18,236 INFO    MainThread:1412 [wandb_run.py:_redirect():2024] Wrapping output streams.
+2023-02-01 09:20:18,236 INFO    MainThread:1412 [wandb_run.py:_redirect():2046] Redirects installed.
+2023-02-01 09:20:18,236 INFO    MainThread:1412 [wandb_init.py:init():798] run started, returning control to user process
+2023-02-01 09:39:28,006 WARNING MsgRouterThr:1412 [router.py:message_loop():77] message_loop has been closed

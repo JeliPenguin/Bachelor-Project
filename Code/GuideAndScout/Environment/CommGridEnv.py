@@ -29,7 +29,7 @@ class CommGridEnv():
         self.state_space = self.row * self.column
         self.time_penalty = -1
         self.treat_penalty = -1
-        self.treatReward = 5
+        self.treatReward = 10
         self.teamReward = None
         self.toRender = render
         self.toNumpify = numpify
