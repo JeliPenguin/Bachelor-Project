@@ -33,14 +33,13 @@ if __name__ == "__main__":
         "column": 5,
         "scoutsNum": 2,
         "RAND_EPS": 1,
-        "TEST_MAX_EPS": 5,
-        "TRAIN_EPS": 2,
-        "noised": True
+        "TEST_MAX_EPS": 30,
+        "TRAIN_EPS": 5000,
     }
 
     myRun = Runner(envSetting, saveName="DoubleScout")
     # myRun.randomRun()
     setVerbose(0)
-    myRun.train(log=False)
+    # myRun.train()
     setVerbose(2)
     myRun.test()
