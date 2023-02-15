@@ -118,7 +118,7 @@ class Runner():
         return sPrime, reward, done, info
 
     def train(self, log=True):
-        setVerbose(0)
+        
         if log:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
             wandb.config = self.configuredEnvSetting
@@ -155,7 +155,6 @@ class Runner():
         dump(episodicSteps, self.stepsSaveDir)
 
     def test(self, loadSavedEnvSetting=True, plot=False):
-        setVerbose(2)
         self.setupEnvSetting(loadSave=loadSavedEnvSetting)
         agents, env = self.setupRun("test")
         env.reset()
