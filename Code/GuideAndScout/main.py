@@ -29,17 +29,17 @@ defaultEnvSetting = {
 
 if __name__ == "__main__":
     envSetting = {
-        "row": 5,
-        "column": 5,
+        "row": 3,
+        "column": 3,
         "scoutsNum": 2,
         "RAND_EPS": 1,
-        "TEST_MAX_EPS": 10,
+        "TEST_MAX_EPS": 20,
         "TRAIN_EPS": 2,
     }
 
     myRun = Runner(envSetting, saveName="DoubleScout")
     # myRun.randomRun()
-    setVerbose(0)
-    myRun.train(log=False)
-    setVerbose(2)
+    # setVerbose(0)
+    # myRun.train(log=False)
+    setVerbose(3)
     myRun.test()

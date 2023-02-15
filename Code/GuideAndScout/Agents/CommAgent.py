@@ -55,6 +55,8 @@ class CommAgent(DQNAgent):
             print("Sending to Agent: ", recieverID)
             print("Message sent: ", self.messageMemory)
         msgString = self.encodeMessage()
+        if getVerbose() >= 3:
+            print("Encoded sent message: ", len(msgString))
         self.channel.sendMessage(self.id, recieverID, msgString)
 
     def decodeMessage(self, encodedMsg):
@@ -80,9 +82,6 @@ class CommAgent(DQNAgent):
         parse = self.decodeMessage(msg)
         parse["action"] = self.action
         if getVerbose() >= 2:
-            # print("Originial Encoded: ", msg)
-            # print("Original Decoded: ", receiver.decodeMessage(msg))
-            # print("Noised Encoded: ", noised)
             print("Message Received: ", parse)
             print("\n")
         for tag, content in parse.items():

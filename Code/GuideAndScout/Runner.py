@@ -155,7 +155,6 @@ class Runner():
         dump(episodicSteps, self.stepsSaveDir)
 
     def test(self, loadSavedEnvSetting=True, plot=False):
-        setVerbose(0)
         self.setupEnvSetting(loadSave=loadSavedEnvSetting)
         agents, env = self.setupRun("test")
         env.reset()
