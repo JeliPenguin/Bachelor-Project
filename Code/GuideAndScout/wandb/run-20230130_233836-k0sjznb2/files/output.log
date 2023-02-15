@@ -1,0 +1,46 @@
+
+Running 8000 epochs:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  0%|▊                                                                                                                                                                                                  | 33/8000 [01:21<5:27:10,  2.46s/it]
+Traceback (most recent call last):
+  File "d:\Bachelor-Project\Code\GuideAndScout\main.py", line 45, in <module>
+    myRun.train()
+  File "d:\Bachelor-Project\Code\GuideAndScout\Runner.py", line 125, in train
+    scout.memorize()
+  File "d:\Bachelor-Project\Code\GuideAndScout\DQN.py", line 136, in optimize
+    self.optimizer.step()
+  File "C:\Users\jeffb\anaconda3\lib\site-packages\torch\optim\optimizer.py", line 140, in wrapper
+    out = func(*args, **kwargs)
+  File "C:\Users\jeffb\anaconda3\lib\site-packages\torch\optim\optimizer.py", line 23, in _use_grad
+    ret = func(self, *args, **kwargs)
+  File "C:\Users\jeffb\anaconda3\lib\site-packages\torch\optim\adam.py", line 234, in step
+    adam(params_with_grad,
+  File "C:\Users\jeffb\anaconda3\lib\site-packages\torch\optim\adam.py", line 300, in adam
+    func(params,
+  File "C:\Users\jeffb\anaconda3\lib\site-packages\torch\optim\adam.py", line 410, in _single_tensor_adam
+    denom = (exp_avg_sq.sqrt() / bias_correction2_sqrt).add_(eps)
+KeyboardInterrupt

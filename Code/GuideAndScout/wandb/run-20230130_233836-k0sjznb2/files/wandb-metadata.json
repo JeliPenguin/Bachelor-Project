@@ -1,0 +1,50 @@
+{
+    "os": "Windows-10-10.0.19044-SP0",
+    "python": "3.9.13",
+    "heartbeatAt": "2023-01-30T23:38:36.840801",
+    "startedAt": "2023-01-30T23:38:36.132692",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "d:\\Bachelor-Project\\Code\\GuideAndScout\\main.py",
+    "codePath": "Code\\GuideAndScout\\main.py",
+    "git": {
+        "remote": "https://github.com/JeliPenguin/Bachelor-Project.git",
+        "commit": "80c1eedb3bdcf664539f446112923ed6ad93a7d2"
+    },
+    "email": "jeffbenchu@gmail.com",
+    "root": "D:/Bachelor-Project",
+    "host": "DESKTOP-PGRONIN",
+    "username": "jeffb",
+    "executable": "C:\\Users\\jeffb\\anaconda3\\python.exe",
+    "cpu_count": 8,
+    "cpu_count_logical": 16,
+    "cpu_freq": {
+        "current": 2904.0,
+        "min": 0.0,
+        "max": 2904.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2904.0,
+            "min": 0.0,
+            "max": 2904.0
+        }
+    ],
+    "disk": {
+        "total": 398.17089462280273,
+        "used": 16.440631866455078
+    },
+    "gpu": "NVIDIA GeForce RTX 2060",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 2060",
+            "memory_total": 6442450944
+        }
+    ],
+    "memory": {
+        "total": 15.865917205810547
+    }
+}

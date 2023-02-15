@@ -1,30 +1,28 @@
 import torch
-from CommGridEnv import CommGridEnv
-from GuideScout import *
+from Environment.CommGridEnv import CommGridEnv
+from Agents.GuideScout import *
 from const import *
 from joblib import dump, load
-from CommChannel import CommChannel
+from Environment.CommChannel import CommChannel
 from typing import List
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import os
+from datetime import datetime
+from typing import List
+import wandb
+
+startingScoutID = GUIDEID + 1
 
 
 class Runner():
-    def __init__(self, envSetting) -> None:
-        envSetting = self.setupEnvSetting(envSetting)
-        self.row = envSetting["row"]
-        self.column = envSetting["column"]
-        self.treatNum = envSetting["treatNum"]
-        self.scoutsNum = envSetting["scoutsNum"]
-        self.noised = envSetting["noised"]
-        self.TRAIN_EPS = envSetting["TRAIN_EPS"]
-        self.TEST_MAX_EPS = envSetting["TEST_MAX_EPS"]
-        self.RAND_EPS = envSetting["RAND_EPS"]
-        self.agentsSaveDir = "./Saves/agents"
-        self.rewardsSaveDir = "./Saves/episodicRewards"
+    def __init__(self, envSetting, saveName="Default") -> None:
+        self.crtEnvSetting = envSetting
+        self.constructSaves(saveName, envSetting)
+        self.setupEnvSetting()
 
-    def setupEnvSetting(self, envSetting):
-        defaultEnvSetting = {
+    def setupEnvSetting(self, loadSave=False):
+        self.configuredEnvSetting = {
             "row": 5,
             "column": 5,
             "treatNum": 2,
@@ -34,15 +32,42 @@ class Runner():
             "TEST_MAX_EPS": 30,
             "RAND_EPS": 1,
         }
-        for key in envSetting.keys():
-            defaultEnvSetting[key] = envSetting[key]
-        return defaultEnvSetting
+        if loadSave:
+            envSetting = load(self.envSaveDir)
+        else:
+            envSetting = self.crtEnvSetting
 
-    def instantiateAgents(self, treatNum: int):
+        for key in envSetting.keys():
+            self.configuredEnvSetting[key] = envSetting[key]
+
+        self.row = self.configuredEnvSetting["row"]
+        self.column = self.configuredEnvSetting["column"]
+        self.treatNum = self.configuredEnvSetting["treatNum"]
+        self.scoutsNum = self.configuredEnvSetting["scoutsNum"]
+        self.noised = self.configuredEnvSetting["noised"]
+        self.TRAIN_EPS = self.configuredEnvSetting["TRAIN_EPS"]
+        self.TEST_MAX_EPS = self.configuredEnvSetting["TEST_MAX_EPS"]
+        self.RAND_EPS = self.configuredEnvSetting["RAND_EPS"]
+
+    def constructSaves(self, saveName, envSetting):
+        # now = datetime.now()
+        # dt_string = now.strftime("-%m-%d_%H-%M")
+        # saveFolderDir = "./Saves/" + saveName + dt_string + "/"
+        saveFolderDir = "./Saves/" + saveName + "/"
+        if not os.path.exists(saveFolderDir):
+            os.mkdir(saveFolderDir)
+        self.agentsSaveDir = saveFolderDir + "agents"
+        self.rewardsSaveDir = saveFolderDir + "episodicRewards"
+        self.stepsSaveDir = saveFolderDir + "episodicSteps"
+        self.envSaveDir = saveFolderDir + "envSetting"
+        self.crtEnvSetting = envSetting
+        dump(envSetting, self.envSaveDir)
+
+    def instantiateAgents(self):
         agentNum = 1 + self.scoutsNum
-        n_obs = 2 * (agentNum + treatNum)
+        n_obs = 2 * (agentNum + self.treatNum)
         guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
-        startingScoutID = GUIDEID + 1
+
         agents = [guide]
         for i in range(self.scoutsNum):
             scout = ScoutAgent(startingScoutID + i, n_obs, ACTIONSPACE)
@@ -52,7 +77,7 @@ class Runner():
     def setupRun(self, setupType):
         render = setupType != "train"
         if setupType == "train" or setupType == "rand":
-            agents = self.instantiateAgents(self.treatNum)
+            agents = self.instantiateAgents()
         else:
             agents = load(self.agentsSaveDir)
         channel = CommChannel(agents, self.noised)
@@ -66,39 +91,49 @@ class Runner():
         # Guide only chooses action STAY
         # Scouts choose epsilon greedy action solely on recieved message
         guide = agents[GUIDEID]
-        for scoutID in range(1, len(agents)):
+        if getVerbose() >= 2:
+            print("SENDING ONLY STATE")
+        for scoutID in range(startingScoutID, len(agents)):
+            # Other part of the message kept as None
             guide.prepareMessage(state, "state")
             guide.sendMessage(scoutID)
         actions: List[int] = [a.choose_action().item() for a in agents]
         # One timestep forward in the environment based on agents' actions
         sPrime, reward, done, info = env.step(actions)
         if done:
-            # -1  Reserved for indication of termination
-
-            #sPrime = [None]
+            # indicates end of episode
             sPrime = None
 
         guide: GuideAgent = agents[GUIDEID]
-        for scoutID in range(GUIDEID+1, len(agents)):
-            guide.prepareMessage([actions[scoutID]], "action")
+        if getVerbose() >= 2:
+            print("SENDING REWARD AND SPRIME")
+        for scoutID in range(startingScoutID, len(agents)):
+            # Action not included in the message as the agent themselves already
+            # know what action they performed and shouldn't be noised
+            agents[scoutID].rememberAction([actions[scoutID]])
             guide.prepareMessage([reward], "reward")
             guide.prepareMessage(sPrime, "sPrime")
             guide.sendMessage(scoutID)
 
         return sPrime, reward, done, info
 
-    def train(self):
+    def train(self, log=True):
+        
+        if log:
+            wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
+            wandb.config = self.configuredEnvSetting
         agents, env = self.setupRun("train")
-        guide = agents[0]
-        scouts = agents[1:]
+        scouts = agents[startingScoutID:]
         episodicRewards = []
+        episodicSteps = []
         print(f"Running {self.TRAIN_EPS} epochs:")
-        for _ in tqdm(range(self.TRAIN_EPS)):
+        for eps in tqdm(range(self.TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State only observerd by the guide
             state = env.reset()
             done = False
             episodicReward = 0
+            step = 0
             while not done:
                 sPrime, reward, done, _ = self.doStep(
                     agents, env, state)
@@ -108,13 +143,20 @@ class Runner():
                 # Move to the next state
                 state = sPrime
                 episodicReward += reward
+                step += 1
 
+            if log:
+                wandb.log({"episodicStep": step})
+                wandb.log({"episodicReward": episodicReward})
+            episodicSteps.append(step)
             episodicRewards.append(episodicReward)
-            #print(f"Episode {eps} done, Eps Reward: {episodicReward}")
         dump(agents, self.agentsSaveDir)
         dump(episodicRewards, self.rewardsSaveDir)
+        dump(episodicSteps, self.stepsSaveDir)
 
-    def test(self, plot=False):
+    def test(self, loadSavedEnvSetting=True, plot=False):
+        setVerbose(0)
+        self.setupEnvSetting(loadSave=loadSavedEnvSetting)
         agents, env = self.setupRun("test")
         env.reset()
         state = env.numpifiedState()

@@ -1,5 +1,5 @@
 from Runner import Runner
-import sys
+from const import setVerbose
 """
 Gridworld with treats, a Guide agent and a Scout agent
 
@@ -29,17 +29,17 @@ defaultEnvSetting = {
 
 if __name__ == "__main__":
     envSetting = {
-        "row": 10,
-        "column": 10,
+        "row": 5,
+        "column": 5,
         "scoutsNum": 2,
-        "RAND_EPS": 10,
-        "TEST_MAX_EPS": 30
+        "RAND_EPS": 1,
+        "TEST_MAX_EPS": 10,
+        "TRAIN_EPS": 2,
     }
 
-    if len(sys.argv) > 1:
-        envSetting["TRAIN_EPS"] = int(sys.argv[1])
-
-    myRun = Runner(envSetting)
+    myRun = Runner(envSetting, saveName="DoubleScout")
     # myRun.randomRun()
-    myRun.train()
+    setVerbose(0)
+    myRun.train(log=False)
+    setVerbose(2)
     myRun.test()
