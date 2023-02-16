@@ -4,6 +4,7 @@ import time
 from const import *
 from typing import List, Tuple
 from Agents.CommAgent import CommAgent
+from Agents.GuideScout import GUIDEID
 
 
 def decodeAction(num: int):
@@ -30,6 +31,7 @@ class CommGridEnv():
         self.time_penalty = -1
         self.treat_penalty = -1
         self.treatReward = 10
+        self.doneReward = 50
         self.teamReward = None
         self.toRender = render
         self.toNumpify = numpify
@@ -107,17 +109,19 @@ class CommGridEnv():
         return initState
 
     def distanceToTreats(self) -> float:
-        """ Returns minimum of all agent's euclidean distance to closest treat """
+        """ Returns maximum of all scout's euclidean distance to closest treat """
         distances = []
-        for treatLoc in self.treatLocations:
+        for i in range(GUIDEID+1, self.agentNum):
             sumDist = 0
-            for i in range(self.agentNum):
+            for treatLoc in self.treatLocations:
                 crtAgentState = self.agentInfo[i]["state"]
                 euclidDistance = np.sqrt(
                     (crtAgentState[0] - treatLoc[0])**2 + (crtAgentState[1] - treatLoc[1])**2)
                 sumDist += euclidDistance
             distances.append(sumDist)
-        return min(distances)
+            self.agentInfo[i]["sumDist"] = sumDist
+        # return 0
+        return max(distances)
 
     def rewardFunction(self, ateTreat: bool, done: bool) -> float:
         """
@@ -125,28 +129,34 @@ class CommGridEnv():
             done: Boolean indicating state of the game
             Cannot set reward >= 255 due to message encodings
         """
-        if done or ateTreat:
+        if done:
+            return self.doneReward
+        if ateTreat:
             return self.treatReward
         reward = self.time_penalty
-        # if ateTreat:
-        #     reward += self.treatReward
         # # Penalise for remaining treats
-        #reward -= self.distanceToTreats()
+        reward -= self.distanceToTreats()
         # Penalised for number of remaining treats and wasted time
         #reward += self.treat_penalty * self.treatCount
         return reward
 
     def takeAction(self, state: tuple, action: int):
+        """ 
+        Given current state as x,y coordinates and an action, return coordinate of resulting new state
+        """
         def tupleAdd(xs, ys): return tuple(x + y for x, y in zip(xs, ys))
         movement = decodeAction(action)
         newState = tupleAdd(state, movement)
-        ''' If the new state is outside then remain at same state
+        ''' If the new state is outside the grid then remain at same state
             Allows agents to be on same state'''
         if min(newState) < 0 or max(newState) > min(self.row-1, self.column-1) or self.grid[newState[0]][newState[1]] in self.agentSymbol:
             return state
         return newState
 
     def agentStep(self, agentID: int, action: int):
+        """
+        Taking one step for an agent specified by its ID
+        """
         s = self.agentInfo[agentID]["state"]
         sPrime = self.takeAction(s, action)
         ateTreat = False
@@ -167,6 +177,9 @@ class CommGridEnv():
         return sPrime, reward
 
     def step(self, actions: List[int]):
+        """
+        Taking one step for all agents in the environment
+        """
         sPrimes: List[tuple] = []
         rewards: List[float] = []
         for agentID, agentAction in enumerate(actions):
@@ -175,24 +188,22 @@ class CommGridEnv():
             sPrimes.append(sPrime)
             rewards.append(reward)
         self.steps += 1
-
-        # Guide scout modification
-        # Team reward is solely the reward of the scout
-        teamReward = max(rewards)
-        for agentID in range(self.agentNum):
-            self.agentInfo[agentID]["reward"] = teamReward
+        self.teamReward = sum(rewards[1:])
 
         if self.toRender:
             self.render()
 
         if self.toNumpify:
             sPrimes = self.numpifiedState()
-        return sPrimes, teamReward, self.done, self.agentInfo
+        return sPrimes, self.teamReward, self.done, self.agentInfo
 
     def write(self, content):
         sys.stdout.write("\r%s" % content)
 
     def formatGridInfo(self):
+        """
+        Generateing the environment grid with text symbols
+        """
         toWrite = "-"*(self.column * 2 + 3) + "\n"
         for row in range(self.row):
             rowContent = "| "
@@ -205,16 +216,21 @@ class CommGridEnv():
         return toWrite
 
     def formatAgentInfo(self):
-        toWrite = ""
+        """
+        Generating detailed information for each agent
+        """
+        toWrite = f"Team Reward: {self.teamReward}\n"
         for agentID in range(self.agentNum):
             agentState = self.agentInfo[agentID]["state"]
             lastAction = ACTIONSPACE[self.agentInfo[agentID]["last-action"]]
-            reward = self.agentInfo[agentID]["reward"]
             symbol = self.agentInfo[agentID]["symbol"]
+            sumDist = None
+            if "sumDist" in self.agentInfo[agentID]:
+                sumDist = self.agentInfo[agentID]["sumDist"]
             aType = "Guide"
             if symbol != "G":
                 aType = "Scout"
-            toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}, Step Reward: {reward}\n"
+            toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}, Sum dist: {sumDist}\n"
         return toWrite
 
     def render(self, inplace=False):

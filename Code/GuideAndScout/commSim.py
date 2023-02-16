@@ -1,30 +1,41 @@
-from Agents.DQN import DQNAgent
-from Environment.CommChannel import CommChannel
 import numpy as np
-import torch
-from const import *
+from typing import *
+import hashlib
+
+sampleMessage = {
+    'state': np.array([8., 6., 4., 2., 4., 3., 8., 2., 3., 8.]),
+    'reward': [255],
+    'sPrime': np.array([8., 6., 4., 1., 4., 2., 8., 2., 3., 8.])}
+
+sampleMessage2 = {
+    'state': np.array([8., 6., 4., 2., 4., 3., 8., 2., 3., 8.]),
+    'reward': [255],
+    'sPrime': None}
+
+sampleMessage3 = {
+    'state': np.array([8., 6., 4., 2., 8., 2., 3., 8.]),
+    'reward': [255],
+    'sPrime': None}
 
 
-class CommAgent(DQNAgent):
-    def __init__(self, id, n_observations, actionSpace, batchSize=32, gamma=0.99, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
-        super().__init__(id, n_observations, actionSpace,
-                         batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
-        self.reset()
+class simulation():
+    def __init__(self) -> None:
+        self.messageMemory = sampleMessage2
+        self.messageReceived = {}
+        self.n_observations = len(self.messageMemory["state"])
+        self.action = [1]
         self.k = 8
 
-    def reset(self):
-        self.messageReceived = {}
-        self.messageSent = {}
-        self.action = None
-        self.messageMemory = {
-            "state": None,
-            "reward": None,
-            "sPrime": None
-        }
-
-    def setChannel(self, channel: CommChannel):
-        self.channel = channel
-        self.reset()
+    def addNoise(self, msg, p=0.05):
+        noise = np.random.random(msg.shape) < p
+        noiseAdded = []
+        for m, n in zip(msg, noise):
+            if n == 0:
+                noiseAdded.append(m)
+            else:
+                noiseAdded.append(1-m)
+        noiseAdded = np.array(noiseAdded)
+        return (noiseAdded)
 
     def genChecksum(self, encoded: str):
         # Normal encoded length 168
@@ -94,32 +105,6 @@ class CommAgent(DQNAgent):
         encoded = np.unpackbits(formatted)
         return encoded
 
-    def prepareMessage(self, msg, tag: str):
-        self.messageMemory[tag] = msg
-
-    def rememberAction(self, action):
-        self.action = action
-
-    def stringify(self, encoded):
-        encodedString = ""
-        for b in encoded:
-            encodedString += str(b)
-        return encodedString
-
-    def sendMessage(self, recieverID: int):
-        if getVerbose() >= 2:
-            print("Sending to Agent: ", recieverID)
-            print("Message sent: ", self.messageMemory)
-        msgString = self.encodeMessage()
-        stringified = self.stringify(msgString)
-        checksum = self.genChecksum(stringified)
-        msgString = np.concatenate([checksum, msgString])
-        # if getVerbose() >= 3:
-        #     print("Checksum: ", checksum)
-        if getVerbose() >= 4:
-            print("Encoded sent message: ", msgString)
-        self.channel.sendMessage(self.id, recieverID, msgString)
-
     def decodeMessage(self, encodedMsg):
         decodedMsg = np.packbits(encodedMsg[self.k:])
         msgLen = len(decodedMsg)
@@ -138,30 +123,31 @@ class CommAgent(DQNAgent):
             parse["reward"] = [-1]
         return parse
 
+    def stringify(self, encoded):
+        encodedString = ""
+        for b in encoded:
+            encodedString += str(b)
+        return encodedString
+
+    def sendMessage(self):
+        print("Message sent: ", self.messageMemory)
+        encoded = self.encodeMessage()
+        # print("Message Sent Encoded: ", encoded)
+        stringified = self.stringify(encoded)
+        checksum = self.genChecksum(stringified)
+        encoded = np.concatenate([checksum, encoded])
+        # print("Concatenated sent msg: ", encoded)
+        # encoded = self.addNoise(encoded)
+        self.recieveMessage(0, encoded)
+
     def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder
         stringified = self.stringify(msg)
-        if getVerbose() >= 3:
-            print("Checksum check: ", self.checkChecksum(stringified))
+        print("Checksum check: ", self.checkChecksum(stringified))
         parse = self.decodeMessage(msg)
         parse["action"] = self.action
-        if getVerbose() >= 2:
-            print("Message Received: ", parse)
-            print("\n")
-        for tag, content in parse.items():
-            if content is not None:
-                if tag == "action":
-                    content = torch.tensor(
-                        [content], dtype=torch.int64, device=device)
-                elif tag == "state" or tag == "sPrime":
-                    if content is not None:
-                        content = torch.tensor(content, dtype=torch.float32,
-                                               device=device).unsqueeze(0)
-                elif tag == "reward":
-                    content = torch.tensor(
-                        content, dtype=torch.float32, device=device)
-            if senderID not in self.messageReceived:
-                self.messageReceived[senderID] = {tag: content}
-            else:
-                self.messageReceived[senderID][tag] = (content)
-        # print(self.messageReceived)
+        print("Msg Recieved: ", parse)
+
+
+t = simulation()
+t.sendMessage()

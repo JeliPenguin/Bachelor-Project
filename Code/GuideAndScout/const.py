@@ -12,6 +12,7 @@ ACTIONSPACE = ["UP", "LEFT", "RIGHT", "DOWN", "STAY"]
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+
 VERBOSE = 0
 
 

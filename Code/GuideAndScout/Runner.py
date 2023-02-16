@@ -26,8 +26,9 @@ class Runner():
             "row": 5,
             "column": 5,
             "treatNum": 2,
-            "scoutsNum": 1,
+            "scoutsNum": 2,
             "noised": False,
+            "noiseP": 0.005,
             "TRAIN_EPS": 5,
             "TEST_MAX_EPS": 30,
             "RAND_EPS": 1,
@@ -45,6 +46,7 @@ class Runner():
         self.treatNum = self.configuredEnvSetting["treatNum"]
         self.scoutsNum = self.configuredEnvSetting["scoutsNum"]
         self.noised = self.configuredEnvSetting["noised"]
+        self.noiseP = self.configuredEnvSetting["noiseP"]
         self.TRAIN_EPS = self.configuredEnvSetting["TRAIN_EPS"]
         self.TEST_MAX_EPS = self.configuredEnvSetting["TEST_MAX_EPS"]
         self.RAND_EPS = self.configuredEnvSetting["RAND_EPS"]
@@ -80,7 +82,7 @@ class Runner():
             agents = self.instantiateAgents()
         else:
             agents = load(self.agentsSaveDir)
-        channel = CommChannel(agents, self.noised)
+        channel = CommChannel(agents, self.noiseP,self.noised)
         channel.setupChannel()
         env = CommGridEnv(self.row, self.column, agents, self.treatNum,
                           render)
@@ -90,9 +92,11 @@ class Runner():
     def doStep(self, agents, env: CommGridEnv, state):
         # Guide only chooses action STAY
         # Scouts choose epsilon greedy action solely on recieved message
+        if getVerbose() >= 1:
+            print("---------------------------------------\n")
         guide = agents[GUIDEID]
         if getVerbose() >= 2:
-            print("SENDING ONLY STATE")
+            print("SENDING CURRENT STATE")
         for scoutID in range(startingScoutID, len(agents)):
             # Other part of the message kept as None
             guide.prepareMessage(state, "state")
@@ -117,9 +121,9 @@ class Runner():
 
         return sPrime, reward, done, info
 
-    def train(self, log=True):
-        
-        if log:
+    def train(self, verbose=0,wandbLog=True):
+        setVerbose(verbose)
+        if wandbLog:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
             wandb.config = self.configuredEnvSetting
         agents, env = self.setupRun("train")
@@ -145,7 +149,7 @@ class Runner():
                 episodicReward += reward
                 step += 1
 
-            if log:
+            if wandbLog:
                 wandb.log({"episodicStep": step})
                 wandb.log({"episodicReward": episodicReward})
             episodicSteps.append(step)
@@ -155,7 +159,6 @@ class Runner():
         dump(episodicSteps, self.stepsSaveDir)
 
     def test(self, loadSavedEnvSetting=True, plot=False):
-        setVerbose(0)
         self.setupEnvSetting(loadSave=loadSavedEnvSetting)
         agents, env = self.setupRun("test")
         env.reset()

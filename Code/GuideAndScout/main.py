@@ -15,31 +15,31 @@ Communication currently with no noise added
 
 """
 defaultEnvSetting = {
-    "row": 5,
-    "column": 5,
-    "treatNum": 2,
-    "scoutsNum": 1,
-    "noised": False,
-    "TRAIN_EPS": 5,
-    "TEST_MAX_EPS": 30,
-    "RAND_EPS": 1,
+            "row": 5,
+            "column": 5,
+            "treatNum": 2,
+            "scoutsNum": 2,
+            "noised": False,
+            "noiseP": 0.01,
+            "TRAIN_EPS": 5,
+            "TEST_MAX_EPS": 30,
+            "RAND_EPS": 1,
 }
 """
 
 
 if __name__ == "__main__":
     envSetting = {
-        "row": 5,
-        "column": 5,
-        "scoutsNum": 2,
-        "RAND_EPS": 1,
+        "row": 3,
+        "column": 3,
+        "RAND_EPS": 5,
+        "noised": False,
         "TEST_MAX_EPS": 10,
-        "TRAIN_EPS": 2,
+        "TRAIN_EPS": 5000,
     }
 
-    myRun = Runner(envSetting, saveName="DoubleScout")
+    myRun = Runner(envSetting)
     # myRun.randomRun()
-    setVerbose(0)
-    myRun.train(log=False)
-    setVerbose(2)
-    myRun.test()
+    myRun.train(wandbLog=False)
+    # setVerbose(1)
+    # myRun.test()
