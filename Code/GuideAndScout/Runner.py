@@ -121,8 +121,8 @@ class Runner():
 
         return sPrime, reward, done, info
 
-    def train(self, wandbLog=True):
-
+    def train(self, verbose=0,wandbLog=True):
+        setVerbose(verbose)
         if wandbLog:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
             wandb.config = self.configuredEnvSetting
