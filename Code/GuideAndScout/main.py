@@ -38,9 +38,9 @@ if __name__ == "__main__":
         "TRAIN_EPS": 2,
     }
 
-    myRun = Runner(envSetting, saveName="DoubleScout")
+    myRun = Runner(envSetting)
     # myRun.randomRun()
     setVerbose(0)
-    myRun.train(log=False)
+    myRun.train(wandbLog=False)
     setVerbose(3)
     myRun.test()

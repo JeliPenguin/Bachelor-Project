@@ -121,9 +121,9 @@ class Runner():
 
         return sPrime, reward, done, info
 
-    def train(self, log=True):
+    def train(self, wandbLog=True):
 
-        if log:
+        if wandbLog:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
             wandb.config = self.configuredEnvSetting
         agents, env = self.setupRun("train")
@@ -149,7 +149,7 @@ class Runner():
                 episodicReward += reward
                 step += 1
 
-            if log:
+            if wandbLog:
                 wandb.log({"episodicStep": step})
                 wandb.log({"episodicReward": episodicReward})
             episodicSteps.append(step)
