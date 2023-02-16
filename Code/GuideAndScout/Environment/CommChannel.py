@@ -5,16 +5,17 @@ import numpy as np
 
 
 class CommChannel():
-    def __init__(self, agents, noised=False) -> None:
+    def __init__(self, agents, noiseP, noised=False) -> None:
         self.noised = noised
+        self.noiseP = noiseP
         self.agents = agents
 
     def setupChannel(self):
         for agent in self.agents:
             agent.setChannel(self)
 
-    def addNoise(self, msg, p=0.005):
-        noise = np.random.random(msg.shape) < p
+    def addNoise(self, msg):
+        noise = np.random.random(msg.shape) < self.noiseP
         noiseAdded = []
         for m, n in zip(msg, noise):
             if n == 0:

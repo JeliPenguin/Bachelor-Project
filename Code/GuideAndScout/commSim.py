@@ -106,7 +106,7 @@ class simulation():
         return encoded
 
     def decodeMessage(self, encodedMsg):
-        decodedMsg = np.packbits(encodedMsg)
+        decodedMsg = np.packbits(encodedMsg[self.k:])
         msgLen = len(decodedMsg)
         obsLen = self.n_observations
         parse = {
@@ -130,14 +130,14 @@ class simulation():
         return encodedString
 
     def sendMessage(self):
-        # print("Message sent: ", self.messageMemory)
+        print("Message sent: ", self.messageMemory)
         encoded = self.encodeMessage()
         # print("Message Sent Encoded: ", encoded)
         stringified = self.stringify(encoded)
         checksum = self.genChecksum(stringified)
-        encoded = np.concatenate([encoded, checksum])
+        encoded = np.concatenate([checksum, encoded])
         # print("Concatenated sent msg: ", encoded)
-        encoded = self.addNoise(encoded)
+        # encoded = self.addNoise(encoded)
         self.recieveMessage(0, encoded)
 
     def recieveMessage(self, senderID: int, msg):
@@ -146,7 +146,7 @@ class simulation():
         print("Checksum check: ", self.checkChecksum(stringified))
         parse = self.decodeMessage(msg)
         parse["action"] = self.action
-        # print("Msg Recieved: ", parse)
+        print("Msg Recieved: ", parse)
 
 
 t = simulation()

@@ -10,6 +10,7 @@ class CommAgent(DQNAgent):
         super().__init__(id, n_observations, actionSpace,
                          batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
         self.reset()
+        self.k = 8
 
     def reset(self):
         self.messageReceived = {}
@@ -24,6 +25,55 @@ class CommAgent(DQNAgent):
     def setChannel(self, channel: CommChannel):
         self.channel = channel
         self.reset()
+
+    def genChecksum(self, encoded: str):
+        # Normal encoded length 168
+        # Terminal state encoded length 88
+        res = []
+
+        digitSum = 0
+        for i in range(int(len(encoded)/self.k)):
+            digitSum += int(encoded[self.k*i:self.k*(i+1)], 2)
+
+        digitSum = bin(digitSum)[2:]
+
+        if(len(digitSum) > self.k):
+            x = len(digitSum)-self.k
+            digitSum = bin(int(digitSum[0:x], 2)+int(digitSum[x:], 2))[2:]
+        if(len(digitSum) < self.k):
+            digitSum = '0'*(self.k-len(digitSum))+digitSum
+
+        for i in digitSum:
+            if(i == '1'):
+                res.append(0)
+            else:
+                res.append(1)
+
+        return np.array(res, dtype=np.uint8)
+
+    def checkChecksum(self, receivedMsg: str):
+        # receivedMsg includes checksum as the final 8 bits
+
+        digitSum = 0
+        for i in range(int(len(receivedMsg)/self.k)):
+            # print(receivedMsg[self.k*i:self.k*(i+1)])
+            digitSum += int(receivedMsg[self.k*i:self.k*(i+1)], 2)
+
+        digitSum = bin(digitSum)[2:]
+
+        # Adding the overflow bits
+        if(len(digitSum) > self.k):
+            x = len(digitSum)-self.k
+            digitSum = bin(
+                int(digitSum[0:x], 2)+int(digitSum[x:], 2))[2:]
+
+        checksum = 0
+        for i in digitSum:
+            if(i == '1'):
+                checksum += 0
+            else:
+                checksum += 1
+        return checksum == 0
 
     def encodeMessage(self):
         """
@@ -50,17 +100,28 @@ class CommAgent(DQNAgent):
     def rememberAction(self, action):
         self.action = action
 
+    def stringify(self, encoded):
+        encodedString = ""
+        for b in encoded:
+            encodedString += str(b)
+        return encodedString
+
     def sendMessage(self, recieverID: int):
         if getVerbose() >= 2:
             print("Sending to Agent: ", recieverID)
             print("Message sent: ", self.messageMemory)
         msgString = self.encodeMessage()
-        if getVerbose() >= 3:
-            print("Encoded sent message: ", len(msgString))
+        stringified = self.stringify(msgString)
+        checksum = self.genChecksum(stringified)
+        msgString = np.concatenate([checksum, msgString])
+        # if getVerbose() >= 3:
+        #     print("Checksum: ", checksum)
+        if getVerbose() >= 4:
+            print("Encoded sent message: ", msgString)
         self.channel.sendMessage(self.id, recieverID, msgString)
 
     def decodeMessage(self, encodedMsg):
-        decodedMsg = np.packbits(encodedMsg)
+        decodedMsg = np.packbits(encodedMsg[self.k:])
         msgLen = len(decodedMsg)
         obsLen = self.n_observations
         parse = {
@@ -79,6 +140,9 @@ class CommAgent(DQNAgent):
 
     def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder
+        stringified = self.stringify(msg)
+        if getVerbose() >= 3:
+            print("Checksum check: ", self.checkChecksum(stringified))
         parse = self.decodeMessage(msg)
         parse["action"] = self.action
         if getVerbose() >= 2:
