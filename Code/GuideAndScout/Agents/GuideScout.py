@@ -10,8 +10,8 @@ GUIDEID = 0
 
 
 class ScoutAgent(CommAgent):
-    def __init__(self, id, obs_dim, actionSpace) -> None:
-        super().__init__(id, obs_dim, actionSpace, epsDecay=10000)
+    def __init__(self, id, obs_dim, actionSpace,epsDecay) -> None:
+        super().__init__(id, obs_dim, actionSpace, epsDecay)
         self.symbol = str(id)
 
     def choose_greedy_action(self) -> torch.Tensor:
