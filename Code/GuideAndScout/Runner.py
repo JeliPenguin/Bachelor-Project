@@ -93,12 +93,13 @@ class Runner():
         # Guide only chooses action STAY
         # Scouts choose epsilon greedy action solely on recieved message
         if getVerbose() >= 1:
-            print("---------------------------------------\n")
+            print("=================================================================\n")
         guide = agents[GUIDEID]
         if getVerbose() >= 2:
-            print("SENDING CURRENT STATE")
+            print("SENDING CURRENT STATE ONLY")
         for scoutID in range(startingScoutID, len(agents)):
             # Other part of the message kept as None
+            guide.clearPreparedMessage()
             guide.prepareMessage(state, "state")
             guide.sendMessage(scoutID)
         actions: List[int] = [a.choose_action().item() for a in agents]
@@ -110,7 +111,8 @@ class Runner():
 
         guide: GuideAgent = agents[GUIDEID]
         if getVerbose() >= 2:
-            print("SENDING REWARD AND SPRIME")
+            # print("SENDING REWARD AND SPRIME")
+            print("MSG SENT:")
         for scoutID in range(startingScoutID, len(agents)):
             # Action not included in the message as the agent themselves already
             # know what action they performed and shouldn't be noised
@@ -118,7 +120,7 @@ class Runner():
             guide.prepareMessage([reward], "reward")
             guide.prepareMessage(sPrime, "sPrime")
             guide.sendMessage(scoutID)
-            # Remember msgRecieved
+            # Remember msg recieved
             agents[scoutID].rememberRecieved()
 
         return sPrime, reward, done, info

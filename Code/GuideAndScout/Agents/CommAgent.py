@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from const import *
 from collections import deque
+from copy import deepcopy
 
 
 class CommAgent(DQNAgent):
@@ -96,6 +97,13 @@ class CommAgent(DQNAgent):
         encoded = np.unpackbits(formatted)
         return encoded
 
+    def clearPreparedMessage(self):
+        self.messageMemory = {
+            "state": None,
+            "reward": None,
+            "sPrime": None
+        }
+
     def prepareMessage(self, msg, tag: str):
         self.messageMemory[tag] = msg
 
@@ -149,11 +157,12 @@ class CommAgent(DQNAgent):
         # Stroing 5 past messages max
         if len(self.recievedHistory) >= 5:
             self.recievedHistory.popleft()
-        self.recievedHistory.append(self.messageReceived)
+        self.recievedHistory.append(deepcopy(self.messageReceived))
         if getVerbose() >= 3:
             print("Recieved history: ")
             for hist in self.recievedHistory:
                 print(hist)
+            print("\n")
 
     def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder

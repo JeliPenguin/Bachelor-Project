@@ -203,7 +203,9 @@ class CommGridEnv():
         """
         Generateing the environment grid with text symbols
         """
-        toWrite = "-"*(self.column * 2 + 3) + "\n"
+        toWrite = ""
+        # toWrite += "="*20+"\n"
+        toWrite += "-"*(self.column * 2 + 3) + "\n"
         for row in range(self.row):
             rowContent = "| "
             for column in range(self.column):
