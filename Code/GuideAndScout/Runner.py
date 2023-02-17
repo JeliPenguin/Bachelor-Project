@@ -82,7 +82,7 @@ class Runner():
             agents = self.instantiateAgents()
         else:
             agents = load(self.agentsSaveDir)
-        channel = CommChannel(agents, self.noiseP,self.noised)
+        channel = CommChannel(agents, self.noiseP, self.noised)
         channel.setupChannel()
         env = CommGridEnv(self.row, self.column, agents, self.treatNum,
                           render)
@@ -121,7 +121,7 @@ class Runner():
 
         return sPrime, reward, done, info
 
-    def train(self, verbose=0,wandbLog=True):
+    def train(self, verbose=0, wandbLog=True):
         setVerbose(verbose)
         if wandbLog:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
@@ -148,6 +148,9 @@ class Runner():
                 state = sPrime
                 episodicReward += reward
                 step += 1
+
+            for scout in scouts:
+                scout.updateEps()
 
             if wandbLog:
                 wandb.log({"episodicStep": step})

@@ -61,32 +61,32 @@ class DQNAgent():
             n_observations, self.n_actions).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
-        self.memory = ReplayMemory(10000)
-        self.steps_done = 0
-
-    # Convert to tensors
+        self.memory = ReplayMemory(50000)
+        self.eps_done = 0
 
     def memorize(self, stateTensor: torch.Tensor, actionTensor: torch.Tensor, sPrimeTensor: torch.Tensor, rewardTensor: torch.Tensor):
         self.memory.push(stateTensor, actionTensor, sPrimeTensor, rewardTensor)
 
     def choose_greedy_action(self, s: torch.Tensor) -> torch.Tensor:
-        with torch.no_grad():
-            # return np.argmax(self.q_table[s])
-            return self.policy_net(s).max(1)[1].view(1, 1)
+        # with torch.no_grad():
+        #     return self.policy_net(s).max(1)[1].view(1, 1)
+        return NotImplementedError
 
     def choose_random_action(self) -> torch.Tensor:
         randAction = np.random.randint(0, self.n_actions)
         return torch.tensor([[randAction]], device=device)
 
     def choose_action(self, s: torch.Tensor) -> torch.Tensor:
-        p = np.random.random()
-        epsThresh = self.epsEnd + \
-            (self.epsStart - self.epsEnd) * \
-            np.exp(-1. * self.steps_done / self.epsDecay)
-        self.steps_done += 1
-        if p > epsThresh:
-            return self.choose_greedy_action(s)
-        return self.choose_random_action()
+        # p = np.random.random()
+
+        # epsThresh = self.epsEnd + \
+        #     (self.epsStart - self.epsEnd) * \
+        #     np.exp(-1. * self.eps_done / self.epsDecay)
+        # self.eps_done += 1
+        # if p > epsThresh:
+        #     return self.choose_greedy_action(s)
+        # return self.choose_random_action()
+        return NotImplementedError
 
     def optimize(self):
         if len(self.memory) < self.batchSize:

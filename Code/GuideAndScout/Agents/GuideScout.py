@@ -8,9 +8,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 GUIDEID = 0
 
+
 class ScoutAgent(CommAgent):
     def __init__(self, id, obs_dim, actionSpace) -> None:
-        super().__init__(id, obs_dim, actionSpace)
+        super().__init__(id, obs_dim, actionSpace, epsDecay=10000)
         self.symbol = str(id)
 
     def choose_greedy_action(self) -> torch.Tensor:
@@ -22,8 +23,8 @@ class ScoutAgent(CommAgent):
         p = np.random.random()
         epsThresh = self.epsEnd + \
             (self.epsStart - self.epsEnd) * \
-            np.exp(-1. * self.steps_done / self.epsDecay)
-        self.steps_done += 1
+            np.exp(-1. * self.eps_done / self.epsDecay)
+        # print(f"EpsThresh: {epsThresh} Eps done: {self.eps_done}")
         if p > epsThresh:
             return self.choose_greedy_action()
         return self.choose_random_action()
@@ -39,6 +40,9 @@ class ScoutAgent(CommAgent):
         rewardTensor = msgDict["reward"]
         super().memorize(stateTensor, actionTensor, sPrimeTensor, rewardTensor)
 
+    def updateEps(self):
+        self.eps_done += 1
+
 
 class GuideAgent(CommAgent):
     def __init__(self, id, obs_dim, actionSpace) -> None:
@@ -52,6 +56,3 @@ class GuideAgent(CommAgent):
     def choose_random_action(self) -> torch.Tensor:
         randAction = STAY
         return torch.tensor([[randAction]], device=device)
-
-
-
