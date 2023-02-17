@@ -1,9 +1,14 @@
 Data integrity Verification Methods: E.g. Checksum
 
-Communication with other scouts about recieved data
+If checksum incorrect:
+- Communicate with other scout
+- If other scout also has incorrect then STAY and wait for next step
+- If other scout has correct checksum, then ask them to send msg
+- However, same issue as the communication channel would be noised
 
 History of recieved messages: See if currently recieved message make sense
 - E.g. Detection of a skip in states
+- Attempt in fixing the current message
 
 Check if data recieved is in predefined range:
 - If agent/treat position are within the grid
