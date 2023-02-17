@@ -172,6 +172,7 @@ class CommGridEnv():
             self.grid[sPrime[0]][sPrime[1]] = agentSymbol
 
         reward = self.rewardFunction(ateTreat, self.done)
+        self.agentInfo[agentID]["indiReward"] = reward
 
         return sPrime, reward
 
@@ -226,12 +227,18 @@ class CommGridEnv():
             lastAction = ACTIONSPACE[self.agentInfo[agentID]["last-action"]]
             symbol = self.agentInfo[agentID]["symbol"]
             sumDist = None
+            indiReward = None
             if "sumDist" in self.agentInfo[agentID]:
                 sumDist = self.agentInfo[agentID]["sumDist"]
+            if "indiReward" in self.agentInfo[agentID]:
+                indiReward = self.agentInfo[agentID]["indiReward"]
             aType = "Guide"
             if symbol != "G":
                 aType = "Scout"
-            toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}, Sum dist: {sumDist}\n"
+            toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}, Sum dist: {sumDist}"
+            if agentID != GUIDEID:
+                toWrite+=f", Indi Reward: {indiReward}"
+            toWrite += "\n"
         return toWrite
 
     def render(self, inplace=False):

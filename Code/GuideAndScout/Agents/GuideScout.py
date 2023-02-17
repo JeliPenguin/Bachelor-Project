@@ -30,27 +30,6 @@ class ScoutAgent(CommAgent):
             return self.choose_greedy_action()
         return self.choose_random_action()
 
-    def tensorize(self, msg):
-        stateTensor = None
-        actionTensor = None
-        sPrimeTensor = None
-        rewardTensor = None
-        for tag, content in msg.items():
-            if content is not None:
-                if tag == "action":
-                    actionTensor = torch.tensor(
-                        [content], dtype=torch.int64, device=device)
-                elif tag == "state":
-                    stateTensor = torch.tensor(content, dtype=torch.float32,
-                                               device=device).unsqueeze(0)
-                elif tag == "sPrime":
-                    sPrimeTensor = torch.tensor(content, dtype=torch.float32,
-                                                device=device).unsqueeze(0)
-                elif tag == "reward":
-                    rewardTensor = torch.tensor(
-                        content, dtype=torch.float32, device=device)
-        return stateTensor, actionTensor, sPrimeTensor, rewardTensor
-
     def memorize(self):
         """
             Unpacks message recieved from Guide and memorize the states
