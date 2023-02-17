@@ -6,7 +6,7 @@ from const import *
 
 
 class CommAgent(DQNAgent):
-    def __init__(self, id, n_observations, actionSpace, batchSize=32, gamma=0.99, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
+    def __init__(self, id, n_observations, actionSpace, batchSize=128, gamma=1, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
         super().__init__(id, n_observations, actionSpace,
                          batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
         self.reset()
@@ -78,7 +78,7 @@ class CommAgent(DQNAgent):
     def encodeMessage(self):
         """
         Message Order: State - Reward - sPrime each as unsigned 8 bits
-        Unsigned 255 used to represents -1
+        Unsigned 129-255 used to represents -127 - -1
         """
         if self.messageMemory["reward"] is None and self.messageMemory["sPrime"] is None:
             # Case state only
@@ -134,13 +134,14 @@ class CommAgent(DQNAgent):
             parse["reward"] = [decodedMsg[obsLen]]
             if msgLen > self.n_observations + 1:
                 parse["sPrime"] = decodedMsg[obsLen+1:]
-        if parse["reward"] == [255]:
-            parse["reward"] = [-1]
+        if parse["reward"] is not None and parse["reward"][0] > 129:
+            parse["reward"] = [parse["reward"][0]-256]
         return parse
 
     def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder
         stringified = self.stringify(msg)
+        # Not doing anything with checksum for now
         if getVerbose() >= 3:
             print("Checksum check: ", self.checkChecksum(stringified))
         parse = self.decodeMessage(msg)

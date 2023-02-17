@@ -29,8 +29,8 @@ class CommGridEnv():
         self.action_space = ACTIONSPACE
         self.state_space = self.row * self.column
         self.time_penalty = -1
-        self.treat_penalty = -1
-        self.treatReward = 10
+        self.treat_penalty = -5
+        self.treatReward = 20
         self.doneReward = 50
         self.teamReward = None
         self.toRender = render
@@ -121,7 +121,7 @@ class CommGridEnv():
             distances.append(sumDist)
             self.agentInfo[i]["sumDist"] = sumDist
         # return 0
-        return max(distances)
+        return int(max(distances))
 
     def rewardFunction(self, ateTreat: bool, done: bool) -> float:
         """
@@ -135,9 +135,8 @@ class CommGridEnv():
             return self.treatReward
         reward = self.time_penalty
         # # Penalise for remaining treats
-        reward -= self.distanceToTreats()
-        # Penalised for number of remaining treats and wasted time
-        #reward += self.treat_penalty * self.treatCount
+        # reward -= self.distanceToTreats()
+        reward += self.treat_penalty * self.treatCount
         return reward
 
     def takeAction(self, state: tuple, action: int):

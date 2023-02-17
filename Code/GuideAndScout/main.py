@@ -30,16 +30,18 @@ defaultEnvSetting = {
 
 if __name__ == "__main__":
     envSetting = {
-        "row": 3,
-        "column": 3,
+        "row": 4,
+        "column": 4,
         "RAND_EPS": 5,
         "noised": False,
+        "scoutsNum": 2,
         "TEST_MAX_EPS": 10,
         "TRAIN_EPS": 5000,
     }
 
-    myRun = Runner(envSetting)
+    myRun = Runner(envSetting, saveName="Two")
+    # setVerbose(2)
     # myRun.randomRun()
-    myRun.train(wandbLog=False)
-    # setVerbose(1)
-    # myRun.test()
+    # myRun.train(wandbLog=False)
+    setVerbose(1)
+    myRun.test()
