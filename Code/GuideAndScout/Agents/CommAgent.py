@@ -14,6 +14,7 @@ class CommAgent(DQNAgent):
 
     def reset(self):
         self.messageReceived = {}
+        self.recievedHistory = {}
         self.messageSent = {}
         self.action = None
         self.messageMemory = {
@@ -138,13 +139,18 @@ class CommAgent(DQNAgent):
             parse["reward"] = [parse["reward"][0]-256]
         return parse
 
+    def attemptRecovery(self):
+        # Attempt in recovering original message by looking at history of correctly received messages
+        pass
+
     def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder
         stringified = self.stringify(msg)
-        # Not doing anything with checksum for now
+        msgChecksum = self.checkChecksum(stringified)
         if getVerbose() >= 3:
-            print("Checksum check: ", self.checkChecksum(stringified))
+            print("Checksum check: ", msgChecksum)
         parse = self.decodeMessage(msg)
+        # Action independent of the message as agent itself knows what action has been executed (deterministic policy)
         parse["action"] = self.action
         if getVerbose() >= 2:
             print("Message Received: ", parse)
