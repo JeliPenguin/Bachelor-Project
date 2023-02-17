@@ -77,8 +77,8 @@ class Runner():
         return agents
 
     def setupRun(self, setupType):
-        render = setupType != "train"
-        if setupType == "train" or setupType == "rand":
+        render = getVerbose() != 0
+        if setupType == "train" or setupType == "random":
             agents = self.instantiateAgents()
         else:
             agents = load(self.agentsSaveDir)
@@ -118,6 +118,8 @@ class Runner():
             guide.prepareMessage([reward], "reward")
             guide.prepareMessage(sPrime, "sPrime")
             guide.sendMessage(scoutID)
+            # Remember msgRecieved
+            agents[scoutID].rememberRecieved()
 
         return sPrime, reward, done, info
 
@@ -161,7 +163,8 @@ class Runner():
         dump(episodicRewards, self.rewardsSaveDir)
         dump(episodicSteps, self.stepsSaveDir)
 
-    def test(self, loadSavedEnvSetting=True, plot=False):
+    def test(self, verbose=2, loadSavedEnvSetting=True, plot=False):
+        setVerbose(verbose)
         self.setupEnvSetting(loadSave=loadSavedEnvSetting)
         agents, env = self.setupRun("test")
         env.reset()
@@ -179,8 +182,9 @@ class Runner():
             plt.plot(rewardPlot)
             plt.show()
 
-    def randomRun(self):
-        agents, env = self.setupRun("rand")
+    def randomRun(self, verbose=1):
+        setVerbose(verbose)
+        agents, env = self.setupRun("random")
         stp = 0
         env.reset()
         state = env.numpifiedState()

@@ -3,6 +3,7 @@ from Environment.CommChannel import CommChannel
 import numpy as np
 import torch
 from const import *
+from collections import deque
 
 
 class CommAgent(DQNAgent):
@@ -14,7 +15,7 @@ class CommAgent(DQNAgent):
 
     def reset(self):
         self.messageReceived = {}
-        self.recievedHistory = {}
+        self.recievedHistory = deque()
         self.messageSent = {}
         self.action = None
         self.messageMemory = {
@@ -142,6 +143,17 @@ class CommAgent(DQNAgent):
     def attemptRecovery(self):
         # Attempt in recovering original message by looking at history of correctly received messages
         pass
+
+    def rememberRecieved(self):
+        # Make a copy of all recieved messages
+        # Stroing 5 past messages max
+        if len(self.recievedHistory) >= 5:
+            self.recievedHistory.popleft()
+        self.recievedHistory.append(self.messageReceived)
+        if getVerbose() >= 3:
+            print("Recieved history: ")
+            for hist in self.recievedHistory:
+                print(hist)
 
     def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder

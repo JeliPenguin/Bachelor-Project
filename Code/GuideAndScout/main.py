@@ -35,13 +35,12 @@ if __name__ == "__main__":
         "RAND_EPS": 5,
         "noised": False,
         "scoutsNum": 2,
-        "TEST_MAX_EPS": 10,
-        "TRAIN_EPS": 100000,
+        "TEST_MAX_EPS": 5,
+        # "TRAIN_EPS": 100000,
+        "TRAIN_EPS": 2,
     }
 
     myRun = Runner(envSetting, saveName="Test")
-    # setVerbose(2)
     # myRun.randomRun()
     myRun.train(wandbLog=False)
-    setVerbose(1)
     myRun.test()
