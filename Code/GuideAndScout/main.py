@@ -27,20 +27,37 @@ defaultEnvSetting = {
 }
 """
 
+envSetting = {
+    "row": 4,
+    "column": 4,
+    "RAND_EPS": 5,
+    "noised": False,
+    "scoutsNum": 2,
+    "TEST_MAX_EPS": 20,
+}
+
+
+def quickTest():
+    envSetting["TRAIN_EPS"] = 2
+    envSetting["TEST_MAX_EPS"] = 10
+    myRun = Runner(envSetting, saveName="Test")
+    myRun.train(wandbLog=False)
+    myRun.test(verbose=1)
+
+
+def randomRun():
+    myRun = Runner(envSetting, saveName="Random")
+    myRun.randomRun(verbose=2)
+
+
+def actualRun():
+    envSetting["TRAIN_EPS"] = 100000
+    myRun = Runner(envSetting, saveName="Two")
+    myRun.train(wandbLog=False)
+    myRun.test(verbose=1)
+
 
 if __name__ == "__main__":
-    envSetting = {
-        "row": 4,
-        "column": 4,
-        "RAND_EPS": 5,
-        "noised": False,
-        "scoutsNum": 2,
-        "TEST_MAX_EPS": 20,
-        # "TRAIN_EPS": 100000,
-        "TRAIN_EPS": 2,
-    }
-
-    myRun = Runner(envSetting, saveName="Test")
-    # myRun.randomRun(verbose=2)
-    # myRun.train(wandbLog=False)
-    myRun.test(verbose=1)
+    quickTest()
+    # randomRun()
+    # actualRun()

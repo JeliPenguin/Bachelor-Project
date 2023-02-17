@@ -102,7 +102,7 @@ class CommAgent(DQNAgent):
     def encodeMessage(self):
         """
         Message Order: State - Reward - sPrime each as unsigned 8 bits
-        Unsigned 129-255 used to represents -127 - -1
+        For rewards, unsigned 129-255 used to represents -127 - -1
         """
         if self.messageMemory["reward"] is None and self.messageMemory["sPrime"] is None:
             # Case state only

@@ -1,6 +1,5 @@
 import numpy as np
 import sys
-import time
 from const import *
 from typing import List, Tuple
 from Agents.CommAgent import CommAgent
@@ -30,7 +29,7 @@ class CommGridEnv():
         self.state_space = self.row * self.column
         self.time_penalty = -1
         self.treat_penalty = -5
-        self.treatReward = 20
+        self.treatReward = 10
         self.doneReward = 50
         self.teamReward = None
         self.toRender = render
@@ -127,15 +126,15 @@ class CommGridEnv():
         """
             ateTreat: Boolean indicating whether a treat has been eaten
             done: Boolean indicating state of the game
-            Cannot set reward >= 255 due to message encodings
+            Cannot set reward > 128 due to message encodings
         """
         if done:
             return self.doneReward
         if ateTreat:
             return self.treatReward
         reward = self.time_penalty
-        # # Penalise for remaining treats
         # reward -= self.distanceToTreats()
+        # Penalise for remaining treats
         reward += self.treat_penalty * self.treatCount
         return reward
 
@@ -237,7 +236,7 @@ class CommGridEnv():
                 aType = "Scout"
             toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}, Sum dist: {sumDist}"
             if agentID != GUIDEID:
-                toWrite+=f", Indi Reward: {indiReward}"
+                toWrite += f", Indi Reward: {indiReward}"
             toWrite += "\n"
         return toWrite
 

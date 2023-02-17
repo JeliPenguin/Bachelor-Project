@@ -1,0 +1,2 @@
+FIX REWARD FUNCTION
+- Prioritize multiple agents getting a treat at the same time
