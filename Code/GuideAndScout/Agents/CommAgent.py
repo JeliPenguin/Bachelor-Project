@@ -168,17 +168,6 @@ class CommAgent(DQNAgent):
             print("Message Received: ", parse)
             print("\n")
         for tag, content in parse.items():
-            if content is not None:
-                if tag == "action":
-                    content = torch.tensor(
-                        [content], dtype=torch.int64, device=device)
-                elif tag == "state" or tag == "sPrime":
-                    if content is not None:
-                        content = torch.tensor(content, dtype=torch.float32,
-                                               device=device).unsqueeze(0)
-                elif tag == "reward":
-                    content = torch.tensor(
-                        content, dtype=torch.float32, device=device)
             if senderID not in self.messageReceived:
                 self.messageReceived[senderID] = {tag: content}
             else:

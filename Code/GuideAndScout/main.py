@@ -35,12 +35,12 @@ if __name__ == "__main__":
         "RAND_EPS": 5,
         "noised": False,
         "scoutsNum": 2,
-        "TEST_MAX_EPS": 5,
+        "TEST_MAX_EPS": 6,
         # "TRAIN_EPS": 100000,
         "TRAIN_EPS": 2,
     }
 
     myRun = Runner(envSetting, saveName="Test")
-    # myRun.randomRun()
+    # myRun.randomRun(verbose=2)
     myRun.train(wandbLog=False)
-    myRun.test()
+    myRun.test(verbose=3)
