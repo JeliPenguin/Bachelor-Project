@@ -17,12 +17,26 @@ startingScoutID = GUIDEID + 1
 
 class Runner():
     def __init__(self, envSetting, saveName="Default") -> None:
-        self.crtEnvSetting = envSetting
+        self._crtEnvSetting = envSetting
         self.constructSaves(saveName, envSetting)
         self.setupEnvSetting()
 
+    def constructSaves(self, saveName, envSetting):
+        # now = datetime.now()
+        # dt_string = now.strftime("-%m-%d_%H-%M")
+        # saveFolderDir = "./Saves/" + saveName + dt_string + "/"
+        saveFolderDir = "./Saves/" + saveName + "/"
+        if not os.path.exists(saveFolderDir):
+            os.mkdir(saveFolderDir)
+        self._agentsSaveDir = saveFolderDir + "agents"
+        self._rewardsSaveDir = saveFolderDir + "episodicRewards"
+        self._stepsSaveDir = saveFolderDir + "episodicSteps"
+        self._envSaveDir = saveFolderDir + "envSetting"
+        self._crtEnvSetting = envSetting
+        dump(envSetting, self._envSaveDir)
+
     def setupEnvSetting(self, loadSave=False):
-        self.configuredEnvSetting = {
+        self._configuredEnvSetting = {
             "row": 5,
             "column": 5,
             "treatNum": 2,
@@ -34,45 +48,32 @@ class Runner():
             "RAND_EPS": 1,
         }
         if loadSave:
-            envSetting = load(self.envSaveDir)
+            envSetting = load(self._envSaveDir)
         else:
-            envSetting = self.crtEnvSetting
+            envSetting = self._crtEnvSetting
 
         for key in envSetting.keys():
-            self.configuredEnvSetting[key] = envSetting[key]
+            self._configuredEnvSetting[key] = envSetting[key]
 
-        self.row = self.configuredEnvSetting["row"]
-        self.column = self.configuredEnvSetting["column"]
-        self.treatNum = self.configuredEnvSetting["treatNum"]
-        self.scoutsNum = self.configuredEnvSetting["scoutsNum"]
-        self.noised = self.configuredEnvSetting["noised"]
-        self.noiseP = self.configuredEnvSetting["noiseP"]
-        self.TRAIN_EPS = self.configuredEnvSetting["TRAIN_EPS"]
-        self.TEST_MAX_EPS = self.configuredEnvSetting["TEST_MAX_EPS"]
-        self.RAND_EPS = self.configuredEnvSetting["RAND_EPS"]
-
-    def constructSaves(self, saveName, envSetting):
-        # now = datetime.now()
-        # dt_string = now.strftime("-%m-%d_%H-%M")
-        # saveFolderDir = "./Saves/" + saveName + dt_string + "/"
-        saveFolderDir = "./Saves/" + saveName + "/"
-        if not os.path.exists(saveFolderDir):
-            os.mkdir(saveFolderDir)
-        self.agentsSaveDir = saveFolderDir + "agents"
-        self.rewardsSaveDir = saveFolderDir + "episodicRewards"
-        self.stepsSaveDir = saveFolderDir + "episodicSteps"
-        self.envSaveDir = saveFolderDir + "envSetting"
-        self.crtEnvSetting = envSetting
-        dump(envSetting, self.envSaveDir)
+        self._row = self._configuredEnvSetting["row"]
+        self._column = self._configuredEnvSetting["column"]
+        self._treatNum = self._configuredEnvSetting["treatNum"]
+        self._scoutsNum = self._configuredEnvSetting["scoutsNum"]
+        self._noised = self._configuredEnvSetting["noised"]
+        self._noiseP = self._configuredEnvSetting["noiseP"]
+        self._TRAIN_EPS = self._configuredEnvSetting["TRAIN_EPS"]
+        self._TEST_MAX_EPS = self._configuredEnvSetting["TEST_MAX_EPS"]
+        self._RAND_EPS = self._configuredEnvSetting["RAND_EPS"]
 
     def instantiateAgents(self):
-        agentNum = 1 + self.scoutsNum
-        n_obs = 2 * (agentNum + self.treatNum)
+        agentNum = 1 + self._scoutsNum
+        n_obs = 2 * (agentNum + self._treatNum)
         guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
 
         agents = [guide]
-        for i in range(self.scoutsNum):
-            scout = ScoutAgent(startingScoutID + i, n_obs, ACTIONSPACE,epsDecay=10000)
+        for i in range(self._scoutsNum):
+            scout = ScoutAgent(startingScoutID + i, n_obs,
+                               ACTIONSPACE, epsDecay=10000)
             agents.append(scout)
         return agents
 
@@ -81,10 +82,10 @@ class Runner():
         if setupType == "train" or setupType == "random":
             agents = self.instantiateAgents()
         else:
-            agents = load(self.agentsSaveDir)
-        channel = CommChannel(agents, self.noiseP, self.noised)
+            agents = load(self._agentsSaveDir)
+        channel = CommChannel(agents, self._noiseP, self._noised)
         channel.setupChannel()
-        env = CommGridEnv(self.row, self.column, agents, self.treatNum,
+        env = CommGridEnv(self._row, self._column, agents, self._treatNum,
                           render)
 
         return agents, env
@@ -129,13 +130,13 @@ class Runner():
         setVerbose(verbose)
         if wandbLog:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
-            wandb.config = self.configuredEnvSetting
+            wandb.config = self._configuredEnvSetting
         agents, env = self.setupRun("train")
         scouts = agents[startingScoutID:]
         episodicRewards = []
         episodicSteps = []
-        print(f"Running {self.TRAIN_EPS} epochs:")
-        for eps in tqdm(range(self.TRAIN_EPS)):
+        print(f"Running {self._TRAIN_EPS} epochs:")
+        for eps in tqdm(range(self._TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State only observerd by the guide
             state = env.reset()
@@ -161,9 +162,9 @@ class Runner():
                 wandb.log({"episodicReward": episodicReward})
             episodicSteps.append(step)
             episodicRewards.append(episodicReward)
-        dump(agents, self.agentsSaveDir)
-        dump(episodicRewards, self.rewardsSaveDir)
-        dump(episodicSteps, self.stepsSaveDir)
+        dump(agents, self._agentsSaveDir)
+        dump(episodicRewards, self._rewardsSaveDir)
+        dump(episodicSteps, self._stepsSaveDir)
 
     def test(self, verbose=2, loadSavedEnvSetting=True, plot=False):
         setVerbose(verbose)
@@ -173,14 +174,14 @@ class Runner():
         state = env.numpifiedState()
         done = False
         step = 0
-        while not done and step < self.TEST_MAX_EPS:
+        while not done and step < self._TEST_MAX_EPS:
             sPrime, _, done, _ = self.doStep(
                 agents, env, state)
             state = sPrime
             step += 1
 
         if plot:
-            rewardPlot = load(self.rewardsSaveDir)
+            rewardPlot = load(self._rewardsSaveDir)
             plt.plot(rewardPlot)
             plt.show()
 
@@ -191,7 +192,7 @@ class Runner():
         env.reset()
         state = env.numpifiedState()
         done = False
-        while not done and stp < self.RAND_EPS:
+        while not done and stp < self._RAND_EPS:
             sPrime, _, done, _ = self.doStep(
                 agents, env, state)
             state = sPrime
