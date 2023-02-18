@@ -128,9 +128,9 @@ class CommGridEnv():
             done: Boolean indicating state of the game
             Cannot set reward > 128 due to message encodings
         """
-        if done:
-            return self.doneReward
-        if ateTreat:
+        # if done:
+        #     return self.doneReward
+        if ateTreat or done:
             return self.treatReward
         reward = self.time_penalty
         # reward -= self.distanceToTreats()
