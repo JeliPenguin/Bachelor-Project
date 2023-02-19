@@ -24,13 +24,10 @@ class CommGridEnv():
         self._treatNum = treatNum
         self._agents = agents
         self._agentNum = len(agents)
-        self._agentSymbol = set([str(agent.getSymbol()) for agent in self._agents])
+        self._agentSymbol = set([str(agent.getSymbol())
+                                for agent in self._agents])
         self._action_space = ACTIONSPACE
         self._state_space = self._row * self._column
-        self._time_penalty = -1
-        self._treat_penalty = -5
-        self._treatReward = 10
-        self._doneReward = 50
         self._teamReward = None
         self._toRender = render
         self._toNumpify = numpify
@@ -173,11 +170,32 @@ class CommGridEnv():
     #     return reward
 
     def rewardFunction(self, sPrimes, ateTreatRecord, doneRecord):
-        # Calculate reward in simulatneous manner
+        """ 
+        Calculate reward in simulatneous manner and returns a unified team reward
+        ateTreat: Boolean indicating whether a treat has been eaten
+        done: Boolean indicating state of the game
+        Cannot set reward > 128 due to message encodings
+        """
+        time_penalty = -1
+        treat_penalty = -2
+        treatReward = 10
+        # doneReward = 50
 
-        for id in self._agentInfo.keys():
-            self._agentInfo[id]["indiReward"] = 5
-        return 5
+        # if doneRecord[-1]:
+        #     return doneReward
+
+        reward = 0
+        for ateTreat in ateTreatRecord:
+            if ateTreat:
+                reward += treatReward
+
+        # Penalised for taking extra timesteps
+        reward += time_penalty
+        # Penalise for remaining treats
+        reward += treat_penalty * self._treatCount
+        # reward -= self.distanceToTreats()
+
+        return reward
 
     def step(self, actions: List[int]):
         """
@@ -186,6 +204,8 @@ class CommGridEnv():
         sPrimes: List[tuple] = []
         ateTreatRecord = []
         doneRecord = []
+        # Agents take turn to do their action
+        # Guide -> Scout1 -> Scout2
         for agentID, agentAction in enumerate(actions):
             self._agentInfo[agentID]["last-action"] = agentAction
             sPrime, ateTreat, done = self.agentStep(agentID, agentAction)
@@ -233,18 +253,18 @@ class CommGridEnv():
             agentState = self._agentInfo[agentID]["state"]
             lastAction = ACTIONSPACE[self._agentInfo[agentID]["last-action"]]
             symbol = self._agentInfo[agentID]["symbol"]
-            sumDist = None
-            indiReward = None
-            if "sumDist" in self._agentInfo[agentID]:
-                sumDist = self._agentInfo[agentID]["sumDist"]
-            if "indiReward" in self._agentInfo[agentID]:
-                indiReward = self._agentInfo[agentID]["indiReward"]
+            # sumDist = None
+            # indiReward = None
+            # if "sumDist" in self._agentInfo[agentID]:
+            #     sumDist = self._agentInfo[agentID]["sumDist"]
+            # if "indiReward" in self._agentInfo[agentID]:
+            #     indiReward = self._agentInfo[agentID]["indiReward"]
             aType = "Guide"
             if symbol != "G":
                 aType = "Scout"
-            toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}, Sum dist: {sumDist}"
-            if agentID != GUIDEID:
-                toWrite += f", Indi Reward: {indiReward}"
+            toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}"
+            # if agentID != GUIDEID:
+            #     toWrite += f", Sum dist: {sumDist}, Indi Reward: {indiReward}"
             toWrite += "\n"
         return toWrite
 
