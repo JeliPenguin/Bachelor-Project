@@ -42,7 +42,7 @@ def quickTest():
     envSetting["TEST_MAX_EPS"] = 20
     myRun = Runner(envSetting, saveName="Test")
     myRun.train(wandbLog=False)
-    myRun.test(verbose=1)
+    myRun.test(verbose=2)
 
 
 def randomRun():
@@ -58,6 +58,6 @@ def actualRun():
 
 
 if __name__ == "__main__":
-    quickTest()
+    # quickTest()
     # randomRun()
-    # actualRun()
+    actualRun()

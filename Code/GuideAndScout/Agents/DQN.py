@@ -14,7 +14,7 @@ class DeepNetwork(nn.Module):
 
     def __init__(self, n_observations, n_actions):
         super(DeepNetwork, self).__init__()
-        self.model = nn.Sequential(
+        self._model = nn.Sequential(
             nn.Linear(n_observations, 128),
             nn.ReLU(),
             nn.Linear(128, 128),
@@ -23,75 +23,82 @@ class DeepNetwork(nn.Module):
         )
 
     def forward(self, x):
-        return self.model(x)
+        return self._model(x)
 
 
 class ReplayMemory():
 
     def __init__(self, capacity):
-        self.memory = deque([], maxlen=capacity)
+        self._memory = deque([], maxlen=capacity)
 
     def push(self, *args):
         """Save a transition"""
-        self.memory.append(Transition(*args))
+        self._memory.append(Transition(*args))
 
     def sample(self, batch_size):
-        return random.sample(self.memory, batch_size)
+        return random.sample(self._memory, batch_size)
 
     def __len__(self):
-        return len(self.memory)
+        return len(self._memory)
 
 
 class DQNAgent():
     def __init__(self, id: int, n_observations: int, actionSpace: List[str], batchSize=128, gamma=0.99, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=1e-4) -> None:
-        self.id = id
-        self.symbol = str(id)
-        self.n_observations = n_observations
-        self.n_actions = len(actionSpace)
-        self.batchSize = batchSize
-        self.gamma = gamma
-        self.epsStart = epsStart
-        self.epsEnd = epsEnd
-        self.epsDecay = epsDecay
-        self.tau = tau
-        self.lr = lr
-        self.policy_net = DeepNetwork(
-            n_observations, self.n_actions).to(device)
-        self.target_net = DeepNetwork(
-            n_observations, self.n_actions).to(device)
-        self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
-        self.memory = ReplayMemory(50000)
-        self.eps_done = 0
+        self._id = id
+        self._symbol = str(id)
+        self._n_observations = n_observations
+        self._n_actions = len(actionSpace)
+        self._batchSize = batchSize
+        self._gamma = gamma
+        self._epsStart = epsStart
+        self._epsEnd = epsEnd
+        self._epsDecay = epsDecay
+        self._tau = tau
+        self._lr = lr
+        self._policy_net = DeepNetwork(
+            n_observations, self._n_actions).to(device)
+        self._target_net = DeepNetwork(
+            n_observations, self._n_actions).to(device)
+        self._target_net.load_state_dict(self._policy_net.state_dict())
+        self._optimizer = optim.Adam(self._policy_net.parameters(), lr=lr)
+        self._memory = ReplayMemory(50000)
+        self._eps_done = 0
+
+    def getID(self):
+        return self._id
+
+    def getSymbol(self):
+        return self._symbol
 
     def memorize(self, stateTensor: torch.Tensor, actionTensor: torch.Tensor, sPrimeTensor: torch.Tensor, rewardTensor: torch.Tensor):
-        self.memory.push(stateTensor, actionTensor, sPrimeTensor, rewardTensor)
+        self._memory.push(stateTensor, actionTensor,
+                          sPrimeTensor, rewardTensor)
 
     def choose_greedy_action(self, s: torch.Tensor) -> torch.Tensor:
         # with torch.no_grad():
-        #     return self.policy_net(s).max(1)[1].view(1, 1)
+        #     return self._policy_net(s).max(1)[1].view(1, 1)
         return NotImplementedError
 
     def choose_random_action(self) -> torch.Tensor:
-        randAction = np.random.randint(0, self.n_actions)
+        randAction = np.random.randint(0, self._n_actions)
         return torch.tensor([[randAction]], device=device)
 
     def choose_action(self, s: torch.Tensor) -> torch.Tensor:
         # p = np.random.random()
 
-        # epsThresh = self.epsEnd + \
-        #     (self.epsStart - self.epsEnd) * \
-        #     np.exp(-1. * self.eps_done / self.epsDecay)
-        # self.eps_done += 1
+        # epsThresh = self._epsEnd + \
+        #     (self._epsStart - self._epsEnd) * \
+        #     np.exp(-1. * self._eps_done / self._epsDecay)
+        # self._eps_done += 1
         # if p > epsThresh:
         #     return self.choose_greedy_action(s)
         # return self.choose_random_action()
         return NotImplementedError
 
     def optimize(self):
-        if len(self.memory) < self.batchSize:
+        if len(self._memory) < self._batchSize:
             return
-        transitions = self.memory.sample(self.batchSize)
+        transitions = self._memory.sample(self._batchSize)
         batch = Transition(*zip(*transitions))
 
         # Compute a mask of non-final states and concatenate the batch elements
@@ -107,7 +114,7 @@ class DQNAgent():
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
-        state_action_values = self.policy_net(
+        state_action_values = self._policy_net(
             state_batch).gather(1, action_batch)
 
         # Compute V(s_{t+1}) for all next states.
@@ -115,13 +122,13 @@ class DQNAgent():
         # on the "older" target_net; selecting their best reward with max(1)[0].
         # This is merged based on the mask, such that we'll have either the expected
         # state value or 0 in case the state was final.
-        next_state_values = torch.zeros(self.batchSize, device=device)
+        next_state_values = torch.zeros(self._batchSize, device=device)
         with torch.no_grad():
-            next_state_values[non_final_mask] = self.target_net(
+            next_state_values[non_final_mask] = self._target_net(
                 non_final_next_states).max(1)[0]
         # Compute the expected Q values
         expected_state_action_values = (
-            next_state_values * self.gamma) + reward_batch
+            next_state_values * self._gamma) + reward_batch
 
         # Compute Huber loss
         criterion = nn.MSELoss()
@@ -129,16 +136,16 @@ class DQNAgent():
                          expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
-        self.optimizer.zero_grad()
+        self._optimizer.zero_grad()
         loss.backward()
         # In-place gradient clipping
-        torch.nn.utils.clip_grad_value_(self.policy_net.parameters(), 100)
-        self.optimizer.step()
+        torch.nn.utils.clip_grad_value_(self._policy_net.parameters(), 100)
+        self._optimizer.step()
         # Soft update of the target network's weights
         # θ′ ← τ θ + (1 −τ )θ′
-        target_net_state_dict = self.target_net.state_dict()
-        policy_net_state_dict = self.policy_net.state_dict()
+        target_net_state_dict = self._target_net.state_dict()
+        policy_net_state_dict = self._policy_net.state_dict()
         for key in policy_net_state_dict:
             target_net_state_dict[key] = policy_net_state_dict[key] * \
-                self.tau + target_net_state_dict[key]*(1-self.tau)
-        self.target_net.load_state_dict(target_net_state_dict)
+                self._tau + target_net_state_dict[key]*(1-self._tau)
+        self._target_net.load_state_dict(target_net_state_dict)
