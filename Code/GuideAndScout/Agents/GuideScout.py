@@ -10,21 +10,22 @@ GUIDEID = 0
 
 
 class ScoutAgent(CommAgent):
-    def __init__(self, id, obs_dim, actionSpace) -> None:
-        super().__init__(id, obs_dim, actionSpace, epsDecay=10000)
-        self.symbol = str(id)
+    def __init__(self, id, obs_dim, actionSpace, epsDecay) -> None:
+        super().__init__(id, obs_dim, actionSpace, epsDecay)
+        self._symbol = str(id)
 
     def choose_greedy_action(self) -> torch.Tensor:
-        s = self.messageReceived[GUIDEID]["state"]
+        guideMsg = self._messageReceived[GUIDEID]
+        stateTensor, _, _, _ = self.tensorize(guideMsg)
         with torch.no_grad():
-            return self.policy_net(s).max(1)[1].view(1, 1)
+            return self._policy_net(stateTensor).max(1)[1].view(1, 1)
 
     def choose_action(self) -> torch.Tensor:
         p = np.random.random()
-        epsThresh = self.epsEnd + \
-            (self.epsStart - self.epsEnd) * \
-            np.exp(-1. * self.eps_done / self.epsDecay)
-        # print(f"EpsThresh: {epsThresh} Eps done: {self.eps_done}")
+        epsThresh = self._epsEnd + \
+            (self._epsStart - self._epsEnd) * \
+            np.exp(-1. * self._eps_done / self._epsDecay)
+        # print(f"EpsThresh: {epsThresh} Eps done: {self._eps_done}")
         if p > epsThresh:
             return self.choose_greedy_action()
         return self.choose_random_action()
@@ -33,21 +34,19 @@ class ScoutAgent(CommAgent):
         """
             Unpacks message recieved from Guide and memorize the states
         """
-        msgDict = self.messageReceived[GUIDEID]
-        stateTensor = msgDict["state"]
-        actionTensor = msgDict["action"]
-        sPrimeTensor = msgDict["sPrime"]
-        rewardTensor = msgDict["reward"]
+        guideMsg = self._messageReceived[GUIDEID]
+        stateTensor, actionTensor, sPrimeTensor, rewardTensor = self.tensorize(
+            guideMsg)
         super().memorize(stateTensor, actionTensor, sPrimeTensor, rewardTensor)
 
     def updateEps(self):
-        self.eps_done += 1
+        self._eps_done += 1
 
 
 class GuideAgent(CommAgent):
     def __init__(self, id, obs_dim, actionSpace) -> None:
         super().__init__(id, obs_dim, actionSpace)
-        self.symbol = "G"
+        self._symbol = "G"
 
     def choose_action(self) -> torch.Tensor:
         """ Returns STAY as Guide can only stay at allocated position"""
