@@ -25,7 +25,7 @@ class ScoutAgent(CommAgent):
         epsThresh = self._epsEnd + \
             (self._epsStart - self._epsEnd) * \
             np.exp(-1. * self._eps_done / self._epsDecay)
-        # print(f"EpsThresh: {epsThresh} Eps done: {self.eps_done}")
+        # print(f"EpsThresh: {epsThresh} Eps done: {self._eps_done}")
         if p > epsThresh:
             return self.choose_greedy_action()
         return self.choose_random_action()

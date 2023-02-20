@@ -73,7 +73,7 @@ class Runner():
         agents = [guide]
         for i in range(self._scoutsNum):
             scout = ScoutAgent(startingScoutID + i, n_obs,
-                               ACTIONSPACE, epsDecay=10000)
+                               ACTIONSPACE, epsDecay=12000)
             agents.append(scout)
         return agents
 

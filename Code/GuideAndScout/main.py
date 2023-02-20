@@ -53,7 +53,7 @@ def randomRun():
 def actualRun():
     envSetting["TRAIN_EPS"] = 100000
     myRun = Runner(envSetting, saveName="Two")
-    myRun.train(wandbLog=False)
+    # myRun.train(wandbLog=False)
     myRun.test(verbose=1)
 
 
