@@ -3,6 +3,7 @@ from typing import *
 from collections import deque
 from copy import deepcopy
 import scipy.stats
+from const import decodeAction
 
 sampleMessage = {
     'state': np.array([8., 6., 4., 2., 4., 3., 8., 2., 3., 8.]),
@@ -19,30 +20,31 @@ sampleMessage3 = {
     'reward': None,
     'sPrime': None}
 
+sampleMessage4 = {
+    'state': np.array([0., 2., 0., 3., 1., 2., 2., 0., 0., 0.]),
+    'reward': [-3],
+    'sPrime': np.array([0., 2., 1., 3., 1., 2., 2., 0., 0., 0.])}
+
 sampleHistory = deque([
-    {0: {'state': np.array([2, 2, 1, 0, 1, 1, 0, 3, 2, 1], dtype=np.uint8), 'reward': [-5],
-         'sPrime': np.array([2, 2, 0, 0, 1, 2, 0, 3, 2, 1], dtype=np.uint8), 'action': [2]}},
-    {0: {'state': np.array([2, 2, 0, 0, 1, 2, 0, 3, 2, 1], dtype=np.uint8), 'reward': [-5],
-         'sPrime': np.array([2, 2, 0, 0, 1, 2, 0, 3, 2, 1], dtype=np.uint8), 'action': [3]}},
-    {0: {'state': np.array([2, 2, 0, 0, 1, 2, 0, 3, 2, 1], dtype=np.uint8), 'reward': [-5],
-         'sPrime': np.array([2, 2, 0, 1, 1, 2, 0, 3, 2, 1], dtype=np.uint8), 'action': [3]}},
-    {0: {'state': np.array([2, 2, 0, 1, 1, 2, 0, 3, 2, 1], dtype=np.uint8), 'reward': [-5],
-         'sPrime': np.array([2, 2, 1, 1, 1, 2, 0, 3, 2, 1], dtype=np.uint8), 'action': [4]}},
-    {0: {'state': np.array([2, 2, 1, 1, 1, 2, 0, 3, 2, 1], dtype=np.uint8), 'reward': [-5],
-         'sPrime': np.array([2, 2, 1, 1, 0, 2, 0, 3, 2, 1], dtype=np.uint8), 'action': [0]}},
+    {0: {'state': np.array([0, 2, 1, 3, 2, 1, 2, 0, 0, 0], dtype=np.uint8), 'reward': [-3],
+         'sPrime': np.array([0, 2, 1, 3, 2, 2, 2, 0, 0, 0], dtype=np.uint8), 'action': [4]}},
+    {0: {'state': np.array([0, 2, 1, 3, 2, 2, 2, 0, 0, 0], dtype=np.uint8), 'reward': [-3],
+         'sPrime': np.array([0, 2, 0, 3, 1, 2, 2, 0, 0, 0], dtype=np.uint8), 'action': [0]}},
+    {0: {'state': np.array([0, 2, 0, 3, 1, 2, 2, 0, 0, 0], dtype=np.uint8), 'reward': [-3],
+         'sPrime': np.array([0, 2, 0, 3, 1, 2, 2, 0, 0, 0], dtype=np.uint8), 'action': [1]}}
 ])
 
 
 class simulation():
     def __init__(self) -> None:
-        self._messageMemory = sampleMessage2
+        self._messageMemory = sampleMessage4
         self._messageReceived = {}
         self._n_observations = len(self._messageMemory["state"])
-        self._action = [1]
+        self._action = [3]
         # self._recievedHistory = deque()
         self._recievedHistory = sampleHistory
         self._k = 8
-        self._majorityNum = 5
+        self._majorityNum = 1
         self._majorityMem = []
         self._noiseHandling = True
 
@@ -159,11 +161,37 @@ class simulation():
             parse["reward"] = [parse["reward"][0]-256]
         return parse
 
-    def attemptRecovery(self, parse):
+    def attemptRecovery(self, senderID, parse):
         # Attempt in recovering original message by looking at history of correctly received messages
 
-        #
-        return parse
+        # TODO Now assumes the last history is 100% accurate
+        # TODO Not robust atm, assumes environment has only 2 treats
+        print("Recovering Message: ")
+        fixedState = parse["state"]
+        fixedReward = parse["reward"]
+        fixedsPrime = parse["sPrime"]
+        if self._recievedHistory:
+            recentRecord = self._recievedHistory[-1][senderID]
+            recentState = recentRecord["state"]
+            recentsPrime = recentRecord["sPrime"]
+            print(self._n_observations)
+            print("Recent state: ", recentState)
+            print("Recent sPrime: ", recentsPrime)
+            # Guide, treat positions are fixed
+            fixedState[0:2] = recentsPrime[0:2]
+            fixedsPrime[0:2] = recentsPrime[0:2]
+            fixedState[self._n_observations -
+                       4:] = recentsPrime[self._n_observations-4:]
+            fixedsPrime[self._n_observations -
+                        4:] = recentsPrime[self._n_observations-4:]
+            # Current scout's s and sPrime can be estimated using previous s and action
+
+        print("\n")
+        return {
+            "state": fixedState,
+            "reward": fixedReward,
+            "sPrime": fixedsPrime
+        }
 
     def rememberRecieved(self):
         # Make a copy of all recieved messages
@@ -207,10 +235,10 @@ class simulation():
             parse = self.decodeMessage(msg)
             if not msgChecksumPass:
                 # If majority voting unable to fix noise, attempt recovery of message using previous history
-                recovered = self.attemptRecovery(parse)
+                parse = self.attemptRecovery(senderID, parse)
 
-            if recovered:
-                self.storeRecievedMessage(senderID, recovered)
+            if parse:
+                self.storeRecievedMessage(senderID, parse)
             else:
                 print("Message not recovered")
 

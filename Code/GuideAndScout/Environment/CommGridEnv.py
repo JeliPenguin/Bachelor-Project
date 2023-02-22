@@ -6,17 +6,6 @@ from Agents.CommAgent import CommAgent
 from Agents.GuideScout import GUIDEID
 
 
-def decodeAction(num: int):
-    mapping = {
-        0: (-1, 0),
-        1: (0, -1),
-        2: (0, 1),
-        3: (1, 0),
-        4: (0, 0)
-    }
-    return mapping[num]
-
-
 class CommGridEnv():
     def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True) -> None:
         self._row = row

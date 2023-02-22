@@ -129,8 +129,9 @@ class Runner():
             guide.prepareMessage([reward], "reward")
             guide.prepareMessage(sPrime, "sPrime")
             guide.sendMessage(scoutID)
-            # Remember msg recieved
-            agents[scoutID].rememberRecieved()
+            if self._noised:
+                # Remember msg recieved
+                agents[scoutID].rememberRecieved()
 
         return sPrime, reward, done, info
 

@@ -40,10 +40,10 @@ envSetting = {
 
 def quickTest():
     envSetting["TRAIN_EPS"] = 2
-    envSetting["TEST_MAX_EPS"] = 5
+    envSetting["TEST_MAX_EPS"] = 6
     myRun = Runner(envSetting, saveName="Test")
     myRun.train(wandbLog=False)
-    myRun.test(verbose=4)
+    myRun.test(verbose=3)
 
 
 def noisedTest():
@@ -53,7 +53,7 @@ def noisedTest():
     envSetting["noiseP"] = 0.1
     myRun = Runner(envSetting, saveName="Test")
     myRun.train(wandbLog=False)
-    myRun.test(verbose=4)
+    myRun.test(verbose=3)
 
 
 def randomRun():
@@ -69,7 +69,7 @@ def actualRun():
 
 
 if __name__ == "__main__":
-    noisedTest()
-    # quickTest()
+    # noisedTest()
+    quickTest()
     # randomRun()
     # actualRun()

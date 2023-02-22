@@ -9,6 +9,16 @@ RIGHT = 2
 DOWN = 3
 STAY = 4
 ACTIONSPACE = ["UP", "LEFT", "RIGHT", "DOWN", "STAY"]
+def decodeAction(num: int):
+    mapping = {
+        0: (-1, 0),
+        1: (0, -1),
+        2: (0, 1),
+        3: (1, 0),
+        4: (0, 0)
+    }
+    return mapping[num]
+    
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device: ", device)
 
