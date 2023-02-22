@@ -84,15 +84,6 @@ class DQNAgent():
         return torch.tensor([[randAction]], device=device)
 
     def choose_action(self, s: torch.Tensor) -> torch.Tensor:
-        # p = np.random.random()
-
-        # epsThresh = self._epsEnd + \
-        #     (self._epsStart - self._epsEnd) * \
-        #     np.exp(-1. * self._eps_done / self._epsDecay)
-        # self._eps_done += 1
-        # if p > epsThresh:
-        #     return self.choose_greedy_action(s)
-        # return self.choose_random_action()
         return NotImplementedError
 
     def optimize(self):

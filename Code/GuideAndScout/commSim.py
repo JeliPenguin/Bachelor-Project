@@ -39,10 +39,12 @@ class simulation():
         self._messageReceived = {}
         self._n_observations = len(self._messageMemory["state"])
         self._action = [1]
-        self._recievedHistory = deque()
+        # self._recievedHistory = deque()
+        self._recievedHistory = sampleHistory
         self._k = 8
         self._majorityNum = 5
         self._majorityMem = []
+        self._noiseHandling = True
 
     def addNoise(self, msg, p=0.05):
         noise = np.random.random(msg.shape) < p
@@ -177,31 +179,38 @@ class simulation():
     def majorityVote(self):
         res = scipy.stats.mode(np.stack(self._majorityMem),
                                axis=0, keepdims=True).mode[0]
+        self._majorityMem.clear()
         return res
+
+    def storeRecievedMessage(self, senderID, parse):
+        # Action independent of the message as agent itself knows what action has been executed
+        # Policy assumed to be a deterministic policy
+        parse["action"] = self._action
+        print("Message Received: ", parse)
+        print("\n")
+        for tag, content in parse.items():
+            if senderID not in self._messageReceived:
+                self._messageReceived[senderID] = {tag: content}
+            else:
+                self._messageReceived[senderID][tag] = (content)
 
     def recieveMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder
         msg = self.addNoise(msg)
         self._majorityMem.append(msg)
         if len(self._majorityMem) == self._majorityNum:
+            # Majority vote the messages
             msg = self.majorityVote()
-            self._majorityMem.clear()
             stringified = self.stringify(msg)
             msgChecksumPass = self.checkChecksum(stringified)
             print("Checksum check: ", msgChecksumPass)
             parse = self.decodeMessage(msg)
             if not msgChecksumPass:
-                parse = self.attemptRecovery(parse)
-            # Action independent of the message as agent itself knows what action has been executed (deterministic policy)
-            if parse:
-                parse["action"] = self._action
-                print("Message Received: ", parse)
-                print("\n")
-                for tag, content in parse.items():
-                    if senderID not in self._messageReceived:
-                        self._messageReceived[senderID] = {tag: content}
-                    else:
-                        self._messageReceived[senderID][tag] = (content)
+                # If majority voting unable to fix noise, attempt recovery of message using previous history
+                recovered = self.attemptRecovery(parse)
+
+            if recovered:
+                self.storeRecievedMessage(senderID, recovered)
             else:
                 print("Message not recovered")
 

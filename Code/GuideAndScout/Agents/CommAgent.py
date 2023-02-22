@@ -5,18 +5,23 @@ import torch
 from const import *
 from collections import deque
 from copy import deepcopy
+import scipy.stats
 
 
 class CommAgent(DQNAgent):
-    def __init__(self, id, n_observations, actionSpace, batchSize=128, gamma=1, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
+    def __init__(self, id, n_observations, actionSpace, noiseHandling=False, batchSize=128, gamma=1, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
         super().__init__(id, n_observations, actionSpace,
                          batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
-        self.reset()
+
         self._k = 8
+        self._historySize = 3
+        self._majorityNum = 5
+        self._noiseHandling = noiseHandling
+        self.reset()
 
     def reset(self):
         self._messageReceived = {}
-        self._recievedHistory = deque()
+        self._recievedHistory = deque(maxlen=self._historySize)
         self._messageSent = {}
         self._action = None
         self._messageMemory = {
@@ -24,6 +29,10 @@ class CommAgent(DQNAgent):
             "reward": None,
             "sPrime": None
         }
+        self._majorityMem = []
+
+    def setNoiseHandling(self, noiseHandling):
+        self._noiseHandling = noiseHandling
 
     def setChannel(self, channel: CommChannel):
         self._channel = channel
@@ -142,17 +151,26 @@ class CommAgent(DQNAgent):
             print("Sending to Agent: ", recieverID)
             print("Message sent: ", self._messageMemory)
         msgString = self.encodeMessage()
-        stringified = self.stringify(msgString)
-        checksum = self.genChecksum(stringified)
-        msgString = np.concatenate([checksum, msgString])
-        # if getVerbose() >= 3:
-        #     print("Checksum: ", checksum)
-        if getVerbose() >= 4:
+        if getVerbose() >= 5:
             print("Encoded sent message: ", msgString)
-        self._channel.sendMessage(self._id, recieverID, msgString)
+        if self._noiseHandling:
+            stringified = self.stringify(msgString)
+            checksum = self.genChecksum(stringified)
+            # Checksum sent along with msg, hence can be noised as well
+            msgString = np.concatenate([checksum, msgString])
+            if getVerbose() >= 5:
+                print("Checksum: ", checksum)
+            for _ in range(self._majorityNum):
+                self._channel.sendMessage(self._id, recieverID, msgString)
+        else:
+            self._channel.sendMessage(self._id, recieverID, msgString)
 
     def decodeMessage(self, encodedMsg):
-        decodedMsg = np.packbits(encodedMsg[self._k:])
+        if self._noiseHandling:
+            decodedMsg = np.packbits(encodedMsg[self._k:])
+        else:
+            # Without checksum bits
+            decodedMsg = np.packbits(encodedMsg)
         msgLen = len(decodedMsg)
         obsLen = self._n_observations
         parse = {
@@ -169,15 +187,21 @@ class CommAgent(DQNAgent):
             parse["reward"] = [parse["reward"][0]-256]
         return parse
 
-    def attemptRecovery(self):
+    def majorityVote(self):
+        res = scipy.stats.mode(np.stack(self._majorityMem),
+                               axis=0, keepdims=True).mode[0]
+        self._majorityMem.clear()
+        return res
+
+    def attemptRecovery(self, parse):
         # Attempt in recovering original message by looking at history of correctly received messages
-        pass
+        # Could be checksum got corrupted, msg got corrupted or both
+
+        #
+        return parse
 
     def rememberRecieved(self):
         # Make a copy of all recieved messages
-        # Stroing 5 past messages max
-        if len(self._recievedHistory) >= 5:
-            self._recievedHistory.popleft()
         self._recievedHistory.append(deepcopy(self._messageReceived))
         if getVerbose() >= 3:
             print("Recieved history: ")
@@ -185,14 +209,9 @@ class CommAgent(DQNAgent):
                 print(hist)
             print("\n")
 
-    def recieveMessage(self, senderID: int, msg):
-        # Assumes message recieved in inorder
-        stringified = self.stringify(msg)
-        msgChecksum = self.checkChecksum(stringified)
-        if getVerbose() >= 3:
-            print("Checksum check: ", msgChecksum)
-        parse = self.decodeMessage(msg)
-        # Action independent of the message as agent itself knows what action has been executed (deterministic policy)
+    def storeRecievedMessage(self, senderID, parse):
+        # Action independent of the message as agent itself knows what action has been executed
+        # Policy assumed to be a deterministic policy
         parse["action"] = self._action
         if getVerbose() >= 2:
             print("Message Received: ", parse)
@@ -202,4 +221,30 @@ class CommAgent(DQNAgent):
                 self._messageReceived[senderID] = {tag: content}
             else:
                 self._messageReceived[senderID][tag] = (content)
-        # print(self._messageReceived)
+
+    def recieveNoisyMessage(self, senderID: int, msg):
+        # Assumes message recieved in inorder
+        self._majorityMem.append(msg)
+        if len(self._majorityMem) == self._majorityNum:
+            # Majority vote the messages
+            msg = self.majorityVote()
+            stringified = self.stringify(msg)
+            msgChecksumPass = self.checkChecksum(stringified)
+            if getVerbose() >= 3:
+                print("Checksum check: ", msgChecksumPass)
+            decoded = self.decodeMessage(msg)
+            if not msgChecksumPass:
+                # If majority voting unable to fix noise, attempt recovery of message using previous history
+                decoded = self.attemptRecovery(decoded)
+
+            if decoded:
+                self.storeRecievedMessage(senderID, decoded)
+            else:
+                print("Message not recovered")
+
+    def recieveMessage(self, senderID: int, msg):
+        if self._noiseHandling:
+            self.recieveNoisyMessage(senderID, msg)
+        else:
+            decoded = self.decodeMessage(msg)
+            self.storeRecievedMessage(senderID, decoded)

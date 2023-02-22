@@ -68,12 +68,13 @@ class Runner():
     def instantiateAgents(self):
         agentNum = 1 + self._scoutsNum
         n_obs = 2 * (agentNum + self._treatNum)
-        guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
+        guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE,
+                           noiseHandling=self._noised)
 
         agents = [guide]
         for i in range(self._scoutsNum):
             scout = ScoutAgent(startingScoutID + i, n_obs,
-                               ACTIONSPACE, epsDecay=12000)
+                               ACTIONSPACE, noiseHandling=self._noised, epsDecay=12000)
             agents.append(scout)
         return agents
 
@@ -83,7 +84,14 @@ class Runner():
             agents = self.instantiateAgents()
         else:
             agents = load(self._agentsSaveDir)
-        channel = CommChannel(agents, self._noiseP, self._noised)
+        noised = self._noised
+        if setupType == "train":
+            noised = False
+        for agent in agents:
+            agent.setNoiseHandling(noised)
+            print(f"{agent._symbol} handling noise: {agent._noiseHandling}")
+        print(f"Noised communication channel: {noised}")
+        channel = CommChannel(agents, self._noiseP, noised)
         channel.setupChannel()
         env = CommGridEnv(self._row, self._column, agents, self._treatNum,
                           render)
