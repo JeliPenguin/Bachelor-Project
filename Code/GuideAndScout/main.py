@@ -40,7 +40,7 @@ envSetting = {
 
 def quickTest():
     envSetting["TRAIN_EPS"] = 2
-    envSetting["TEST_MAX_EPS"] = 6
+    envSetting["TEST_MAX_EPS"] = 10
     myRun = Runner(envSetting, saveName="Test")
     myRun.train(wandbLog=False)
     myRun.test(verbose=3)

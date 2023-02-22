@@ -18,7 +18,9 @@ def decodeAction(num: int):
         4: (0, 0)
     }
     return mapping[num]
-    
+
+def tupleAdd(xs, ys): return tuple(x + y for x, y in zip(xs, ys))
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device: ", device)
 

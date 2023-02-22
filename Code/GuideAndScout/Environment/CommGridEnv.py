@@ -97,7 +97,6 @@ class CommGridEnv():
         """ 
         Given current state as x,y coordinates and an action, return coordinate of resulting new state
         """
-        def tupleAdd(xs, ys): return tuple(x + y for x, y in zip(xs, ys))
         movement = decodeAction(action)
         newState = tupleAdd(state, movement)
         ''' If the new state is outside the grid then remain at same state

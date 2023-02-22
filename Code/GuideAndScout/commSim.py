@@ -3,7 +3,7 @@ from typing import *
 from collections import deque
 from copy import deepcopy
 import scipy.stats
-from const import decodeAction
+from const import decodeAction, tupleAdd
 
 sampleMessage = {
     'state': np.array([8., 6., 4., 2., 4., 3., 8., 2., 3., 8.]),
@@ -47,6 +47,7 @@ class simulation():
         self._majorityNum = 1
         self._majorityMem = []
         self._noiseHandling = True
+        self._id = 1
 
     def addNoise(self, msg, p=0.05):
         noise = np.random.random(msg.shape) < p
@@ -174,10 +175,7 @@ class simulation():
             recentRecord = self._recievedHistory[-1][senderID]
             recentState = recentRecord["state"]
             recentsPrime = recentRecord["sPrime"]
-            print(self._n_observations)
-            print("Recent state: ", recentState)
-            print("Recent sPrime: ", recentsPrime)
-            # Guide, treat positions are fixed
+            # Guide, treat positions are fixed hence can be recovered directly
             fixedState[0:2] = recentsPrime[0:2]
             fixedsPrime[0:2] = recentsPrime[0:2]
             fixedState[self._n_observations -
@@ -185,6 +183,13 @@ class simulation():
             fixedsPrime[self._n_observations -
                         4:] = recentsPrime[self._n_observations-4:]
             # Current scout's s and sPrime can be estimated using previous s and action
+            fixedState[self._id*2:self._id*2 +
+                       2] = recentsPrime[self._id*2:self._id*2+2]
+            myState = recentsPrime[self._id*2:self._id*2+2]
+            actionTaken = decodeAction(self._action[0])
+            newState = np.array(
+                tupleAdd(tuple(myState), actionTaken), dtype=np.uint8)
+            fixedsPrime[self._id*2:self._id*2 + 2] = newState
 
         print("\n")
         return {
