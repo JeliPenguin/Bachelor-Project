@@ -3,7 +3,7 @@ from typing import *
 from collections import deque
 from copy import deepcopy
 import scipy.stats
-from const import decodeAction, tupleAdd
+from const import decodeAction, transition
 
 sampleMessage = {
     'state': np.array([8., 6., 4., 2., 4., 3., 8., 2., 3., 8.]),
@@ -37,14 +37,14 @@ sampleHistory = deque([
 
 class simulation():
     def __init__(self) -> None:
-        self._messageMemory = sampleMessage4
+        self._messageMemory = sampleMessage3
         self._messageReceived = {}
         self._n_observations = len(self._messageMemory["state"])
         self._action = [3]
         # self._recievedHistory = deque()
         self._recievedHistory = sampleHistory
         self._k = 8
-        self._majorityNum = 1
+        self._majorityNum = 3
         self._majorityMem = []
         self._noiseHandling = True
         self._id = 1
@@ -64,7 +64,7 @@ class simulation():
         # Normal encoded length 168
         # Terminal state encoded length 88
         res = []
-
+        encoded = self.stringify(encoded)
         digitSum = 0
         for i in range(int(len(encoded)/self._k)):
             digitSum += int(encoded[self._k*i:self._k*(i+1)], 2)
@@ -85,9 +85,9 @@ class simulation():
 
         return np.array(res, dtype=np.uint8)
 
-    def checkChecksum(self, receivedMsg: str):
+    def checkChecksum(self, receivedMsg):
         # receivedMsg includes checksum as the final 8 bits
-
+        receivedMsg = self.stringify(receivedMsg)
         digitSum = 0
         for i in range(int(len(receivedMsg)/self._k)):
             # print(receivedMsg[self._k*i:self._k*(i+1)])
@@ -137,8 +137,7 @@ class simulation():
     def sendMessage(self):
         print("Message sent: ", self._messageMemory)
         msgString = self.encodeMessage()
-        stringified = self.stringify(msgString)
-        checksum = self.genChecksum(stringified)
+        checksum = self.genChecksum(msgString)
         msgString = np.concatenate([checksum, msgString])
         # print("Encoded sent message: ", msgString)
         for _ in range(self._majorityNum):
@@ -165,31 +164,45 @@ class simulation():
     def attemptRecovery(self, senderID, parse):
         # Attempt in recovering original message by looking at history of correctly received messages
 
-        # TODO Now assumes the last history is 100% accurate
         # TODO Not robust atm, assumes environment has only 2 treats
         print("Recovering Message: ")
         fixedState = parse["state"]
         fixedReward = parse["reward"]
         fixedsPrime = parse["sPrime"]
-        if self._recievedHistory:
-            recentRecord = self._recievedHistory[-1][senderID]
-            recentState = recentRecord["state"]
-            recentsPrime = recentRecord["sPrime"]
-            # Guide, treat positions are fixed hence can be recovered directly
-            fixedState[0:2] = recentsPrime[0:2]
-            fixedsPrime[0:2] = recentsPrime[0:2]
-            fixedState[self._n_observations -
-                       4:] = recentsPrime[self._n_observations-4:]
-            fixedsPrime[self._n_observations -
-                        4:] = recentsPrime[self._n_observations-4:]
-            # Current scout's s and sPrime can be estimated using previous s and action
+
+        def recoverMyState(recentsPrime):
             fixedState[self._id*2:self._id*2 +
                        2] = recentsPrime[self._id*2:self._id*2+2]
             myState = recentsPrime[self._id*2:self._id*2+2]
             actionTaken = decodeAction(self._action[0])
             newState = np.array(
-                tupleAdd(tuple(myState), actionTaken), dtype=np.uint8)
-            fixedsPrime[self._id*2:self._id*2 + 2] = newState
+                transition(tuple(myState), actionTaken), dtype=np.uint8)
+            if fixedsPrime:
+                fixedsPrime[self._id*2:self._id*2 + 2] = newState
+
+        def recoverSPrime():
+            pass
+
+        def recoverStandard(recentsPrime):
+            # Assumes 2 treats in environment
+            fixedState[0:2] = recentsPrime[0:2]
+            fixedState[self._n_observations -
+                       4:] = recentsPrime[self._n_observations-4:]
+            if fixedsPrime:
+                fixedsPrime[0:2] = recentsPrime[0:2]
+                fixedsPrime[self._n_observations -
+                            4:] = recentsPrime[self._n_observations-4:]
+
+        if self._recievedHistory:
+            recentRecord = self._recievedHistory[-1][senderID]
+            recentState = recentRecord["state"]
+            # Guide, treat positions are fixed hence can be recovered directly
+            recoverStandard(recentRecord["sPrime"])
+            # Current scout's s and sPrime can be estimated using previous s and action
+            recoverMyState(recentRecord["sPrime"])
+        else:
+            # No history of previous states
+            return parse
 
         print("\n")
         return {
@@ -197,17 +210,6 @@ class simulation():
             "reward": fixedReward,
             "sPrime": fixedsPrime
         }
-
-    def rememberRecieved(self):
-        # Make a copy of all recieved messages
-        # Stroing 5 past messages max
-        if len(self._recievedHistory) >= 5:
-            self._recievedHistory.popleft()
-        self._recievedHistory.append(deepcopy(self._messageReceived))
-        print("Recieved history: ")
-        for hist in self._recievedHistory:
-            print(hist)
-        print("\n")
 
     def majorityVote(self):
         res = scipy.stats.mode(np.stack(self._majorityMem),
@@ -234,8 +236,7 @@ class simulation():
         if len(self._majorityMem) == self._majorityNum:
             # Majority vote the messages
             msg = self.majorityVote()
-            stringified = self.stringify(msg)
-            msgChecksumPass = self.checkChecksum(stringified)
+            msgChecksumPass = self.checkChecksum(msg)
             print("Checksum check: ", msgChecksumPass)
             parse = self.decodeMessage(msg)
             if not msgChecksumPass:

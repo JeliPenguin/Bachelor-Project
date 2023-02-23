@@ -9,6 +9,8 @@ RIGHT = 2
 DOWN = 3
 STAY = 4
 ACTIONSPACE = ["UP", "LEFT", "RIGHT", "DOWN", "STAY"]
+
+
 def decodeAction(num: int):
     mapping = {
         0: (-1, 0),
@@ -19,7 +21,10 @@ def decodeAction(num: int):
     }
     return mapping[num]
 
-def tupleAdd(xs, ys): return tuple(x + y for x, y in zip(xs, ys))
+
+def transition(initStateTuple, actionTuple):
+    return tuple(x + y for x, y in zip(initStateTuple, actionTuple))
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device: ", device)
@@ -29,6 +34,8 @@ print("Using device: ", device)
 # 2 for agent communication information
 # 3 for checksum information and message history
 VERBOSE = 0
+
+
 def setVerbose(num):
     global VERBOSE
     VERBOSE = num

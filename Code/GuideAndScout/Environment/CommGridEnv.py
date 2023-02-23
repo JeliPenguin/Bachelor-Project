@@ -98,7 +98,7 @@ class CommGridEnv():
         Given current state as x,y coordinates and an action, return coordinate of resulting new state
         """
         movement = decodeAction(action)
-        newState = tupleAdd(state, movement)
+        newState = transition(state, movement)
         ''' If the new state is outside the grid then remain at same state
             Allows agents to be on same state'''
         if min(newState) < 0 or max(newState) > min(self._row-1, self._column-1) or self._grid[newState[0]][newState[1]] in self._agentSymbol:

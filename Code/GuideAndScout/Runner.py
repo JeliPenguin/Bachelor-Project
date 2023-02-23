@@ -12,11 +12,15 @@ from datetime import datetime
 from typing import List
 import wandb
 
+
 startingScoutID = GUIDEID + 1
 
 
 class Runner():
     def __init__(self, envSetting, saveName="Default") -> None:
+        """
+        Standardized Runner for handling interaction between agents and the environment
+        """
         self._crtEnvSetting = envSetting
         self.constructSaves(saveName, envSetting)
         self.setupEnvSetting()
@@ -123,19 +127,17 @@ class Runner():
             # print("SENDING REWARD AND SPRIME")
             print("MSG SENT:")
         for scoutID in range(startingScoutID, len(agents)):
-            # Action not included in the message as the agent themselves already
-            # know what action they performed and shouldn't be noised
             agents[scoutID].rememberAction([actions[scoutID]])
             guide.prepareMessage([reward], "reward")
             guide.prepareMessage(sPrime, "sPrime")
             guide.sendMessage(scoutID)
-            if self._noised:
-                # Remember msg recieved
-                agents[scoutID].rememberRecieved()
 
         return sPrime, reward, done, info
 
     def train(self, verbose=0, wandbLog=True):
+        """
+        Run training with given environment settings
+        """
         setVerbose(verbose)
         if wandbLog:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
