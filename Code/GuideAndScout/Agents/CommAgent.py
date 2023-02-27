@@ -189,7 +189,7 @@ class CommAgent(DQNAgent):
     def attemptRecovery(self, senderID, parse):
         # Attempt in recovering original message by looking at history of correctly received messages
         # Could be checksum got corrupted, msg got corrupted or both
-
+        # TODO Assumes Checksum is 100% accurate
         # TODO Now assumes the last history is 100% accurate
         # TODO Not robust atm, assumes environment has only 2 treats
         # print("Recovering Message: ")
