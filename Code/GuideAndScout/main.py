@@ -58,6 +58,6 @@ def actualRun():
 
 
 if __name__ == "__main__":
-    # quickTest()
+    quickTest()
     # randomRun()
-    actualRun()
+    # actualRun()
