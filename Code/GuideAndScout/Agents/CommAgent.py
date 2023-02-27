@@ -4,8 +4,8 @@ import numpy as np
 import torch
 from const import *
 from collections import deque
-from copy import deepcopy
-import scipy.stats
+from ErrorDetection.Checksum import Checksum
+
 
 class CommAgent(DQNAgent):
     def __init__(self, id, obs_dim, actionSpace, noiseHandling=False, batchSize=128, gamma=1, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
@@ -14,7 +14,8 @@ class CommAgent(DQNAgent):
         n_observations = 2 * (self._agentNum + self._totalTreatNum)
         super().__init__(id, n_observations, actionSpace,
                          batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
-        self._k = 8
+        
+        self.errorDetector = Checksum(8)
         self._historySize = 20
         self._majorityNum = 3
         self._noiseHandling = noiseHandling
@@ -31,8 +32,6 @@ class CommAgent(DQNAgent):
             "sPrime": None
         }
         self._majorityMem = []
-        self._anchoredGuidePos = None
-        self._anchoredTreatPos = None
 
     def setNoiseHandling(self, noiseHandling):
         self._noiseHandling = noiseHandling
@@ -40,51 +39,6 @@ class CommAgent(DQNAgent):
     def setChannel(self, channel: CommChannel):
         self._channel = channel
         self.reset()
-
-    def calcDigitsum(self, binString: str):
-        digitSum = 0
-        for i in range(int(len(binString)/self._k)):
-            digitSum += int(binString[self._k*i:self._k*(i+1)], 2)
-        digitSum = bin(digitSum)[2:]
-        return digitSum
-
-    def genChecksum(self, encoded):
-        # Normal encoded length 168
-        # Terminal state encoded length 88
-        res = []
-        encoded = self.stringify(encoded)
-        digitSum = self.calcDigitsum(encoded)
-        if(len(digitSum) > self._k):
-            x = len(digitSum)-self._k
-            digitSum = bin(int(digitSum[0:x], 2)+int(digitSum[x:], 2))[2:]
-        if(len(digitSum) < self._k):
-            digitSum = '0'*(self._k-len(digitSum))+digitSum
-
-        for i in digitSum:
-            if(i == '1'):
-                res.append(0)
-            else:
-                res.append(1)
-
-        return np.array(res, dtype=np.uint8)
-
-    def checkChecksum(self, receivedMsg):
-        # receivedMsg includes checksum as the final 8 bits
-        receivedMsg = self.stringify(receivedMsg)
-        digitSum = self.calcDigitsum(receivedMsg)
-        # Adding the overflow bits
-        if(len(digitSum) > self._k):
-            x = len(digitSum)-self._k
-            digitSum = bin(
-                int(digitSum[0:x], 2)+int(digitSum[x:], 2))[2:]
-
-        checksum = 0
-        for i in digitSum:
-            if(i == '1'):
-                checksum += 0
-            else:
-                checksum += 1
-        return checksum == 0
 
     def tensorize(self, msg):
         stateTensor = None
@@ -134,9 +88,11 @@ class CommAgent(DQNAgent):
         }
 
     def prepareMessage(self, msg, tag: str):
+        # Staging the message to be sent
         self._messageMemory[tag] = msg
 
     def rememberAction(self, action):
+        # Agent itself remebers the action being executed
         self._action = action
 
     def stringify(self, encoded):
@@ -146,22 +102,7 @@ class CommAgent(DQNAgent):
         return encodedString
 
     def sendMessage(self, recieverID: int):
-        if getVerbose() >= 2:
-            print("Sending to Agent: ", recieverID)
-            print("Message sent: ", self._messageMemory)
-        msgString = self.encodeMessage()
-        if getVerbose() >= 5:
-            print("Encoded sent message: ", msgString)
-        if self._noiseHandling:
-            checksum = self.genChecksum(msgString)
-            # Checksum sent along with msg, hence can be noised as well
-            msgString = np.concatenate([checksum, msgString])
-            if getVerbose() >= 5:
-                print("Checksum: ", checksum)
-            for _ in range(self._majorityNum):
-                self._channel.sendMessage(self._id, recieverID, msgString)
-        else:
-            self._channel.sendMessage(self._id, recieverID, msgString)
+        pass
 
     def decodeMessage(self, encodedMsg):
         msgLen = len(encodedMsg)
@@ -180,93 +121,6 @@ class CommAgent(DQNAgent):
             parse["reward"] = [parse["reward"][0]-256]
         return parse
 
-    def majorityVote(self):
-
-        res = scipy.stats.mode(np.stack(self._majorityMem),
-                               axis=0, keepdims=True).mode[0]
-        self._majorityMem.clear()
-        return res
-
-    def attemptRecovery(self, senderID, parse):
-        # Attempt in recovering original message by looking at history of correctly received messages
-        # Could be checksum got corrupted, msg got corrupted or both
-        # TODO Assumes Checksum is 100% accurate
-        # TODO Now assumes the last history is 100% accurate
-        # TODO Not robust atm, assumes environment has only 2 treats
-        # print("Recovering Message: ")
-        fixedState = parse["state"]
-        fixedReward = parse["reward"]
-        fixedsPrime = parse["sPrime"]
-        hasSPrime = fixedsPrime is not None
-
-        def recoverSPrime():
-            # Detect skip in states
-            pass
-
-        # Guide, treat positions are fixed hence can be recovered directly
-        # Assumes 2 treats only in environment
-        if self._anchoredGuidePos is not None:
-            guidePos = self._anchoredGuidePos
-            fixedState[0:2] = guidePos
-            if hasSPrime:
-                fixedsPrime[0:2] = guidePos
-
-        if self._anchoredTreatPos is not None:
-            treatPos = self._anchoredTreatPos
-            fixedState[self._n_observations -
-                    2*self._totalTreatNum:] = treatPos
-            if hasSPrime:
-                fixedsPrime[self._n_observations -
-                        2*self._totalTreatNum:] = treatPos
-
-        if self._recievedHistory:
-            recentRecord = self._recievedHistory[-1][senderID]
-            recentState = recentRecord["state"]
-            recentsPrime = recentRecord["sPrime"]
-            history = recentsPrime
-            if history is None:
-                history = recentState
-            # Current scout's s and sPrime can be estimated using previous s and action
-            fixedState[self._id*2:self._id*2 +
-                       2] = history[self._id*2:self._id*2+2]
-            myState = history[self._id*2:self._id*2+2]
-            actionTaken = decodeAction(self._action[0])
-            newState = np.array(
-                transition(tuple(myState), actionTaken), dtype=np.uint8)
-            if hasSPrime:
-                fixedsPrime[self._id*2:self._id*2 + 2] = newState
-
-        return {
-            "state": fixedState,
-            "reward": fixedReward,
-            "sPrime": fixedsPrime
-        }
-    
-    def computeGuideAnchor(self,anchorVal):
-        if self._anchoredGuidePos is None:
-            self._anchoredGuidePos = anchorVal
-        
-    
-    def computeTreatAnchor(self,anchorVal):
-        self._anchoredTreatPos = anchorVal
-
-    def rememberRecieved(self, correctChecksum):
-        # Make a copy of all recieved messages
-        self._recievedHistory.append(deepcopy(self._messageReceived))
-        if correctChecksum:
-            for id in self._messageReceived.keys():
-                state = self._messageReceived[id]["state"]
-                guidePos = state[:2]
-                treatPos = state[self._n_observations - 4:]
-                self.computeGuideAnchor(guidePos)
-                self.computeTreatAnchor(treatPos)
-
-        if getVerbose() >= 3:
-            print("Recieved history: ")
-            for hist in self._recievedHistory:
-                print(hist)
-            print("\n")
-
     def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
         # Action independent of the message as agent itself knows what action has been executed
         # Policy assumed to be a deterministic policy
@@ -279,12 +133,9 @@ class CommAgent(DQNAgent):
                 self._messageReceived[senderID] = {tag: content}
             else:
                 self._messageReceived[senderID][tag] = (content)
-        if self._noiseHandling:
-            # Remember msg recieved
-            self.rememberRecieved(correctChecksum)
 
     def recieveNoisyMessage(self, senderID: int, msg):
-        raise NotImplementedError
+        pass
 
     def recieveNormalMessage(self, senderID: int, msg):
         msg = np.packbits(msg)
@@ -301,4 +152,4 @@ class CommAgent(DQNAgent):
         self._channel.broadcastSignal(self._id,signal)
 
     def recieveBroadcast(self,signal):
-        raise NotImplementedError
+        pass
