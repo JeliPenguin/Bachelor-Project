@@ -7,16 +7,17 @@ from collections import deque
 from copy import deepcopy
 import scipy.stats
 
-
 class CommAgent(DQNAgent):
     def __init__(self, id, n_observations, actionSpace, noiseHandling=False, batchSize=128, gamma=1, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
         super().__init__(id, n_observations, actionSpace,
                          batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
 
         self._k = 8
-        self._historySize = 3
+        self._historySize = 20
         self._majorityNum = 3
         self._noiseHandling = noiseHandling
+
+        self._treatNum = 2
         self.reset()
 
     def reset(self):
@@ -30,6 +31,8 @@ class CommAgent(DQNAgent):
             "sPrime": None
         }
         self._majorityMem = []
+        self._anchoredGuidePos = None
+        self._anchoredTreatPos = None
 
     def setNoiseHandling(self, noiseHandling):
         self._noiseHandling = noiseHandling
@@ -195,11 +198,39 @@ class CommAgent(DQNAgent):
         fixedsPrime = parse["sPrime"]
         hasSPrime = fixedsPrime is not None
 
-        def recoverMyState(recentState, recentsPrime):
-            # Current scout's s and sPrime can be estimated using previous s and action
+        def recoverSPrime():
+            # Detect skip in states
+            pass
+
+        if self._recievedHistory:
+            recentRecord = self._recievedHistory[-1][senderID]
+            recentState = recentRecord["state"]
+            recentsPrime = recentRecord["sPrime"]
             history = recentsPrime
-            if recentsPrime is None:
+            if history is None:
                 history = recentState
+
+            # Guide, treat positions are fixed hence can be recovered directly
+            # Assumes 2 treats only in environment
+            if self._anchoredGuidePos is not None:
+                guidePos = self._anchoredGuidePos
+            else:
+                guidePos = history[0:2]
+
+            if self._anchoredTreatPos is not None:
+                treatPos = self._anchoredTreatPos
+            else:
+                treatPos = history[self._n_observations-2*self._treatNum:]
+
+            fixedState[0:2] = guidePos
+            fixedState[self._n_observations -
+                       2*self._treatNum:] = treatPos
+            if hasSPrime:
+                fixedsPrime[0:2] = guidePos
+                fixedsPrime[self._n_observations -
+                        2*self._treatNum:] = treatPos
+
+            # Current scout's s and sPrime can be estimated using previous s and action
             fixedState[self._id*2:self._id*2 +
                        2] = history[self._id*2:self._id*2+2]
             myState = history[self._id*2:self._id*2+2]
@@ -208,30 +239,6 @@ class CommAgent(DQNAgent):
                 transition(tuple(myState), actionTaken), dtype=np.uint8)
             if hasSPrime:
                 fixedsPrime[self._id*2:self._id*2 + 2] = newState
-
-        def recoverSPrime():
-            pass
-
-        def recoverStandard(recentState, recentsPrime):
-            # Guide, treat positions are fixed hence can be recovered directly
-            # Assumes 2 treats only in environment
-            history = recentsPrime
-            if history is None:
-                history = recentState
-            fixedState[0:2] = history[0:2]
-            fixedState[self._n_observations -
-                       4:] = history[self._n_observations-4:]
-            if hasSPrime:
-                fixedsPrime[0:2] = history[0:2]
-                fixedsPrime[self._n_observations -
-                            4:] = history[self._n_observations-4:]
-
-        if self._recievedHistory:
-            recentRecord = self._recievedHistory[-1][senderID]
-            recentState = recentRecord["state"]
-            recentsPrime = recentRecord["sPrime"]
-            recoverStandard(recentState, recentsPrime)
-            recoverMyState(recentState, recentsPrime)
         else:
             # No history of previous states
             return parse
@@ -241,16 +248,24 @@ class CommAgent(DQNAgent):
             "sPrime": fixedsPrime
         }
 
-    def rememberRecieved(self):
+    def rememberRecieved(self, correctChecksum):
         # Make a copy of all recieved messages
         self._recievedHistory.append(deepcopy(self._messageReceived))
+        if correctChecksum:
+            for id in self._messageReceived.keys():
+                state = self._messageReceived[id]["state"]
+                guidePos = state[:2]
+                treatPos = state[self._n_observations - 4:]
+                self._anchoredGuidePos = guidePos
+                self._anchoredTreatPos = treatPos
+
         if getVerbose() >= 3:
             print("Recieved history: ")
             for hist in self._recievedHistory:
                 print(hist)
             print("\n")
 
-    def storeRecievedMessage(self, senderID, parse):
+    def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
         # Action independent of the message as agent itself knows what action has been executed
         # Policy assumed to be a deterministic policy
         parse["action"] = self._action
@@ -264,7 +279,7 @@ class CommAgent(DQNAgent):
                 self._messageReceived[senderID][tag] = (content)
         if self._noiseHandling:
             # Remember msg recieved
-            self.rememberRecieved()
+            self.rememberRecieved(correctChecksum)
 
     def recieveNoisyMessage(self, senderID: int, msg):
         # Assumes message recieved in inorder
@@ -277,16 +292,24 @@ class CommAgent(DQNAgent):
                 print("Checksum check: ", msgChecksumPass)
             msg = np.packbits(msg[self._k:])
             decoded = self.decodeMessage(msg)
+            if getVerbose() >= 3:
+                print("Before recovery: ",decoded)
             if not msgChecksumPass:
                 # If majority voting unable to fix noise, attempt recovery of message using previous history
                 decoded = self.attemptRecovery(senderID, decoded)
+            if getVerbose() >= 3:
+                print("Anchors:")
+                print(f"Guide Pos: {self._anchoredGuidePos}")
+                print(f"Treat Pos: {self._anchoredTreatPos}")
+            self.storeRecievedMessage(senderID, decoded, msgChecksumPass)
 
-            self.storeRecievedMessage(senderID, decoded)
+    def recieveNormalMessage(self, senderID: int, msg):
+        msg = np.packbits(msg)
+        decoded = self.decodeMessage(msg)
+        self.storeRecievedMessage(senderID, decoded)
 
     def recieveMessage(self, senderID: int, msg):
         if self._noiseHandling:
             self.recieveNoisyMessage(senderID, msg)
         else:
-            msg = np.packbits(msg)
-            decoded = self.decodeMessage(msg)
-            self.storeRecievedMessage(senderID, decoded)
+            self.recieveNormalMessage(senderID, msg)

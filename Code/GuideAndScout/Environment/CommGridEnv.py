@@ -230,6 +230,7 @@ class CommGridEnv():
             toWrite += rowContent
         toWrite += "-"*(self._column * 2 + 3)+"\n"
         toWrite += f"Treats: {self._treatCount}"
+        toWrite += f"\nTreat Pos: {self._treatLocations}"
         return toWrite
 
     def formatAgentInfo(self):

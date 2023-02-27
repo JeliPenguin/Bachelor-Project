@@ -22,6 +22,9 @@ class ScoutAgent(CommAgent):
             return self._policy_net(stateTensor).max(1)[1].view(1, 1)
 
     def choose_action(self) -> torch.Tensor:
+        """ 
+            Ordinary Epsilon greedy 
+        """
         p = np.random.random()
         epsThresh = self._epsEnd + \
             (self._epsStart - self._epsEnd) * \
@@ -45,8 +48,8 @@ class ScoutAgent(CommAgent):
 
 
 class GuideAgent(CommAgent):
-    def __init__(self, id, obs_dim, actionSpace,noiseHandling) -> None:
-        super().__init__(id, obs_dim, actionSpace,noiseHandling=noiseHandling)
+    def __init__(self, id, obs_dim, actionSpace, noiseHandling) -> None:
+        super().__init__(id, obs_dim, actionSpace, noiseHandling=noiseHandling)
         self._symbol = "G"
 
     def choose_action(self) -> torch.Tensor:
@@ -54,5 +57,5 @@ class GuideAgent(CommAgent):
         return torch.tensor([[STAY]], device=device)
 
     def choose_random_action(self) -> torch.Tensor:
-        randAction = STAY
-        return torch.tensor([[randAction]], device=device)
+        """ Returns STAY as Guide can only stay at allocated position"""
+        return self.choose_action()

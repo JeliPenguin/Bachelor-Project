@@ -93,8 +93,9 @@ class Runner():
             noised = False
         for agent in agents:
             agent.setNoiseHandling(noised)
-            print(f"{agent._symbol} handling noise: {agent._noiseHandling}")
-        print(f"Noised communication channel: {noised}")
+        print(f"Noised: {noised}")
+        if noised:
+            print(f"Noise level: {self._noiseP}")
         channel = CommChannel(agents, self._noiseP, noised)
         channel.setupChannel()
         env = CommGridEnv(self._row, self._column, agents, self._treatNum,

@@ -1,0 +1,4 @@
+- Sometimes checksum wouldn't work (due to flip of bits at same pos)
+- Is checksum really necessary here?
+- After eating a treat, location of that treat is removed, message is set as default to 0,0
+ -- To reproduce, run code and check message sent when a treat has been eaten
