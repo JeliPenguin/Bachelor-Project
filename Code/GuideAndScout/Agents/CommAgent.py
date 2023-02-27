@@ -8,16 +8,16 @@ from copy import deepcopy
 import scipy.stats
 
 class CommAgent(DQNAgent):
-    def __init__(self, id, n_observations, actionSpace, noiseHandling=False, batchSize=128, gamma=1, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
+    def __init__(self, id, obs_dim, actionSpace, noiseHandling=False, batchSize=128, gamma=1, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
+        self._agentNum = obs_dim[0]
+        self._totalTreatNum = obs_dim[1]
+        n_observations = 2 * (self._agentNum + self._totalTreatNum)
         super().__init__(id, n_observations, actionSpace,
                          batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
-
         self._k = 8
         self._historySize = 20
         self._majorityNum = 3
         self._noiseHandling = noiseHandling
-
-        self._treatNum = 2
         self.reset()
 
     def reset(self):
@@ -181,6 +181,7 @@ class CommAgent(DQNAgent):
         return parse
 
     def majorityVote(self):
+
         res = scipy.stats.mode(np.stack(self._majorityMem),
                                axis=0, keepdims=True).mode[0]
         self._majorityMem.clear()
@@ -202,6 +203,22 @@ class CommAgent(DQNAgent):
             # Detect skip in states
             pass
 
+        # Guide, treat positions are fixed hence can be recovered directly
+        # Assumes 2 treats only in environment
+        if self._anchoredGuidePos is not None:
+            guidePos = self._anchoredGuidePos
+            fixedState[0:2] = guidePos
+            if hasSPrime:
+                fixedsPrime[0:2] = guidePos
+
+        if self._anchoredTreatPos is not None:
+            treatPos = self._anchoredTreatPos
+            fixedState[self._n_observations -
+                    2*self._totalTreatNum:] = treatPos
+            if hasSPrime:
+                fixedsPrime[self._n_observations -
+                        2*self._totalTreatNum:] = treatPos
+
         if self._recievedHistory:
             recentRecord = self._recievedHistory[-1][senderID]
             recentState = recentRecord["state"]
@@ -209,27 +226,6 @@ class CommAgent(DQNAgent):
             history = recentsPrime
             if history is None:
                 history = recentState
-
-            # Guide, treat positions are fixed hence can be recovered directly
-            # Assumes 2 treats only in environment
-            if self._anchoredGuidePos is not None:
-                guidePos = self._anchoredGuidePos
-            else:
-                guidePos = history[0:2]
-
-            if self._anchoredTreatPos is not None:
-                treatPos = self._anchoredTreatPos
-            else:
-                treatPos = history[self._n_observations-2*self._treatNum:]
-
-            fixedState[0:2] = guidePos
-            fixedState[self._n_observations -
-                       2*self._treatNum:] = treatPos
-            if hasSPrime:
-                fixedsPrime[0:2] = guidePos
-                fixedsPrime[self._n_observations -
-                        2*self._treatNum:] = treatPos
-
             # Current scout's s and sPrime can be estimated using previous s and action
             fixedState[self._id*2:self._id*2 +
                        2] = history[self._id*2:self._id*2+2]
@@ -239,14 +235,20 @@ class CommAgent(DQNAgent):
                 transition(tuple(myState), actionTaken), dtype=np.uint8)
             if hasSPrime:
                 fixedsPrime[self._id*2:self._id*2 + 2] = newState
-        else:
-            # No history of previous states
-            return parse
+
         return {
             "state": fixedState,
             "reward": fixedReward,
             "sPrime": fixedsPrime
         }
+    
+    def computeGuideAnchor(self,anchorVal):
+        if self._anchoredGuidePos is None:
+            self._anchoredGuidePos = anchorVal
+        
+    
+    def computeTreatAnchor(self,anchorVal):
+        self._anchoredTreatPos = anchorVal
 
     def rememberRecieved(self, correctChecksum):
         # Make a copy of all recieved messages
@@ -256,8 +258,8 @@ class CommAgent(DQNAgent):
                 state = self._messageReceived[id]["state"]
                 guidePos = state[:2]
                 treatPos = state[self._n_observations - 4:]
-                self._anchoredGuidePos = guidePos
-                self._anchoredTreatPos = treatPos
+                self.computeGuideAnchor(guidePos)
+                self.computeTreatAnchor(treatPos)
 
         if getVerbose() >= 3:
             print("Recieved history: ")
@@ -282,26 +284,7 @@ class CommAgent(DQNAgent):
             self.rememberRecieved(correctChecksum)
 
     def recieveNoisyMessage(self, senderID: int, msg):
-        # Assumes message recieved in inorder
-        self._majorityMem.append(msg)
-        if len(self._majorityMem) == self._majorityNum:
-            # Majority vote the messages
-            msg = self.majorityVote()
-            msgChecksumPass = self.checkChecksum(msg)
-            if getVerbose() >= 3:
-                print("Checksum check: ", msgChecksumPass)
-            msg = np.packbits(msg[self._k:])
-            decoded = self.decodeMessage(msg)
-            if getVerbose() >= 3:
-                print("Before recovery: ",decoded)
-            if not msgChecksumPass:
-                # If majority voting unable to fix noise, attempt recovery of message using previous history
-                decoded = self.attemptRecovery(senderID, decoded)
-            if getVerbose() >= 3:
-                print("Anchors:")
-                print(f"Guide Pos: {self._anchoredGuidePos}")
-                print(f"Treat Pos: {self._anchoredTreatPos}")
-            self.storeRecievedMessage(senderID, decoded, msgChecksumPass)
+        raise NotImplementedError
 
     def recieveNormalMessage(self, senderID: int, msg):
         msg = np.packbits(msg)
@@ -313,3 +296,9 @@ class CommAgent(DQNAgent):
             self.recieveNoisyMessage(senderID, msg)
         else:
             self.recieveNormalMessage(senderID, msg)
+
+    def broadcastSignal(self,signal):
+        self._channel.broadcastSignal(self._id,signal)
+
+    def recieveBroadcast(self,signal):
+        raise NotImplementedError

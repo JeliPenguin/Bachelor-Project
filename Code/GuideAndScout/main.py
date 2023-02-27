@@ -56,9 +56,9 @@ def noisedRandomTest():
 
 def noisedTest():
     envSetting["TRAIN_EPS"] = 1
-    envSetting["TEST_MAX_EPS"] = 5
+    envSetting["TEST_MAX_EPS"] = 10
     envSetting["noised"] = True
-    envSetting["noiseP"] = 0.05
+    envSetting["noiseP"] = 0.1
     myRun = Runner(envSetting, saveName="Test")
     myRun.train(wandbLog=False)
     myRun.test(verbose=3)

@@ -24,6 +24,14 @@ class CommChannel():
                 noiseAdded.append(1-m)
         noiseAdded = np.array(noiseAdded)
         return (noiseAdded)
+    
+    def broadcastSignal(self,senderID,signal):
+        if self._noised:
+            signal = self.addNoise(signal)
+        for id in range(len(self._agents)):
+            if id != senderID:
+                self._agents[id].recieveBroadcast(signal)
+
 
     def sendMessage(self, senderID, receiverID, msg):
         receiver = self._agents[receiverID]

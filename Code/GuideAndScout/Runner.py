@@ -71,13 +71,13 @@ class Runner():
 
     def instantiateAgents(self):
         agentNum = 1 + self._scoutsNum
-        n_obs = 2 * (agentNum + self._treatNum)
-        guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE,
+        obsDim = (agentNum,self._treatNum)
+        guide = GuideAgent(GUIDEID, obsDim, ACTIONSPACE,
                            noiseHandling=self._noised)
 
         agents = [guide]
         for i in range(self._scoutsNum):
-            scout = ScoutAgent(startingScoutID + i, n_obs,
+            scout = ScoutAgent(startingScoutID + i, obsDim,
                                ACTIONSPACE, noiseHandling=self._noised, epsDecay=12000)
             agents.append(scout)
         return agents
