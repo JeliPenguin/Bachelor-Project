@@ -64,7 +64,6 @@ def testTrained():
 
 
 if __name__ == "__main__":
-    # quickTest()
+    quickTest()
     # randomRun()
     # actualRun()
-    testTrained()
