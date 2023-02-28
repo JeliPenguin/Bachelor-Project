@@ -17,30 +17,12 @@ startingScoutID = GUIDEID + 1
 
 
 class Runner():
-    def __init__(self, envSetting, saveName="Default") -> None:
+    def __init__(self, saveName="Default") -> None:
         """
         Standardized Runner for handling interaction between agents and the environment
         """
-        self._crtEnvSetting = envSetting
-        self.constructSaves(saveName, envSetting)
-        self.setupEnvSetting()
-
-    def constructSaves(self, saveName, envSetting):
-        # now = datetime.now()
-        # dt_string = now.strftime("-%m-%d_%H-%M")
-        # saveFolderDir = "./Saves/" + saveName + dt_string + "/"
-        saveFolderDir = "./Saves/" + saveName + "/"
-        if not os.path.exists(saveFolderDir):
-            os.mkdir(saveFolderDir)
-        self._agentsSaveDir = saveFolderDir + "agents"
-        self._rewardsSaveDir = saveFolderDir + "episodicRewards"
-        self._stepsSaveDir = saveFolderDir + "episodicSteps"
-        self._envSaveDir = saveFolderDir + "envSetting"
-        self._crtEnvSetting = envSetting
-        dump(envSetting, self._envSaveDir)
-
-    def setupEnvSetting(self, loadSave=False):
-        self._configuredEnvSetting = {
+        self.saveName = saveName
+        self.defaultEnvSetting = {
             "row": 5,
             "column": 5,
             "treatNum": 2,
@@ -51,13 +33,31 @@ class Runner():
             "TEST_MAX_EPS": 30,
             "RAND_EPS": 1,
         }
-        if loadSave:
-            envSetting = load(self._envSaveDir)
-        else:
-            envSetting = self._crtEnvSetting
 
-        for key in envSetting.keys():
-            self._configuredEnvSetting[key] = envSetting[key]
+    def constructSaves(self):
+        # now = datetime.now()
+        # dt_string = now.strftime("-%m-%d_%H-%M")
+        # saveFolderDir = "./Saves/" + saveName + dt_string + "/"
+        saveFolderDir = "./Saves/" + self.saveName + "/"
+        if not os.path.exists(saveFolderDir):
+            os.mkdir(saveFolderDir)
+        self._agentSettingSaveDir = saveFolderDir + "agentSettings"
+        self._agentsSaveDir = saveFolderDir + "agents"
+        self._rewardsSaveDir = saveFolderDir + "episodicRewards"
+        self._stepsSaveDir = saveFolderDir + "episodicSteps"
+        self._envSaveDir = saveFolderDir + "envSetting"
+
+    def setupEnvSetting(self, loadSave, envSetting):
+        if loadSave:
+            self._configuredEnvSetting = load(self._envSaveDir)
+        else:
+            self._configuredEnvSetting = self.defaultEnvSetting
+            if envSetting:
+                for key in envSetting.keys():
+                    self._configuredEnvSetting[key] = envSetting[key]
+            dump(self._configuredEnvSetting, self._envSaveDir)
+
+        # print(self._configuredEnvSetting)
 
         self._row = self._configuredEnvSetting["row"]
         self._column = self._configuredEnvSetting["column"]
@@ -82,20 +82,28 @@ class Runner():
             agents.append(scout)
         return agents
 
-    def setupRun(self, setupType):
+    def setupRun(self, setupType, envSetting=None, noiseLevel=None, noiseHandlingMode=None):
+        self.constructSaves()
+        loadSave = setupType == "test"
+        self.setupEnvSetting(loadSave, envSetting)
         render = getVerbose() != 0
-        if setupType == "train" or setupType == "random":
-            agents = self.instantiateAgents()
-        else:
-            agents = load(self._agentsSaveDir)
-        noised = self._noised
-        if setupType == "train":
-            noised = False
-        for agent in agents:
-            agent.setNoiseHandling(noised)
-        print(f"Noised: {noised}")
+        noised = self._noised and (setupType != "train")
+
+        agents = self.instantiateAgents()
+        agentSetting = None
+        if setupType == "test":
+            agentSetting = load(self._agentSettingSaveDir)
+        for i, agent in enumerate(agents):
+            agent.setNoiseHandling(noiseHandlingMode)
+            if agentSetting:
+                agent.loadSetting(agentSetting[i])
+
+        print(f"Environment Noised: {noised}")
         if noised:
+            if noiseLevel:
+                self._noiseP = noiseLevel
             print(f"Noise level: {self._noiseP}")
+        print("Noise Handling Mode: ", noiseHandlingMode)
         channel = CommChannel(agents, self._noiseP, noised)
         channel.setupChannel()
         env = CommGridEnv(self._row, self._column, agents, self._treatNum,
@@ -135,7 +143,7 @@ class Runner():
 
         return sPrime, reward, done, info
 
-    def train(self, verbose=0, wandbLog=True):
+    def train(self, envSetting=None, verbose=0, wandbLog=True):
         """
         Run training with given environment settings
         """
@@ -143,7 +151,7 @@ class Runner():
         if wandbLog:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
             wandb.config = self._configuredEnvSetting
-        agents, env = self.setupRun("train")
+        agents, env = self.setupRun("train", envSetting)
         scouts = agents[startingScoutID:]
         episodicRewards = []
         episodicSteps = []
@@ -176,14 +184,18 @@ class Runner():
                 wandb.log({"episodicReward": episodicReward})
             episodicSteps.append(step)
             episodicRewards.append(episodicReward)
+        for a in agents:
+            a._memory.clear()
+        agentSettings = [a.getSetting() for a in agents]
         dump(agents, self._agentsSaveDir)
+        dump(agentSettings, self._agentSettingSaveDir)
         dump(episodicRewards, self._rewardsSaveDir)
         dump(episodicSteps, self._stepsSaveDir)
 
-    def test(self, verbose=2, loadSavedEnvSetting=True, plot=False):
+    def test(self, verbose=2, plot=False, noiseLevel=None, noiseHandlingMode=None):
         setVerbose(verbose)
-        self.setupEnvSetting(loadSave=loadSavedEnvSetting)
-        agents, env = self.setupRun("test")
+        agents, env = self.setupRun(
+            "test", noiseLevel=noiseLevel, noiseHandlingMode=noiseHandlingMode)
         env.reset()
         state = env.numpifiedState()
         done = False
@@ -198,6 +210,9 @@ class Runner():
             rewardPlot = load(self._rewardsSaveDir)
             plt.plot(rewardPlot)
             plt.show()
+
+        print(
+            f"===================================================\nCompleted in {step} steps\n===================================================")
 
     def randomRun(self, verbose=1):
         setVerbose(verbose)

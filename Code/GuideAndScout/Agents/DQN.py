@@ -38,6 +38,9 @@ class ReplayMemory():
     def sample(self, batch_size):
         return random.sample(self._memory, batch_size)
 
+    def clear(self):
+        self._memory.clear()
+
     def __len__(self):
         return len(self._memory)
 
@@ -64,8 +67,11 @@ class DQNAgent():
         self._memory = ReplayMemory(50000)
         self._eps_done = 0
 
-    def loadPolicyNet(self, policyNet):
-        self._policy_net = policyNet
+    def getSetting(self):
+        return (self._policy_net, self._epsStart, self._epsEnd, self._epsDecay, self._eps_done)
+
+    def loadSetting(self, setting: tuple):
+        self._policy_net, self._epsStart, self._epsEnd, self._epsDecay, self._eps_done = setting
 
     def getID(self):
         return self._id

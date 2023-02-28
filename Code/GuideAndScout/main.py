@@ -1,3 +1,5 @@
+from joblib import dump, load
+import matplotlib.pyplot as plt
 from Runner import Runner
 from const import setVerbose
 """
@@ -49,7 +51,7 @@ def quickTest():
 def noisedRandomTest():
     envSetting["noised"] = True
     envSetting["noiseP"] = 0.05
-    myRun = Runner(envSetting, saveName="Test")
+    myRun = Runner(saveName="Test")
     myRun.randomRun(verbose=3)
 
 
@@ -58,8 +60,8 @@ def noisedTest():
     envSetting["TEST_MAX_EPS"] = 5
     envSetting["noised"] = True
     envSetting["noiseP"] = 0.1
-    myRun = Runner(envSetting, saveName="Test")
-    myRun.train(wandbLog=False)
+    myRun = Runner(saveName="Test")
+    myRun.train(envSetting=envSetting, wandbLog=False)
     myRun.test(verbose=3)
 
 
@@ -76,13 +78,22 @@ def actualRun():
 
 
 def testTrained():
-    envSetting["TEST_MAX_EPS"] = 20
-    myRun = Runner(envSetting, saveName="Noised5x5")
-    myRun.test(verbose=1)
+    myRun = Runner(saveName="Two5X5")
+    myRun.test(verbose=0, noiseLevel=0.1, noiseHandlingMode=1)
+
+
+def plotter():
+    norm = load("./Saves/Two5X5/episodicRewards")
+    noised = load("./Saves/Noised5X5/episodicRewards")
+    plt.plot(norm)
+    plt.plot(noised)
+    plt.show()
 
 
 if __name__ == "__main__":
-    noisedTest()
+    # noisedTest()
     # quickTest()
     # randomRun()
     # actualRun()
+    # testTrained()
+    plotter()
