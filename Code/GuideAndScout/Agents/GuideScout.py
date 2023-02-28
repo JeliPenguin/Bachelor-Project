@@ -1,4 +1,5 @@
-from const import *
+from const import verbPrint, device, getVerbose
+from Environment.EnvUtilities import *
 from Agents.CommAgent import CommAgent
 from Agents.MessageRecoverer import MessageRecoverer
 import torch
@@ -7,10 +8,6 @@ from typing import Tuple
 from copy import deepcopy
 import scipy.stats
 from collections import deque
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-GUIDEID = 0
 
 
 class ScoutAgent(CommAgent):
@@ -72,8 +69,8 @@ class ScoutAgent(CommAgent):
             falseRatio = self._falseCount / self._recieveCount
             if falseRatio >= self._falseLimit:
                 self._majorityNum += 2
-                if getVerbose() >= 4:
-                    print("Increased majority num, now is : ", self._majorityNum)
+                verbPrint(
+                    f"Increased majority num, now is : {self._majorityNum}", 4)
                 self._falseCount = 0
                 self._recieveCount = 0
                 self.broadcastMajority()
@@ -85,21 +82,18 @@ class ScoutAgent(CommAgent):
             # Majority vote the messages
             msg = self.majorityVote()
             msgChecksumPass, msg = self.errorDetector.decode(msg)
-            if getVerbose() >= 2:
-                print("Checksum check: ", msgChecksumPass)
+            verbPrint(f"Checksum check: {msgChecksumPass}", 2)
             msg = np.packbits(msg)
             decoded = self.decodeMessage(msg)
-            if getVerbose() >= 3:
-                print("Before recovery: ", decoded)
+            verbPrint(f"Before recovery: {decoded}", 3)
             if not msgChecksumPass:
                 # If majority voting unable to fix noise, attempt recovery of message using previous history
                 decoded = self.recoverer.attemptRecovery(
                     senderID, decoded, self._recievedHistory, self._action)
             self.majorityAdjust(msgChecksumPass)
-            if getVerbose() >= 3:
-                print("Anchors:")
-                print(f"Guide Pos: {self.recoverer._anchoredGuidePos}")
-                print(f"Treat Pos: {self.recoverer._anchoredTreatPos}")
+            verbPrint("Anchors:", 3)
+            verbPrint(f"Guide Pos: {self.recoverer._anchoredGuidePos}", 3)
+            verbPrint(f"Treat Pos: {self.recoverer._anchoredTreatPos}", 3)
             self.storeRecievedMessage(senderID, decoded, msgChecksumPass)
 
     def broadcastMajority(self):
@@ -158,14 +152,12 @@ class GuideAgent(CommAgent):
             print("Sending to Agent: ", recieverID)
             print("Message sent: ", self._messageMemory)
         msgString = self.encodeMessage()
-        if getVerbose() >= 5:
-            print("Encoded sent message: ", msgString)
+        verbPrint(f"Encoded sent message: {msgString}", 5)
         if self._noiseHandling:
             checksum = self.errorDetector.encode(msgString)
             # Checksum sent along with msg, hence can be noised as well
             msgString = np.concatenate([checksum, msgString])
-            if getVerbose() >= 5:
-                print("Checksum: ", checksum)
+            verbPrint(f"Checksum: {checksum}", 5)
             for _ in range(self._majorityNum):
                 self._channel.sendMessage(self._id, recieverID, msgString)
         else:
