@@ -64,6 +64,9 @@ class DQNAgent():
         self._memory = ReplayMemory(50000)
         self._eps_done = 0
 
+    def loadPolicyNet(self, policyNet):
+        self._policy_net = policyNet
+
     def getID(self):
         return self._id
 

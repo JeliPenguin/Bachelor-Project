@@ -135,6 +135,8 @@ class Runner():
         scouts = agents[startingScoutID:]
         episodicRewards = []
         episodicSteps = []
+        print(f"Training On: ")
+        print(self._configuredEnvSetting)
         print(f"Running {self._TRAIN_EPS} epochs:")
         for eps in tqdm(range(self._TRAIN_EPS)):
             # Initialize the environment and get it's state
