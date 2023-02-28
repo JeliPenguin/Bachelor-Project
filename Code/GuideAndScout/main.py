@@ -28,10 +28,10 @@ defaultEnvSetting = {
 """
 
 envSetting = {
-    "row": 4,
-    "column": 4,
+    "row": 5,
+    "column": 5,
     "RAND_EPS": 5,
-    "noised": False,
+    "noised": True,
     "scoutsNum": 2,
     "TEST_MAX_EPS": 20,
 }
@@ -52,12 +52,19 @@ def randomRun():
 
 def actualRun():
     envSetting["TRAIN_EPS"] = 100000
-    myRun = Runner(envSetting, saveName="Two")
-    # myRun.train(wandbLog=False)
+    myRun = Runner(envSetting, saveName="Noised5X5")
+    myRun.train(wandbLog=False)
+    myRun.test(verbose=1)
+
+
+def testTrained():
+    envSetting["TEST_MAX_EPS"] = 20
+    myRun = Runner(envSetting, saveName="Noised5x5")
     myRun.test(verbose=1)
 
 
 if __name__ == "__main__":
     # quickTest()
     # randomRun()
-    actualRun()
+    # actualRun()
+    testTrained()
