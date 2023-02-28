@@ -71,7 +71,7 @@ class Runner():
 
     def instantiateAgents(self):
         agentNum = 1 + self._scoutsNum
-        obsDim = (agentNum,self._treatNum)
+        obsDim = (agentNum, self._treatNum)
         guide = GuideAgent(GUIDEID, obsDim, ACTIONSPACE,
                            noiseHandling=self._noised)
 
