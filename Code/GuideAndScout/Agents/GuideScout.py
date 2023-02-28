@@ -6,6 +6,7 @@ import numpy as np
 from typing import Tuple
 from copy import deepcopy
 import scipy.stats
+from collections import deque
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -21,7 +22,9 @@ class ScoutAgent(CommAgent):
         self._recieveCount = 0
         self._MASampleSize = 3
         self._falseLimit = 0.4
-        self.recoverer = MessageRecoverer(self._id,self._totalTreatNum)
+        self.recoverer = MessageRecoverer(self._id, self._totalTreatNum)
+        self._historySize = 20
+        self._recievedHistory = deque(maxlen=self._historySize)
 
     def choose_greedy_action(self) -> torch.Tensor:
         guideMsg = self._messageReceived[GUIDEID]
@@ -61,7 +64,7 @@ class ScoutAgent(CommAgent):
         self._majorityMem.clear()
         return res
 
-    def majorityAdjust(self,checksumCheck):
+    def majorityAdjust(self, checksumCheck):
         self._recieveCount += 1
         if not checksumCheck:
             self._falseCount += 1
@@ -70,7 +73,7 @@ class ScoutAgent(CommAgent):
             if falseRatio >= self._falseLimit:
                 self._majorityNum += 2
                 if getVerbose() >= 4:
-                    print("Increased majority num, now is : ",self._majorityNum)
+                    print("Increased majority num, now is : ", self._majorityNum)
                 self._falseCount = 0
                 self._recieveCount = 0
                 self.broadcastMajority()
@@ -81,16 +84,17 @@ class ScoutAgent(CommAgent):
         if len(self._majorityMem) == self._majorityNum:
             # Majority vote the messages
             msg = self.majorityVote()
-            msgChecksumPass,msg = self.errorDetector.decode(msg)
+            msgChecksumPass, msg = self.errorDetector.decode(msg)
             if getVerbose() >= 2:
                 print("Checksum check: ", msgChecksumPass)
             msg = np.packbits(msg)
             decoded = self.decodeMessage(msg)
             if getVerbose() >= 3:
-                print("Before recovery: ",decoded)
+                print("Before recovery: ", decoded)
             if not msgChecksumPass:
                 # If majority voting unable to fix noise, attempt recovery of message using previous history
-                decoded = self.recoverer.attemptRecovery(senderID, decoded,self._recievedHistory,self._action)
+                decoded = self.recoverer.attemptRecovery(
+                    senderID, decoded, self._recievedHistory, self._action)
             self.majorityAdjust(msgChecksumPass)
             if getVerbose() >= 3:
                 print("Anchors:")
@@ -100,9 +104,9 @@ class ScoutAgent(CommAgent):
 
     def broadcastMajority(self):
         self.broadcastSignal(np.array([0]))
-    
+
     def recieveBroadcast(self, signal):
-        self._majorityNum+=2
+        self._majorityNum += 2
 
     def rememberRecieved(self, correctChecksum):
         # Make a copy of all recieved messages
@@ -138,16 +142,16 @@ class GuideAgent(CommAgent):
     def choose_action(self) -> torch.Tensor:
         """ Returns STAY as Guide can only stay at allocated position"""
         return torch.tensor([[STAY]], device=device)
-    
+
     def recieveNoisyMessage(self):
         return
 
     def choose_random_action(self) -> torch.Tensor:
         """ Returns STAY as Guide can only stay at allocated position"""
         return self.choose_action()
-    
+
     def recieveBroadcast(self, signal):
-        self._majorityNum+=2
+        self._majorityNum += 2
 
     def sendMessage(self, recieverID: int):
         if getVerbose() >= 2:

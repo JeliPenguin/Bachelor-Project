@@ -3,7 +3,6 @@ from Environment.CommChannel import CommChannel
 import numpy as np
 import torch
 from const import *
-from collections import deque
 from ErrorDetection.Checksum import Checksum
 
 
@@ -14,16 +13,15 @@ class CommAgent(DQNAgent):
         n_observations = 2 * (self._agentNum + self._totalTreatNum)
         super().__init__(id, n_observations, actionSpace,
                          batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
-        
+
         self.errorDetector = Checksum(8)
-        self._historySize = 20
         self._majorityNum = 3
         self._noiseHandling = noiseHandling
         self.reset()
 
     def reset(self):
         self._messageReceived = {}
-        self._recievedHistory = deque(maxlen=self._historySize)
+
         self._messageSent = {}
         self._action = None
         self._messageMemory = {
@@ -33,8 +31,9 @@ class CommAgent(DQNAgent):
         }
         self._majorityMem = []
 
-    def setNoiseHandling(self, noiseHandling):
-        self._noiseHandling = noiseHandling
+    def setNoiseHandling(self, noiseHandlingMode):
+        self._noiseHandlingMode = noiseHandlingMode
+        self._noiseHandling = noiseHandlingMode is not None
 
     def setChannel(self, channel: CommChannel):
         self._channel = channel
@@ -148,8 +147,8 @@ class CommAgent(DQNAgent):
         else:
             self.recieveNormalMessage(senderID, msg)
 
-    def broadcastSignal(self,signal):
-        self._channel.broadcastSignal(self._id,signal)
+    def broadcastSignal(self, signal):
+        self._channel.broadcastSignal(self._id, signal)
 
-    def recieveBroadcast(self,signal):
+    def recieveBroadcast(self, signal):
         pass
