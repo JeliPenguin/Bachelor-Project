@@ -1,7 +1,7 @@
 from Runner import Runner
 from const import setVerbose
 """
-Gridworld with treats, a Guide agent and a Scout agent
+Gridworld with treats, a Guide agent and Scout agent(s)
 
 Guide agent cannot move but can observe the environment and send messages
 
@@ -9,7 +9,8 @@ Scout agent can move but cannot observe the environment and send messages
 
 Guide and scout need to cooporate through communication to obtain all treats
 
-Communication currently with no noise added
+With additional scouts added, scouts themselves would also need to cooperate to obtain all treats in least amount
+of time
 """
 
 
@@ -39,14 +40,31 @@ envSetting = {
 
 def quickTest():
     envSetting["TRAIN_EPS"] = 2
-    envSetting["TEST_MAX_EPS"] = 20
+    envSetting["TEST_MAX_EPS"] = 10
     myRun = Runner(envSetting, saveName="Test")
     myRun.train(wandbLog=False)
-    myRun.test(verbose=2)
+    myRun.test(verbose=3)
+
+
+def noisedRandomTest():
+    envSetting["noised"] = True
+    envSetting["noiseP"] = 0.05
+    myRun = Runner(envSetting, saveName="Test")
+    myRun.randomRun(verbose=3)
+
+
+def noisedTest():
+    envSetting["TRAIN_EPS"] = 1
+    envSetting["TEST_MAX_EPS"] = 5
+    envSetting["noised"] = True
+    envSetting["noiseP"] = 0.1
+    myRun = Runner(envSetting, saveName="Test")
+    myRun.train(wandbLog=False)
+    myRun.test(verbose=3)
 
 
 def randomRun():
-    myRun = Runner(envSetting, saveName="Random")
+    myRun = Runner(envSetting, saveName="Test")
     myRun.randomRun(verbose=2)
 
 
@@ -64,6 +82,7 @@ def testTrained():
 
 
 if __name__ == "__main__":
-    quickTest()
+    noisedTest()
+    # quickTest()
     # randomRun()
     # actualRun()

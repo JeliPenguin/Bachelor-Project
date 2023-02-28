@@ -1,0 +1,11 @@
+Check if data recieved is in predefined range:
+- If agent/treat position are within the grid
+- If reward is within certain range?
+
+Training an inner "Message unnoising DL model"?
+- But would be difficult recovering the original message
+- Better approach would be detection of corruption in sent data, then requesting resending
+
+Attempt Recovery of Message:
+- Keep history of consecutive correctly recieved/correctly recovered messages
+- Using a true checksum message as anchor for GUIDE position and TREAT position

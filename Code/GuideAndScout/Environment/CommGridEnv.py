@@ -6,17 +6,6 @@ from Agents.CommAgent import CommAgent
 from Agents.GuideScout import GUIDEID
 
 
-def decodeAction(num: int):
-    mapping = {
-        0: (-1, 0),
-        1: (0, -1),
-        2: (0, 1),
-        3: (1, 0),
-        4: (0, 0)
-    }
-    return mapping[num]
-
-
 class CommGridEnv():
     def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True) -> None:
         self._row = row
@@ -108,9 +97,8 @@ class CommGridEnv():
         """ 
         Given current state as x,y coordinates and an action, return coordinate of resulting new state
         """
-        def tupleAdd(xs, ys): return tuple(x + y for x, y in zip(xs, ys))
         movement = decodeAction(action)
-        newState = tupleAdd(state, movement)
+        newState = transition(state, movement)
         ''' If the new state is outside the grid then remain at same state
             Allows agents to be on same state'''
         if min(newState) < 0 or max(newState) > min(self._row-1, self._column-1) or self._grid[newState[0]][newState[1]] in self._agentSymbol:
@@ -242,6 +230,7 @@ class CommGridEnv():
             toWrite += rowContent
         toWrite += "-"*(self._column * 2 + 3)+"\n"
         toWrite += f"Treats: {self._treatCount}"
+        toWrite += f"\nTreat Pos: {self._treatLocations}"
         return toWrite
 
     def formatAgentInfo(self):

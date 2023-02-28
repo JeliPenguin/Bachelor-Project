@@ -12,11 +12,15 @@ from datetime import datetime
 from typing import List
 import wandb
 
+
 startingScoutID = GUIDEID + 1
 
 
 class Runner():
     def __init__(self, envSetting, saveName="Default") -> None:
+        """
+        Standardized Runner for handling interaction between agents and the environment
+        """
         self._crtEnvSetting = envSetting
         self.constructSaves(saveName, envSetting)
         self.setupEnvSetting()
@@ -67,13 +71,14 @@ class Runner():
 
     def instantiateAgents(self):
         agentNum = 1 + self._scoutsNum
-        n_obs = 2 * (agentNum + self._treatNum)
-        guide = GuideAgent(GUIDEID, n_obs, ACTIONSPACE)
+        obsDim = (agentNum,self._treatNum)
+        guide = GuideAgent(GUIDEID, obsDim, ACTIONSPACE,
+                           noiseHandling=self._noised)
 
         agents = [guide]
         for i in range(self._scoutsNum):
-            scout = ScoutAgent(startingScoutID + i, n_obs,
-                               ACTIONSPACE, epsDecay=12000)
+            scout = ScoutAgent(startingScoutID + i, obsDim,
+                               ACTIONSPACE, noiseHandling=self._noised, epsDecay=12000)
             agents.append(scout)
         return agents
 
@@ -83,7 +88,15 @@ class Runner():
             agents = self.instantiateAgents()
         else:
             agents = load(self._agentsSaveDir)
-        channel = CommChannel(agents, self._noiseP, self._noised)
+        noised = self._noised
+        if setupType == "train":
+            noised = False
+        for agent in agents:
+            agent.setNoiseHandling(noised)
+        print(f"Noised: {noised}")
+        if noised:
+            print(f"Noise level: {self._noiseP}")
+        channel = CommChannel(agents, self._noiseP, noised)
         channel.setupChannel()
         env = CommGridEnv(self._row, self._column, agents, self._treatNum,
                           render)
@@ -115,18 +128,17 @@ class Runner():
             # print("SENDING REWARD AND SPRIME")
             print("MSG SENT:")
         for scoutID in range(startingScoutID, len(agents)):
-            # Action not included in the message as the agent themselves already
-            # know what action they performed and shouldn't be noised
             agents[scoutID].rememberAction([actions[scoutID]])
             guide.prepareMessage([reward], "reward")
             guide.prepareMessage(sPrime, "sPrime")
             guide.sendMessage(scoutID)
-            # Remember msg recieved
-            agents[scoutID].rememberRecieved()
 
         return sPrime, reward, done, info
 
     def train(self, verbose=0, wandbLog=True):
+        """
+        Run training with given environment settings
+        """
         setVerbose(verbose)
         if wandbLog:
             wandb.init(project="Comm-Noised MARL", entity="jelipenguin")

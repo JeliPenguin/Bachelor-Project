@@ -1,8 +1,11 @@
 from const import *
 from Agents.CommAgent import CommAgent
+from Agents.MessageRecoverer import MessageRecoverer
 import torch
 import numpy as np
 from typing import Tuple
+from copy import deepcopy
+import scipy.stats
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -10,9 +13,15 @@ GUIDEID = 0
 
 
 class ScoutAgent(CommAgent):
-    def __init__(self, id, obs_dim, actionSpace, epsDecay) -> None:
-        super().__init__(id, obs_dim, actionSpace, epsDecay)
+    def __init__(self, id, obs_dim, actionSpace, noiseHandling, epsDecay) -> None:
+        super().__init__(id, obs_dim, actionSpace,
+                         noiseHandling=noiseHandling, epsDecay=epsDecay)
         self._symbol = str(id)
+        self._falseCount = 0
+        self._recieveCount = 0
+        self._MASampleSize = 3
+        self._falseLimit = 0.4
+        self.recoverer = MessageRecoverer(self._id,self._totalTreatNum)
 
     def choose_greedy_action(self) -> torch.Tensor:
         guideMsg = self._messageReceived[GUIDEID]
@@ -21,6 +30,9 @@ class ScoutAgent(CommAgent):
             return self._policy_net(stateTensor).max(1)[1].view(1, 1)
 
     def choose_action(self) -> torch.Tensor:
+        """ 
+            Ordinary Epsilon greedy 
+        """
         p = np.random.random()
         epsThresh = self._epsEnd + \
             (self._epsStart - self._epsEnd) * \
@@ -42,16 +54,115 @@ class ScoutAgent(CommAgent):
     def updateEps(self):
         self._eps_done += 1
 
+    def majorityVote(self):
+
+        res = scipy.stats.mode(np.stack(self._majorityMem),
+                               axis=0, keepdims=True).mode[0]
+        self._majorityMem.clear()
+        return res
+
+    def majorityAdjust(self,checksumCheck):
+        self._recieveCount += 1
+        if not checksumCheck:
+            self._falseCount += 1
+        if self._recieveCount >= self._MASampleSize:
+            falseRatio = self._falseCount / self._recieveCount
+            if falseRatio >= self._falseLimit:
+                self._majorityNum += 2
+                if getVerbose() >= 4:
+                    print("Increased majority num, now is : ",self._majorityNum)
+                self._falseCount = 0
+                self._recieveCount = 0
+                self.broadcastMajority()
+
+    def recieveNoisyMessage(self, senderID: int, msg):
+        # Assumes message recieved in inorder
+        self._majorityMem.append(msg)
+        if len(self._majorityMem) == self._majorityNum:
+            # Majority vote the messages
+            msg = self.majorityVote()
+            msgChecksumPass,msg = self.errorDetector.decode(msg)
+            if getVerbose() >= 2:
+                print("Checksum check: ", msgChecksumPass)
+            msg = np.packbits(msg)
+            decoded = self.decodeMessage(msg)
+            if getVerbose() >= 3:
+                print("Before recovery: ",decoded)
+            if not msgChecksumPass:
+                # If majority voting unable to fix noise, attempt recovery of message using previous history
+                decoded = self.recoverer.attemptRecovery(senderID, decoded,self._recievedHistory,self._action)
+            self.majorityAdjust(msgChecksumPass)
+            if getVerbose() >= 3:
+                print("Anchors:")
+                print(f"Guide Pos: {self.recoverer._anchoredGuidePos}")
+                print(f"Treat Pos: {self.recoverer._anchoredTreatPos}")
+            self.storeRecievedMessage(senderID, decoded, msgChecksumPass)
+
+    def broadcastMajority(self):
+        self.broadcastSignal(np.array([0]))
+    
+    def recieveBroadcast(self, signal):
+        self._majorityNum+=2
+
+    def rememberRecieved(self, correctChecksum):
+        # Make a copy of all recieved messages
+        history = deepcopy(self._messageReceived)
+        history[GUIDEID]["checksum"] = correctChecksum
+        self._recievedHistory.append(history)
+        if correctChecksum:
+            for id in self._messageReceived.keys():
+                state = self._messageReceived[id]["state"]
+                guidePos = state[:2]
+                treatPos = state[self._n_observations - 4:]
+                self.recoverer.computeGuideAnchor(guidePos)
+                self.recoverer.computeTreatAnchor(treatPos)
+
+        if getVerbose() >= 3:
+            print("Recieved history: ")
+            for hist in self._recievedHistory:
+                print(hist[GUIDEID])
+            print("\n")
+
+    def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
+        super().storeRecievedMessage(senderID, parse, correctChecksum)
+        if self._noiseHandling:
+            # Remember msg recieved
+            self.rememberRecieved(correctChecksum)
+
 
 class GuideAgent(CommAgent):
-    def __init__(self, id, obs_dim, actionSpace) -> None:
-        super().__init__(id, obs_dim, actionSpace)
+    def __init__(self, id, obs_dim, actionSpace, noiseHandling) -> None:
+        super().__init__(id, obs_dim, actionSpace, noiseHandling=noiseHandling)
         self._symbol = "G"
 
     def choose_action(self) -> torch.Tensor:
         """ Returns STAY as Guide can only stay at allocated position"""
         return torch.tensor([[STAY]], device=device)
+    
+    def recieveNoisyMessage(self):
+        return
 
     def choose_random_action(self) -> torch.Tensor:
-        randAction = STAY
-        return torch.tensor([[randAction]], device=device)
+        """ Returns STAY as Guide can only stay at allocated position"""
+        return self.choose_action()
+    
+    def recieveBroadcast(self, signal):
+        self._majorityNum+=2
+
+    def sendMessage(self, recieverID: int):
+        if getVerbose() >= 2:
+            print("Sending to Agent: ", recieverID)
+            print("Message sent: ", self._messageMemory)
+        msgString = self.encodeMessage()
+        if getVerbose() >= 5:
+            print("Encoded sent message: ", msgString)
+        if self._noiseHandling:
+            checksum = self.errorDetector.encode(msgString)
+            # Checksum sent along with msg, hence can be noised as well
+            msgString = np.concatenate([checksum, msgString])
+            if getVerbose() >= 5:
+                print("Checksum: ", checksum)
+            for _ in range(self._majorityNum):
+                self._channel.sendMessage(self._id, recieverID, msgString)
+        else:
+            self._channel.sendMessage(self._id, recieverID, msgString)
