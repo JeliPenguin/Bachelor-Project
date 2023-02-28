@@ -1,9 +1,8 @@
 import numpy as np
 import sys
-from const import *
+from Environment.EnvUtilities import *
 from typing import List, Tuple
 from Agents.CommAgent import CommAgent
-from Agents.GuideScout import GUIDEID
 
 
 class CommGridEnv():

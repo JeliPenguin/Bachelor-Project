@@ -1,25 +1,21 @@
-import torch
 from Environment.CommGridEnv import CommGridEnv
 from Agents.GuideScout import *
 from const import *
+from Environment.EnvUtilities import *
 from joblib import dump, load
 from Environment.CommChannel import CommChannel
 from typing import List
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 import os
 from datetime import datetime
 from typing import List
 import wandb
 
 
-startingScoutID = GUIDEID + 1
-
-
 class Runner():
-    def __init__(self, saveName="Default") -> None:
+    def __init__(self, saveName) -> None:
         """
-        Standardized Runner for handling interaction between agents and the environment
+
         """
         self.saveName = saveName
         self.defaultEnvSetting = {
@@ -66,7 +62,8 @@ class Runner():
         self._noised = self._configuredEnvSetting["noised"]
         self._noiseP = self._configuredEnvSetting["noiseP"]
         self._TRAIN_EPS = self._configuredEnvSetting["TRAIN_EPS"]
-        self._TEST_MAX_EPS = self._configuredEnvSetting["TEST_MAX_EPS"]
+        # self._TEST_MAX_EPS = self._configuredEnvSetting["TEST_MAX_EPS"]
+        self._TEST_MAX_EPS = np.inf
         self._RAND_EPS = self._configuredEnvSetting["RAND_EPS"]
 
     def instantiateAgents(self):
@@ -87,7 +84,7 @@ class Runner():
         loadSave = setupType == "test"
         self.setupEnvSetting(loadSave, envSetting)
         render = getVerbose() != 0
-        noised = self._noised and (setupType != "train")
+        noised = (self._noised or noiseLevel) and (setupType != "train")
 
         agents = self.instantiateAgents()
         agentSetting = None
@@ -97,13 +94,12 @@ class Runner():
             agent.setNoiseHandling(noiseHandlingMode)
             if agentSetting:
                 agent.loadSetting(agentSetting[i])
-
-        print(f"Environment Noised: {noised}")
+        verbPrint(f"Environment Noised: {noised}", 1)
         if noised:
             if noiseLevel:
                 self._noiseP = noiseLevel
-            print(f"Noise level: {self._noiseP}")
-        print("Noise Handling Mode: ", noiseHandlingMode)
+            verbPrint(f"Noise level: {self._noiseP}", 1)
+        verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
         channel = CommChannel(agents, self._noiseP, noised)
         channel.setupChannel()
         env = CommGridEnv(self._row, self._column, agents, self._treatNum,
@@ -114,11 +110,10 @@ class Runner():
     def doStep(self, agents, env: CommGridEnv, state):
         # Guide only chooses action STAY
         # Scouts choose epsilon greedy action solely on recieved message
-        if getVerbose() >= 1:
-            print("=================================================================\n")
+        verbPrint(
+            "=================================================================\n", 1)
         guide = agents[GUIDEID]
-        if getVerbose() >= 2:
-            print("SENDING CURRENT STATE ONLY")
+        verbPrint("SENDING CURRENT STATE ONLY", 2)
         for scoutID in range(startingScoutID, len(agents)):
             # Other part of the message kept as None
             guide.clearPreparedMessage()
@@ -132,9 +127,7 @@ class Runner():
             sPrime = None
 
         guide: GuideAgent = agents[GUIDEID]
-        if getVerbose() >= 2:
-            # print("SENDING REWARD AND SPRIME")
-            print("MSG SENT:")
+        verbPrint("MSG SENT:", 2)
         for scoutID in range(startingScoutID, len(agents)):
             agents[scoutID].rememberAction([actions[scoutID]])
             guide.prepareMessage([reward], "reward")
@@ -192,7 +185,7 @@ class Runner():
         dump(episodicRewards, self._rewardsSaveDir)
         dump(episodicSteps, self._stepsSaveDir)
 
-    def test(self, verbose=2, plot=False, noiseLevel=None, noiseHandlingMode=None):
+    def test(self, verbose=2, noiseLevel=None, noiseHandlingMode=None):
         setVerbose(verbose)
         agents, env = self.setupRun(
             "test", noiseLevel=noiseLevel, noiseHandlingMode=noiseHandlingMode)
@@ -200,19 +193,16 @@ class Runner():
         state = env.numpifiedState()
         done = False
         step = 0
+        rewards = 0
         while not done and step < self._TEST_MAX_EPS:
-            sPrime, _, done, _ = self.doStep(
+            sPrime, reward, done, _ = self.doStep(
                 agents, env, state)
             state = sPrime
             step += 1
-
-        if plot:
-            rewardPlot = load(self._rewardsSaveDir)
-            plt.plot(rewardPlot)
-            plt.show()
-
-        print(
-            f"===================================================\nCompleted in {step} steps\n===================================================")
+            rewards += reward
+        verbPrint(
+            f"===================================================\nCompleted in {step} steps\n===================================================", 1)
+        return step, rewards
 
     def randomRun(self, verbose=1):
         setVerbose(verbose)

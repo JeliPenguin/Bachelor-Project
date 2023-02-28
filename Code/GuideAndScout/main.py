@@ -1,7 +1,7 @@
 from joblib import dump, load
 import matplotlib.pyplot as plt
 from Runner import Runner
-from const import setVerbose
+from Evaluator import Evaluator
 """
 Gridworld with treats, a Guide agent and Scout agent(s)
 
@@ -79,7 +79,7 @@ def actualRun():
 
 def testTrained():
     myRun = Runner(saveName="Two5X5")
-    myRun.test(verbose=0, noiseLevel=0.1, noiseHandlingMode=1)
+    myRun.test(verbose=3)
 
 
 def plotter():
@@ -90,10 +90,18 @@ def plotter():
     plt.show()
 
 
+def evaluate():
+    norm = "Two5X5"
+    noised = "Noised5X5"
+    eT = Evaluator(norm, noised)
+    eT.evaluate(True)
+
+
 if __name__ == "__main__":
     # noisedTest()
     # quickTest()
     # randomRun()
     # actualRun()
     # testTrained()
-    plotter()
+    # plotter()
+    evaluate()

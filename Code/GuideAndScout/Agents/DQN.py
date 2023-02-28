@@ -84,16 +84,14 @@ class DQNAgent():
                           sPrimeTensor, rewardTensor)
 
     def choose_greedy_action(self, s: torch.Tensor) -> torch.Tensor:
-        # with torch.no_grad():
-        #     return self._policy_net(s).max(1)[1].view(1, 1)
-        return NotImplementedError
+        raise NotImplementedError
 
     def choose_random_action(self) -> torch.Tensor:
         randAction = np.random.randint(0, self._n_actions)
         return torch.tensor([[randAction]], device=device)
 
     def choose_action(self, s: torch.Tensor) -> torch.Tensor:
-        return NotImplementedError
+        raise NotImplementedError
 
     def optimize(self):
         if len(self._memory) < self._batchSize:

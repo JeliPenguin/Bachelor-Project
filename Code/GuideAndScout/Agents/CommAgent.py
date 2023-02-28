@@ -124,9 +124,7 @@ class CommAgent(DQNAgent):
         # Action independent of the message as agent itself knows what action has been executed
         # Policy assumed to be a deterministic policy
         parse["action"] = self._action
-        if getVerbose() >= 2:
-            print("Message Received: ", parse)
-            print("\n")
+        verbPrint(f"Message Received: {parse}\n", 2)
         for tag, content in parse.items():
             if senderID not in self._messageReceived:
                 self._messageReceived[senderID] = {tag: content}
