@@ -13,11 +13,12 @@ import wandb
 
 
 class Runner():
-    def __init__(self, saveName) -> None:
+    def __init__(self, saveName, eval=False) -> None:
         """
 
         """
         self.saveName = saveName
+        self.eval = eval
         self.defaultEnvSetting = {
             "row": 5,
             "column": 5,
@@ -62,8 +63,10 @@ class Runner():
         self._noised = self._configuredEnvSetting["noised"]
         self._noiseP = self._configuredEnvSetting["noiseP"]
         self._TRAIN_EPS = self._configuredEnvSetting["TRAIN_EPS"]
-        # self._TEST_MAX_EPS = self._configuredEnvSetting["TEST_MAX_EPS"]
-        self._TEST_MAX_EPS = np.inf
+        if self.eval:
+            self._TEST_MAX_EPS = np.inf
+        else:
+            self._TEST_MAX_EPS = self._configuredEnvSetting["TEST_MAX_EPS"]
         self._RAND_EPS = self._configuredEnvSetting["RAND_EPS"]
 
     def instantiateAgents(self):

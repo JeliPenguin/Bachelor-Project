@@ -14,11 +14,11 @@ class Evaluator():
         baseModel = (noisedSaveName, None, "Baseline")
         self.models = [nhModel, normNoisedModel, baseModel, normModel]
         self.verbose = 0
-        self.noiseLevels = [0, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2]
+        self.noiseLevels = [0, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2,0.]
         self.repetitions = 1000
 
     def testRun(self, modelName, noiseLevel, noiseHandlingMode):
-        run = Runner(modelName)
+        run = Runner(modelName, eval=True)
         steps, reward = run.test(
             verbose=0, noiseLevel=noiseLevel, noiseHandlingMode=noiseHandlingMode)
         return steps, reward

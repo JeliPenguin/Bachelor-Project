@@ -20,7 +20,7 @@ class ScoutAgent(CommAgent):
         self._MASampleSize = 3
         self._falseLimit = 0.4
         self.recoverer = MessageRecoverer(self._id, self._totalTreatNum)
-        self._historySize = 20
+        self._historySize = 5
         self._recievedHistory = deque(maxlen=self._historySize)
 
     def choose_greedy_action(self) -> torch.Tensor:
@@ -122,7 +122,7 @@ class ScoutAgent(CommAgent):
             print("\n")
 
     def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
-        super().storeRecievedMessage(senderID, parse, correctChecksum)
+        super().storeRecievedMessage(senderID, parse)
         if self._noiseHandling:
             # Remember msg recieved
             self.rememberRecieved(correctChecksum)

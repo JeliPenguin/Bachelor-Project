@@ -120,7 +120,7 @@ class CommAgent(DQNAgent):
             parse["reward"] = [parse["reward"][0]-256]
         return parse
 
-    def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
+    def storeRecievedMessage(self, senderID, parse):
         # Action independent of the message as agent itself knows what action has been executed
         # Policy assumed to be a deterministic policy
         parse["action"] = self._action

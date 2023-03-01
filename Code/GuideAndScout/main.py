@@ -59,10 +59,10 @@ def noisedTest():
     envSetting["TRAIN_EPS"] = 1
     envSetting["TEST_MAX_EPS"] = 5
     envSetting["noised"] = True
-    envSetting["noiseP"] = 0.1
+    envSetting["noiseP"] = 0.2
     myRun = Runner(saveName="Test")
     myRun.train(envSetting=envSetting, wandbLog=False)
-    myRun.test(verbose=3)
+    myRun.test(noiseHandlingMode=0, verbose=4)
 
 
 def randomRun():
@@ -70,11 +70,11 @@ def randomRun():
     myRun.randomRun(verbose=2)
 
 
-def actualRun():
-    envSetting["TRAIN_EPS"] = 100000
-    myRun = Runner(envSetting, saveName="Noised5X5")
-    myRun.train(wandbLog=False)
-    myRun.test(verbose=1)
+# def actualRun():
+#     envSetting["TRAIN_EPS"] = 100000
+#     myRun = Runner(envSetting, saveName="Noised5X5")
+#     myRun.train(wandbLog=False)
+#     myRun.test(verbose=1)
 
 
 def testTrained():

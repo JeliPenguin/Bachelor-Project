@@ -1,21 +1,22 @@
 import numpy as np
-from Environment.EnvUtilities import decodeAction,transition
+from Environment.EnvUtilities import decodeAction, transition
+
 
 class MessageRecoverer():
-    def __init__(self,id,totalTreatNum) -> None:
+    def __init__(self, id, totalTreatNum) -> None:
         self._anchoredGuidePos = None
         self._anchoredTreatPos = None
         self._id = id
         self._totalTreatNum = totalTreatNum
 
-    def computeGuideAnchor(self,anchorVal):
+    def computeGuideAnchor(self, anchorVal):
         if self._anchoredGuidePos is None:
             self._anchoredGuidePos = anchorVal
-        
-    def computeTreatAnchor(self,anchorVal):
+
+    def computeTreatAnchor(self, anchorVal):
         self._anchoredTreatPos = anchorVal
 
-    def attemptRecovery(self, senderID, parse,recievedHistory,action):
+    def attemptRecovery(self, senderID, parse, recievedHistory, action):
         # Attempt in recovering original message by looking at history of correctly received messages
         # Could be checksum got corrupted, msg got corrupted or both
         # print("Recovering Message: ")
@@ -59,7 +60,7 @@ class MessageRecoverer():
                 transition(tuple(myState), actionTaken), dtype=np.uint8)
             if hasSPrime:
                 fixedsPrime[self._id*2:self._id*2 + 2] = mySPrime
-            #resolving other agents' (excluding guide) s and s'
+            # resolving other agents' (excluding guide) s and s'
             resolveOtherAgents()
 
         return {
