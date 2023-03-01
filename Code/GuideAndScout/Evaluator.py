@@ -12,9 +12,10 @@ class Evaluator():
         normNoisedModel = (normSaveName, None, "Norm_Noised")
         normModel = (normSaveName, None, "Norm")
         baseModel = (noisedSaveName, None, "Baseline")
-        self.models = [nhModel, normNoisedModel, baseModel, normModel]
+        self.modelToEvaluate = [nhModel, normNoisedModel, baseModel]
+        self.models = self.modelToEvaluate + [normModel]
         self.verbose = 0
-        self.noiseLevels = [0, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2,0.]
+        self.noiseLevels = [0, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2]
         self.repetitions = 1000
 
     def testRun(self, modelName, noiseLevel, noiseHandlingMode):
@@ -44,27 +45,25 @@ class Evaluator():
         dump(epsRecord, f"./Saves/Evaluation/{saveName}Eps")
         dump(rwdRecord, f"./Saves/Evaluation/{saveName}Rwd")
 
-    def checkSaved(self):
+    def doPlot(self,plotType):
         for model in self.models:
             modelSaveName = model[2]
-            epsRecord = load(f"./Saves/Evaluation/{modelSaveName}Eps")
-            plt.plot(self.noiseLevels, epsRecord, label=modelSaveName)
+            epsRecord = load(f"./Saves/Evaluation/{modelSaveName}{plotType}")
+            style = None
+            if modelSaveName == "Norm":
+                style = "dashed"
+            plt.plot(self.noiseLevels, epsRecord, label=modelSaveName,linestyle=style)
         plt.xlabel("Noise Level (p)")
         plt.ylabel("Average steps per episode")
         plt.legend(loc="upper left")
         plt.show()
 
-        for model in self.models:
-            modelSaveName = model[2]
-            rwdRecord = load(f"./Saves/Evaluation/{modelSaveName}Rwd")
-            plt.plot(self.noiseLevels, rwdRecord, label=modelSaveName)
-        plt.xlabel("Noise Level (p)")
-        plt.ylabel("Average return per episode")
-        plt.legend(loc="upper left")
-        plt.show()
+    def checkSaved(self):
+        self.doPlot("Eps")
+        self.doPlot("Rwd")
 
     def evaluate(self, reEval=False):
         if reEval:
-            for model in self.models:
+            for model in self.modelToEvaluate:
                 self.reEvaluate(model)
         self.checkSaved()
