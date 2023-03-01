@@ -94,7 +94,7 @@ def evaluate():
     norm = "Two5X5"
     noised = "Noised5X5"
     eT = Evaluator(norm, noised)
-    eT.evaluate(True)
+    eT.evaluate(False)
 
 
 if __name__ == "__main__":

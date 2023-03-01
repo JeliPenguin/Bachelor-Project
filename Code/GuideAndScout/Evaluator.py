@@ -8,9 +8,11 @@ from tqdm import tqdm
 
 class Evaluator():
     def __init__(self, normSaveName, noisedSaveName) -> None:
-        normModel = (normSaveName, 0, "Norm")
+        nhModel = (normSaveName, 0, "Noise_Handling")
+        normNoisedModel = (normSaveName, None, "Norm_Noised")
+        normModel = (normSaveName, None, "Norm")
         baseModel = (noisedSaveName, None, "Baseline")
-        self.models = [baseModel, normModel]
+        self.models = [nhModel, normNoisedModel, baseModel, normModel]
         self.verbose = 0
         self.noiseLevels = [0, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2]
         self.repetitions = 1000
@@ -25,12 +27,14 @@ class Evaluator():
         modelName = model[0]
         noiseHandling = model[1]
         saveName = model[2]
-        print(f"Evaluating Model {modelName}:")
+        print(f"Evaluating Model {saveName}:")
         epsRecord = []
         rwdRecord = []
         for noise in tqdm(self.noiseLevels):
             eps = []
             rwd = []
+            if saveName == "Norm" or noise == 0:
+                noise = None
             for _ in range(self.repetitions):
                 epsE, epsR = self.testRun(modelName, noise, noiseHandling)
                 eps.append(epsE)
