@@ -12,6 +12,11 @@ class Checksum(ErrorDetector):
             digitSum += int(binString[self._k*i:self._k*(i+1)], 2)
         digitSum = bin(digitSum)[2:]
         return digitSum
+    
+    def handleOverflow(self,digitSum):
+        x = len(digitSum)-self._k
+        newdigitSum = bin(int(digitSum[0:x], 2)+int(digitSum[x:], 2))[2:]
+        return newdigitSum
 
     def encode(self, encoded):
         # Normal encoded length 168
@@ -20,8 +25,7 @@ class Checksum(ErrorDetector):
         encoded = self.stringify(encoded)
         digitSum = self.calcDigitsum(encoded)
         if(len(digitSum) > self._k):
-            x = len(digitSum)-self._k
-            digitSum = bin(int(digitSum[0:x], 2)+int(digitSum[x:], 2))[2:]
+            digitSum = self.handleOverflow(digitSum)
         if(len(digitSum) < self._k):
             digitSum = '0'*(self._k-len(digitSum))+digitSum
 
@@ -34,19 +38,14 @@ class Checksum(ErrorDetector):
         return np.array(res, dtype=np.uint8)
 
     def decode(self, receivedMsg):
-        # receivedMsg includes checksum as the final 8 bits
         strReceivedMsg = self.stringify(receivedMsg)
         digitSum = self.calcDigitsum(strReceivedMsg)
         # Adding the overflow bits
         if(len(digitSum) > self._k):
-            x = len(digitSum)-self._k
-            digitSum = bin(
-                int(digitSum[0:x], 2)+int(digitSum[x:], 2))[2:]
-
-        checksum = 0
+            digitSum = self.handleOverflow(digitSum)
         for i in digitSum:
             if(i == '1'):
-                checksum += 0
+                continue
             else:
-                checksum += 1
-        return (checksum == 0),receivedMsg[self._k:]
+                return False,receivedMsg[self._k:]
+        return True,receivedMsg[self._k:]

@@ -90,6 +90,9 @@ class ScoutAgent(CommAgent):
                 # If majority voting unable to fix noise, attempt recovery of message using previous history
                 decoded = self.recoverer.attemptRecovery(
                     senderID, decoded, self._recievedHistory, self._action)
+                # reEncode = self.encodeMessage()
+                # checksumRecheck = False
+                # verbPrint(f"Checksum check after recovery: {checksumRecheck}",3)
             self.majorityAdjust(msgChecksumPass)
             verbPrint("Anchors:", 3)
             verbPrint(f"Guide Pos: {self.recoverer._anchoredGuidePos}", 3)
@@ -102,24 +105,42 @@ class ScoutAgent(CommAgent):
     def recieveBroadcast(self, signal):
         self._majorityNum = min(self._majorityNum + 2,self._bandwidth)
 
+    def parseState(self,state):
+        guidePos = state[:2]
+        treatsPos = state[self._n_observations - 2*self._totalTreatNum:]
+        scout1Pos = state[2:4]
+        scout2Pos = state[4:6]
+        return [guidePos,scout1Pos,scout2Pos,treatsPos]
+
+
+    def formatHistory(self):
+        history = self._messageReceived[0]
+        formatted = {}
+        formatted["state"] = self.parseState(history["state"])
+        formatted["action"] = history["action"]
+        if history["sPrime"] is None:
+            formatted["sPrime"] = None
+        else:
+            formatted["sPrime"] = self.parseState(history["sPrime"])
+        return formatted
+
     def rememberRecieved(self, correctChecksum):
         # Make a copy of all recieved messages
-        history = deepcopy(self._messageReceived)
-        history[GUIDEID]["checksum"] = correctChecksum
+        history = self.formatHistory()
+        history["checksum"] = correctChecksum
         self._recievedHistory.append(history)
         if correctChecksum:
-            for id in self._messageReceived.keys():
-                state = self._messageReceived[id]["state"]
-                guidePos = state[:2]
-                treatPos = state[self._n_observations - 2*self._totalTreatNum:]
-                self.recoverer.computeGuideAnchor(guidePos)
-                self.recoverer.computeTreatAnchor(treatPos)
+            # for id in self._messageReceived.keys():
+            state = self._messageReceived[GUIDEID]["state"]
+            guidePos = state[:2]
+            treatPos = state[self._n_observations - 2*self._totalTreatNum:]
+            self.recoverer.computeGuideAnchor(guidePos)
+            self.recoverer.computeTreatAnchor(treatPos)
 
         if getVerbose() >= 3:
             print("Recieved history: ")
             for hist in self._recievedHistory:
-                print(hist[GUIDEID])
-            print("\n")
+                print(hist)
 
     def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
         super().storeRecievedMessage(senderID, parse)
