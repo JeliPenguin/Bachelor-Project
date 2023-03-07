@@ -68,7 +68,7 @@ class ScoutAgent(CommAgent):
         if self._recieveCount >= self._MASampleSize:
             falseRatio = self._falseCount / self._recieveCount
             if falseRatio >= self._falseLimit:
-                self._majorityNum += 2
+                self._majorityNum = min(self._majorityNum + 2,self._bandwidth)
                 verbPrint(
                     f"Increased majority num, now is : {self._majorityNum}", 4)
                 self._falseCount = 0
@@ -100,7 +100,7 @@ class ScoutAgent(CommAgent):
         self.broadcastSignal(np.array([0]))
 
     def recieveBroadcast(self, signal):
-        self._majorityNum += 2
+        self._majorityNum = min(self._majorityNum + 2,self._bandwidth)
 
     def rememberRecieved(self, correctChecksum):
         # Make a copy of all recieved messages
@@ -111,7 +111,7 @@ class ScoutAgent(CommAgent):
             for id in self._messageReceived.keys():
                 state = self._messageReceived[id]["state"]
                 guidePos = state[:2]
-                treatPos = state[self._n_observations - 4:]
+                treatPos = state[self._n_observations - 2*self._totalTreatNum:]
                 self.recoverer.computeGuideAnchor(guidePos)
                 self.recoverer.computeTreatAnchor(treatPos)
 
@@ -145,7 +145,7 @@ class GuideAgent(CommAgent):
         return self.choose_action()
 
     def recieveBroadcast(self, signal):
-        self._majorityNum += 2
+        self._majorityNum = min(self._majorityNum + 2,self._bandwidth)
 
     def sendMessage(self, recieverID: int):
         if getVerbose() >= 2:

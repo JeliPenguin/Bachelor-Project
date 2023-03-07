@@ -57,12 +57,12 @@ def noisedRandomTest():
 
 def noisedTest():
     envSetting["TRAIN_EPS"] = 1
-    envSetting["TEST_MAX_EPS"] = 5
+    envSetting["TEST_MAX_EPS"] = 10
     envSetting["noised"] = True
     envSetting["noiseP"] = 0.2
     myRun = Runner(saveName="Test")
     myRun.train(envSetting=envSetting, wandbLog=False)
-    myRun.test(noiseHandlingMode=0, verbose=4)
+    myRun.test(noiseHandlingMode=0, verbose=3)
 
 
 def randomRun():
@@ -98,10 +98,10 @@ def evaluate():
 
 
 if __name__ == "__main__":
-    # noisedTest()
+    noisedTest()
     # quickTest()
     # randomRun()
     # actualRun()
     # testTrained()
     # plotter()
-    evaluate()
+    # evaluate()
