@@ -1,6 +1,6 @@
 from joblib import dump, load
 import matplotlib.pyplot as plt
-from Runner import Runner
+from Runner.Runner import Runner
 from Evaluator import Evaluator
 """
 Gridworld with treats, a Guide agent and Scout agent(s)
@@ -57,12 +57,12 @@ def noisedRandomTest():
 
 def noisedTest():
     envSetting["TRAIN_EPS"] = 1
-    envSetting["TEST_MAX_EPS"] = 10
+    envSetting["TEST_MAX_EPS"] = 20
     envSetting["noised"] = True
-    envSetting["noiseP"] = 0.2
+    envSetting["noiseP"] = 0.15
     myRun = Runner(saveName="Test")
     myRun.train(envSetting=envSetting, wandbLog=False)
-    myRun.test(noiseHandlingMode=0, verbose=3)
+    myRun.test(noiseHandlingMode=0, verbose=-1)
 
 
 def randomRun():
@@ -94,14 +94,14 @@ def evaluate():
     norm = "Two5X5"
     noised = "Noised5X5"
     eT = Evaluator(norm, noised)
-    eT.evaluate(False)
+    eT.evaluate()
 
 
 if __name__ == "__main__":
-    noisedTest()
+    # noisedTest()
     # quickTest()
     # randomRun()
     # actualRun()
     # testTrained()
     # plotter()
-    # evaluate()
+    evaluate()

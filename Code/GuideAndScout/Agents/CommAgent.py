@@ -17,7 +17,7 @@ class CommAgent(DQNAgent):
         self.errorDetector = Checksum(8)
         self._majorityNum = 3
         self._noiseHandling = noiseHandling
-        self._bandwidth = 10
+        self._bandwidth = 9
         self.reset()
 
     def reset(self):
@@ -67,10 +67,8 @@ class CommAgent(DQNAgent):
         For rewards, unsigned 129-255 used to represents -127 - -1
         """
         if self._messageMemory["reward"] is None and self._messageMemory["sPrime"] is None:
-            # Case state only
             msgString = self._messageMemory["state"]
         elif self._messageMemory["sPrime"] is None:
-            # Case termination
             msgString = np.concatenate(
                 (self._messageMemory["state"], self._messageMemory["reward"]))
         else:

@@ -1,5 +1,5 @@
 
-from Runner import Runner
+from Runner.Runner import Runner
 from joblib import dump, load
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,8 +15,9 @@ class Evaluator():
         self.modelToEvaluate = [nhModel, normNoisedModel, baseModel]
         self.models = self.modelToEvaluate + [normModel]
         self.verbose = 0
-        self.noiseLevels = [0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2,0.4,0.6,0.8,1]
-        self.repetitions = 1000
+        self.noiseLevels = [0, 0.001, 0.005, 0.01,
+                            0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1]
+        self.repetitions = 500
 
     def testRun(self, modelName, noiseLevel, noiseHandlingMode):
         run = Runner(modelName, eval=True)
@@ -45,14 +46,15 @@ class Evaluator():
         dump(epsRecord, f"./Saves/Evaluation/{saveName}Eps")
         dump(rwdRecord, f"./Saves/Evaluation/{saveName}Rwd")
 
-    def doPlot(self,plotType):
+    def doPlot(self, plotType):
         for model in self.models:
             modelSaveName = model[2]
             epsRecord = load(f"./Saves/Evaluation/{modelSaveName}{plotType}")
             style = None
             if modelSaveName == "Norm":
                 style = "dashed"
-            plt.plot(self.noiseLevels, epsRecord, label=modelSaveName,linestyle=style)
+            plt.plot(self.noiseLevels, epsRecord,
+                     label=modelSaveName, linestyle=style)
         plt.xlabel("Noise Level (p)")
         plt.ylabel("Average steps per episode")
         plt.legend(loc="upper left")

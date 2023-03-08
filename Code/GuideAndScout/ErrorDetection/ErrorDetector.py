@@ -9,6 +9,9 @@ class ErrorDetector():
         return encodedString
     
     def encode(self,msg):
+        """
+        Return numpy array of bits
+        """
         pass
 
     def decode(self,msg):
