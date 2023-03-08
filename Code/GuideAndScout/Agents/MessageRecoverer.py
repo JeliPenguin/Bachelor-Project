@@ -72,9 +72,9 @@ class MessageRecoverer():
                     if agentSPrime is not None:
                         agentSPrime = agentSPrime[otherAgentID]
                     otherAgentStates.append([agentS,agentSPrime])
-            verbPrint(f"Agent: {self._id}",-1)
-            verbPrint("Other Agent States:",-1)
-            verbPrint(otherAgentStates,-1)
+            # verbPrint(f"Agent: {self._id}",-1)
+            # verbPrint("Other Agent States:",-1)
+            # verbPrint(otherAgentStates,-1)
 
         return {
             "state": fixedState,
