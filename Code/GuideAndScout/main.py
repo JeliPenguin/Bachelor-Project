@@ -1,6 +1,6 @@
 from joblib import dump, load
 import matplotlib.pyplot as plt
-from Runner import Runner
+from Runner.Runner import Runner
 from Evaluator import Evaluator
 """
 Gridworld with treats, a Guide agent and Scout agent(s)

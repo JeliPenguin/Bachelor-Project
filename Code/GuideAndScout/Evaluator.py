@@ -1,5 +1,5 @@
 
-from Runner import Runner
+from Runner.Runner import Runner
 from joblib import dump, load
 import numpy as np
 import matplotlib.pyplot as plt
