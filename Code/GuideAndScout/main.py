@@ -1,6 +1,7 @@
 from joblib import dump, load
 import matplotlib.pyplot as plt
 from Runner.NormRunner import Runner
+from Runner.SchedRunner import SchedRunner
 from Evaluator import Evaluator
 """
 Gridworld with treats, a Guide agent and Scout agent(s)
@@ -77,6 +78,14 @@ def randomRun():
 #     myRun.test(verbose=1)
 
 
+def schedTrain():
+    envSetting["TRAIN_EPS"] = 100000
+    # envSetting["TRAIN_EPS"] = 10
+    myRun = SchedRunner(saveName="Sched5X5")
+    myRun.train(envSetting=envSetting)
+    # myRun.test(verbose=1)
+
+
 def testTrained():
     myRun = Runner(saveName="Two5X5")
     myRun.test(verbose=3)
@@ -104,4 +113,5 @@ if __name__ == "__main__":
     # actualRun()
     # testTrained()
     # plotter()
-    evaluate()
+    # evaluate()
+    schedTrain()

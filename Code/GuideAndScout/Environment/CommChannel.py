@@ -4,12 +4,16 @@ import numpy as np
 class CommChannel():
     def __init__(self, agents, noiseP, noised=False) -> None:
         self._noised = noised
-        self._noiseP = noiseP
+        self.setNoiseP(noiseP)
         self._agents = agents
 
     def setupChannel(self):
         for agent in self._agents:
             agent.setChannel(self)
+
+    def setNoiseP(self, noiseP):
+        # print(f"Setting noisep: {noiseP}")
+        self._noiseP = noiseP
 
     def addNoise(self, msg):
         noise = np.random.random(msg.shape) < self._noiseP

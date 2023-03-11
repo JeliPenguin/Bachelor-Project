@@ -1,8 +1,9 @@
 from Runner.RunnerBase import RunnerBase
-from const import setVerbose
+from const import setVerbose,trainSeed
 from Environment.EnvUtilities import *
 from tqdm import tqdm
 from joblib import dump
+import random
 
 
 class SchedRunner(RunnerBase):
@@ -17,6 +18,7 @@ class SchedRunner(RunnerBase):
         """
         Run training with given environment settings, but with scheduled changes in channel noise
         """
+        random.seed(trainSeed)
         setVerbose(verbose)
         agents, env = self.setupRun("train", envSetting)
         scouts = agents[startingScoutID:]
@@ -28,6 +30,7 @@ class SchedRunner(RunnerBase):
         for eps in tqdm(range(self._TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State only observerd by the guide
+            self._channel.setNoiseP(random.random())
             state = env.reset()
             done = False
             episodicReward = 0

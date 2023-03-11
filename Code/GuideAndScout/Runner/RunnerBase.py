@@ -99,8 +99,8 @@ class RunnerBase():
                 self._noiseP = noiseLevel
             verbPrint(f"Noise level: {self._noiseP}", 1)
         verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
-        channel = CommChannel(agents, self._noiseP, noised)
-        channel.setupChannel()
+        self._channel = CommChannel(agents, self._noiseP, noised)
+        self._channel.setupChannel()
         env = CommGridEnv(self._row, self._column, agents, self._treatNum,
                           render)
 
