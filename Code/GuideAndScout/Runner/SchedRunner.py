@@ -24,6 +24,7 @@ class SchedRunner(RunnerBase):
         scouts = agents[startingScoutID:]
         episodicRewards = []
         episodicSteps = []
+        print("Sched Runner")
         print(f"Training On: ")
         print(self._configuredEnvSetting)
         print(f"Running {self._TRAIN_EPS} epochs:")
