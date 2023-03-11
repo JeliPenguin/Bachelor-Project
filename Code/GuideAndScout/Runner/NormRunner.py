@@ -1,13 +1,14 @@
 from Runner.RunnerBase import RunnerBase
-from const import setVerbose
-from Environment.EnvUtilities import *
+import wandb
 from tqdm import tqdm
+from Environment.EnvUtilities import *
+from const import setVerbose
 from joblib import dump
 
 
-class SchedRunner(RunnerBase):
+class Runner(RunnerBase):
     """
-        Runner with varied p for the binary symmetric channel when training
+    Normal Runner with constant p for the binary symmetric channel when training
     """
 
     def __init__(self, saveName, eval=False) -> None:
@@ -15,9 +16,12 @@ class SchedRunner(RunnerBase):
 
     def train(self, envSetting=None, verbose=0, wandbLog=False):
         """
-        Run training with given environment settings, but with scheduled changes in channel noise
+        Run training with given environment settings
         """
         setVerbose(verbose)
+        if wandbLog:
+            wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
+            wandb.config = self._configuredEnvSetting
         agents, env = self.setupRun("train", envSetting)
         scouts = agents[startingScoutID:]
         episodicRewards = []
@@ -46,6 +50,9 @@ class SchedRunner(RunnerBase):
             for scout in scouts:
                 scout.updateEps()
 
+            if wandbLog:
+                wandb.log({"episodicStep": step})
+                wandb.log({"episodicReward": episodicReward})
             episodicSteps.append(step)
             episodicRewards.append(episodicReward)
         for a in agents:
