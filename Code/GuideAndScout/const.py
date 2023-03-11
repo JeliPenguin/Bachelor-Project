@@ -23,3 +23,7 @@ def getVerbose():
 def verbPrint(string, verbose):
     if getVerbose() >= verbose:
         print(string)
+
+
+trainSeed = 10
+evalSeed = 17

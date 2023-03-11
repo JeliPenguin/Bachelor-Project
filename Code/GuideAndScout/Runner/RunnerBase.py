@@ -1,18 +1,14 @@
 from Environment.CommGridEnv import CommGridEnv
 from Agents.GuideScout import *
-from const import *
-from Environment.EnvUtilities import *
+from const import verbPrint, setVerbose
 from joblib import dump, load
 from Environment.CommChannel import CommChannel
 from typing import List
-from tqdm import tqdm
 import os
 from datetime import datetime
-from typing import List
-import wandb
 
 
-class Runner():
+class RunnerBase():
     def __init__(self, saveName, eval=False) -> None:
         """
 
@@ -103,16 +99,14 @@ class Runner():
                 self._noiseP = noiseLevel
             verbPrint(f"Noise level: {self._noiseP}", 1)
         verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
-        channel = CommChannel(agents, self._noiseP, noised)
-        channel.setupChannel()
+        self._channel = CommChannel(agents, self._noiseP, noised)
+        self._channel.setupChannel()
         env = CommGridEnv(self._row, self._column, agents, self._treatNum,
                           render)
 
         return agents, env
 
     def doStep(self, agents, env: CommGridEnv, state):
-        # Guide only chooses action STAY
-        # Scouts choose epsilon greedy action solely on recieved message
         verbPrint(
             "=================================================================\n", 1)
         guide = agents[GUIDEID]
@@ -143,50 +137,7 @@ class Runner():
         """
         Run training with given environment settings
         """
-        setVerbose(verbose)
-        if wandbLog:
-            wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
-            wandb.config = self._configuredEnvSetting
-        agents, env = self.setupRun("train", envSetting)
-        scouts = agents[startingScoutID:]
-        episodicRewards = []
-        episodicSteps = []
-        print(f"Training On: ")
-        print(self._configuredEnvSetting)
-        print(f"Running {self._TRAIN_EPS} epochs:")
-        for eps in tqdm(range(self._TRAIN_EPS)):
-            # Initialize the environment and get it's state
-            # State only observerd by the guide
-            state = env.reset()
-            done = False
-            episodicReward = 0
-            step = 0
-            while not done:
-                sPrime, reward, done, _ = self.doStep(
-                    agents, env, state)
-                for scout in scouts:
-                    scout.memorize()
-                    scout.optimize()
-                # Move to the next state
-                state = sPrime
-                episodicReward += reward
-                step += 1
-
-            for scout in scouts:
-                scout.updateEps()
-
-            if wandbLog:
-                wandb.log({"episodicStep": step})
-                wandb.log({"episodicReward": episodicReward})
-            episodicSteps.append(step)
-            episodicRewards.append(episodicReward)
-        for a in agents:
-            a._memory.clear()
-        agentSettings = [a.getSetting() for a in agents]
-        dump(agents, self._agentsSaveDir)
-        dump(agentSettings, self._agentSettingSaveDir)
-        dump(episodicRewards, self._rewardsSaveDir)
-        dump(episodicSteps, self._stepsSaveDir)
+        raise NotImplementedError
 
     def test(self, verbose=2, noiseLevel=None, noiseHandlingMode=None):
         setVerbose(verbose)
