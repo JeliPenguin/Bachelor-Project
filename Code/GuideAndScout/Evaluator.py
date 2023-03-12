@@ -13,8 +13,10 @@ class Evaluator():
         normNoisedModel = (normSaveName, None, "Norm_Noised")
         normModel = (normSaveName, None, "Norm")
         baseModel = (noisedSaveName, None, "Baseline")
-        self.modelToEvaluate = [nhModel, normNoisedModel, baseModel]
-        self.models = self.modelToEvaluate + [normModel]
+        schedModel = ("Sched5x5", None, "Sched")
+        self.modelToEvaluate = []
+        self.models = self.modelToEvaluate + \
+            [nhModel, normNoisedModel, baseModel, normModel]
         self.verbose = 0
         self.noiseLevels = [0, 0.001, 0.005, 0.01,
                             0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1]

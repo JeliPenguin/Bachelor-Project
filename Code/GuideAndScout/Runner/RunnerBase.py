@@ -83,7 +83,6 @@ class RunnerBase():
         loadSave = setupType == "test"
         self.setupEnvSetting(loadSave, envSetting)
         render = getVerbose() != 0
-        noised = (self._noised or noiseLevel) and (setupType != "train")
 
         agents = self.instantiateAgents()
         agentSetting = None
@@ -93,13 +92,13 @@ class RunnerBase():
             agent.setNoiseHandling(noiseHandlingMode)
             if agentSetting:
                 agent.loadSetting(agentSetting[i])
-        verbPrint(f"Environment Noised: {noised}", 1)
-        if noised:
+        print(f"Channel Noised: {self._noised}")
+        if self._noised:
             if noiseLevel:
                 self._noiseP = noiseLevel
             verbPrint(f"Noise level: {self._noiseP}", 1)
         verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
-        self._channel = CommChannel(agents, self._noiseP, noised)
+        self._channel = CommChannel(agents, self._noiseP, self._noised)
         self._channel.setupChannel()
         env = CommGridEnv(self._row, self._column, agents, self._treatNum,
                           render)
@@ -107,8 +106,8 @@ class RunnerBase():
         return agents, env
 
     def doStep(self, agents, env: CommGridEnv, state):
-        verbPrint(
-            "=================================================================\n", 1)
+        # verbPrint(
+        #     "=================================================================\n", 1)
         guide = agents[GUIDEID]
         verbPrint("SENDING CURRENT STATE ONLY", 2)
         for scoutID in range(startingScoutID, len(agents)):
@@ -154,8 +153,8 @@ class RunnerBase():
             state = sPrime
             step += 1
             rewards += reward
-        verbPrint(
-            f"===================================================\nCompleted in {step} steps\n===================================================", 1)
+        # verbPrint(
+        #     f"===================================================\nCompleted in {step} steps\n===================================================", 1)
         return step, rewards
 
     def randomRun(self, verbose=1):

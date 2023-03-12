@@ -19,6 +19,12 @@ class CommGridEnv():
         self._teamReward = None
         self._toRender = render
         self._toNumpify = numpify
+        self._seed = None
+        
+
+    def setSeed(self, seed):
+        self._seed = seed
+        np.random.seed(self._seed)
 
     def initGrid(self) -> List[tuple]:
         self._steps = 0
@@ -39,6 +45,7 @@ class CommGridEnv():
                 "state": loc, "last-action": -1, "reward": 0, "symbol": agent.getSymbol()}
         if self._toRender:
             self.render()
+            self._toRender = False
 
         if self._toNumpify:
             return self.numpifiedState()
