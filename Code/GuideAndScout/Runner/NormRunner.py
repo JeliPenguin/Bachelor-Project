@@ -11,8 +11,8 @@ class Runner(RunnerBase):
     Normal Runner with constant p for the binary symmetric channel when training
     """
 
-    def __init__(self, saveName, eval=False) -> None:
-        super().__init__(saveName, eval)
+    def __init__(self, saveName) -> None:
+        super().__init__(saveName)
 
     def train(self, envSetting=None, verbose=0, wandbLog=False):
         """

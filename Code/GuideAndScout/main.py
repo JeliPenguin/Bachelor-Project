@@ -52,16 +52,16 @@ def quickTest():
 def noisedRandomTest():
     envSetting["noised"] = True
     envSetting["noiseP"] = 0.05
-    myRun = Runner(saveName="Test")
+    myRun = Runner(saveName="Test2")
     myRun.randomRun(verbose=3)
 
 
-def noisedTest():
+def noisedTest(p):
     envSetting["TRAIN_EPS"] = 1
     envSetting["TEST_MAX_EPS"] = 20
     envSetting["noised"] = True
-    envSetting["noiseP"] = 0.15
-    myRun = Runner(saveName="Test")
+    envSetting["noiseP"] = p
+    myRun = Runner(saveName="Test2")
     myRun.train(envSetting=envSetting, wandbLog=False)
     myRun.test(noiseHandlingMode=0, verbose=-1)
 
@@ -103,15 +103,16 @@ def evaluate():
     norm = "Two5X5"
     noised = "Noised5X5"
     eT = Evaluator(norm, noised)
-    eT.evaluate()
+    eT.evaluate(True)
 
 
 if __name__ == "__main__":
-    # noisedTest()
+    # noisedTest(0.3)
+    # noisedRandomTest()
     # quickTest()
     # randomRun()
     # actualRun()
     # testTrained()
     # plotter()
-    # evaluate()
-    schedTrain()
+    evaluate()
+    # schedTrain()

@@ -9,12 +9,11 @@ from datetime import datetime
 
 
 class RunnerBase():
-    def __init__(self, saveName, eval=False) -> None:
+    def __init__(self, saveName) -> None:
         """
 
         """
         self.saveName = saveName
-        self.eval = eval
         self.defaultEnvSetting = {
             "row": 5,
             "column": 5,
@@ -59,10 +58,7 @@ class RunnerBase():
         self._noised = self._configuredEnvSetting["noised"]
         self._noiseP = self._configuredEnvSetting["noiseP"]
         self._TRAIN_EPS = self._configuredEnvSetting["TRAIN_EPS"]
-        if self.eval:
-            self._TEST_MAX_EPS = 1000
-        else:
-            self._TEST_MAX_EPS = self._configuredEnvSetting["TEST_MAX_EPS"]
+        self._TEST_MAX_EPS = self._configuredEnvSetting["TEST_MAX_EPS"]
         self._RAND_EPS = self._configuredEnvSetting["RAND_EPS"]
 
     def instantiateAgents(self):
@@ -92,7 +88,7 @@ class RunnerBase():
             agent.setNoiseHandling(noiseHandlingMode)
             if agentSetting:
                 agent.loadSetting(agentSetting[i])
-        print(f"Channel Noised: {self._noised}")
+        # print(f"Channel Noised: {self._noised}")
         if self._noised:
             if noiseLevel:
                 self._noiseP = noiseLevel

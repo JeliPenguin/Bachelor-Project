@@ -1,5 +1,5 @@
 
-from Runner.NormRunner import Runner
+from Runner.EvalRunner import EvalRunner
 from joblib import dump, load
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +9,13 @@ from random import random
 
 class Evaluator():
     def __init__(self, normSaveName, noisedSaveName) -> None:
+        # randModel = ("Test",None,"Random")
+        # randModel2 = ("Test",None,"Random2")
+        # randModel3 = ("Test2",None,"Random3")
+        # self.modelToEvaluate = [randModel,randModel2,randModel3]
+        # self.models =self.modelToEvaluate
+
+
         nhModel = (normSaveName, 0, "Noise_Handling")
         normNoisedModel = (normSaveName, None, "Norm_Noised")
         normModel = (normSaveName, None, "Norm")
@@ -17,21 +24,16 @@ class Evaluator():
         self.modelToEvaluate = []
         self.models = self.modelToEvaluate + \
             [nhModel, normNoisedModel, baseModel, normModel]
-        self.verbose = 0
         self.noiseLevels = [0, 0.001, 0.005, 0.01,
                             0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1]
-        self.repetitions = 500
+        self.repetitions = 2
 
-    def testRun(self, modelName, noiseLevel, noiseHandlingMode):
-        run = Runner(modelName, eval=True)
+    def testRun(self, run, noiseLevel, noiseHandlingMode):
         steps, reward = run.test(
             verbose=0, noiseLevel=noiseLevel, noiseHandlingMode=noiseHandlingMode)
         return steps, reward
 
-    def reEvaluate(self, model):
-        modelName = model[0]
-        noiseHandling = model[1]
-        saveName = model[2]
+    def reEvaluate(self, run,noiseHandling,saveName):
         print(f"Evaluating Model {saveName}:")
         epsRecord = []
         rwdRecord = []
@@ -41,7 +43,7 @@ class Evaluator():
             if saveName == "Norm" or noise == 0:
                 noise = None
             for _ in range(self.repetitions):
-                epsE, epsR = self.testRun(modelName, noise, noiseHandling)
+                epsE, epsR = self.testRun(run, noise, noiseHandling)
                 eps.append(epsE)
                 rwd.append(epsR)
             epsRecord.append(np.mean(eps))
@@ -56,6 +58,7 @@ class Evaluator():
             style = None
             if modelSaveName == "Norm":
                 style = "dashed"
+            # print(epsRecord)
             plt.plot(self.noiseLevels, epsRecord,
                      label=modelSaveName, linestyle=style)
         plt.xlabel("Noise Level (p)")
@@ -70,5 +73,9 @@ class Evaluator():
     def evaluate(self, reEval=False):
         if reEval:
             for model in self.modelToEvaluate:
-                self.reEvaluate(model)
+                modelName = model[0]
+                noiseHandling = model[1]
+                saveName = model[2]
+                run= EvalRunner(modelName)
+                self.reEvaluate(run,noiseHandling,saveName)
         self.checkSaved()

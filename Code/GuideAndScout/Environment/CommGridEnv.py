@@ -20,7 +20,6 @@ class CommGridEnv():
         self._toRender = render
         self._toNumpify = numpify
         self._seed = None
-        
 
     def setSeed(self, seed):
         self._seed = seed
