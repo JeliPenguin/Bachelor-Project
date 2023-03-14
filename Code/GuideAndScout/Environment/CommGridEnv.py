@@ -16,7 +16,6 @@ class CommGridEnv():
                                 for agent in self._agents])
         self._action_space = ACTIONSPACE
         self._state_space = self._row * self._column
-        self._teamReward = None
         self._toRender = render
         self._toNumpify = numpify
         self._seed = None
@@ -26,6 +25,7 @@ class CommGridEnv():
         np.random.seed(self._seed)
 
     def initGrid(self) -> List[tuple]:
+        self._teamReward = None
         self._steps = 0
         self._treatCount = self._treatNum
         self._initLoc = set()

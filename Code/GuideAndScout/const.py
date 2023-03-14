@@ -28,4 +28,4 @@ def verbPrint(string, verbose):
 # Seed for randomness in Binary symmetric model
 trainSeed = 10
 # Seed for randomness in envrionment init
-evalSeed = 17
+evalSeed = 20
