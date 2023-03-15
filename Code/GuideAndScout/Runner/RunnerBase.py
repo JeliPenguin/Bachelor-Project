@@ -1,4 +1,6 @@
+from Environment.FindingTreat import FindingTreat
 from Environment.CommGridEnv import CommGridEnv
+from Environment.Spread import Spread
 from Agents.GuideScout import *
 from const import verbPrint, setVerbose
 from joblib import dump, load
@@ -87,7 +89,7 @@ class RunnerBase():
             agent.setNoiseHandling(noiseHandlingMode)
             if agentSetting:
                 agent.loadSetting(agentSetting[i])
-        
+
         noised = self._noised
         if setupType == "test":
             noised = noiseLevel is not None
@@ -97,13 +99,14 @@ class RunnerBase():
                 self._noiseP = 0
         # print(f"Channel Noised: {self._noised}")
             # verbPrint(f"Noise level: {self._noiseP}", 1)
-        # print(f"Noised: {noised}")
+        print(f"Noised: {noised}")
         # print(f"Noise level: {self._noiseP}")
         verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
         self._channel = CommChannel(agents, self._noiseP, noised)
         self._channel.setupChannel()
-        env = CommGridEnv(self._row, self._column, agents, self._treatNum,
-                          render)
+        env = FindingTreat(self._row, self._column, agents, self._treatNum,
+                           render)
+        print("Running on environment: ", env.envName())
 
         return agents, env
 

@@ -31,7 +31,7 @@ class SchedRunner(RunnerBase):
         for eps in tqdm(range(self._TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State only observerd by the guide
-            noiseP = random.uniform(0, 0.6)
+            noiseP = random.uniform(0, 0.5)
             self._channel.setNoiseP(noiseP)
             state = env.reset()
             done = False

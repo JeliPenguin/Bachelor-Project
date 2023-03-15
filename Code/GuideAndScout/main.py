@@ -103,16 +103,16 @@ def evaluate():
     norm = "Two5X5"
     noised = "Noised5X5"
     eT = Evaluator(norm, noised)
-    eT.evaluate(True)
+    eT.evaluate(True,range=0.6)
 
 
 if __name__ == "__main__":
-    # noisedTest(0.3)
+    noisedTest(0.3)
     # noisedRandomTest()
     # quickTest()
     # randomRun()
     # actualRun()
     # testTrained()
     # plotter()
-    evaluate()
+    # evaluate()
     # schedTrain()

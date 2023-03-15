@@ -6,7 +6,7 @@ from Agents.CommAgent import CommAgent
 
 
 class CommGridEnv():
-    def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True) -> None:
+    def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True, envName="Base") -> None:
         self._row = row
         self._column = column
         self._treatNum = treatNum
@@ -19,6 +19,10 @@ class CommGridEnv():
         self._toRender = render
         self._toNumpify = numpify
         self._seed = None
+        self._envName = envName
+
+    def envName(self):
+        return self._envName
 
     def setSeed(self, seed):
         self._seed = seed
@@ -163,32 +167,7 @@ class CommGridEnv():
     #     return reward
 
     def rewardFunction(self, sPrimes, ateTreatRecord, doneRecord):
-        """ 
-        Calculate reward in simulatneous manner and returns a unified team reward
-        ateTreat: Boolean indicating whether a treat has been eaten
-        done: Boolean indicating state of the game
-        Cannot set reward > 128 due to message encodings
-        """
-        time_penalty = -1
-        treat_penalty = -2
-        treatReward = 10
-        # doneReward = 50
-
-        # if doneRecord[-1]:
-        #     return doneReward
-
-        reward = 0
-        for ateTreat in ateTreatRecord:
-            if ateTreat:
-                reward += treatReward
-
-        # Penalised for taking extra timesteps
-        reward += time_penalty
-        # Penalise for remaining treats
-        reward += treat_penalty * self._treatCount
-        # reward -= self.distanceToTreats()
-
-        return reward
+        raise NotImplementedError
 
     def step(self, actions: List[int]):
         """
