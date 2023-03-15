@@ -1,4 +1,6 @@
+from Environment.FindingTreat import FindingTreat
 from Environment.CommGridEnv import CommGridEnv
+from Environment.Spread import Spread
 from Agents.GuideScout import *
 from const import verbPrint, setVerbose
 from joblib import dump, load
@@ -9,19 +11,18 @@ from datetime import datetime
 
 
 class RunnerBase():
-    def __init__(self, saveName, eval=False) -> None:
+    def __init__(self, saveName) -> None:
         """
 
         """
         self.saveName = saveName
-        self.eval = eval
         self.defaultEnvSetting = {
             "row": 5,
             "column": 5,
             "treatNum": 2,
             "scoutsNum": 2,
             "noised": False,
-            "noiseP": 0.005,
+            "noiseP": None,
             "TRAIN_EPS": 5,
             "TEST_MAX_EPS": 30,
             "RAND_EPS": 1,
@@ -59,10 +60,7 @@ class RunnerBase():
         self._noised = self._configuredEnvSetting["noised"]
         self._noiseP = self._configuredEnvSetting["noiseP"]
         self._TRAIN_EPS = self._configuredEnvSetting["TRAIN_EPS"]
-        if self.eval:
-            self._TEST_MAX_EPS = 1000
-        else:
-            self._TEST_MAX_EPS = self._configuredEnvSetting["TEST_MAX_EPS"]
+        self._TEST_MAX_EPS = self._configuredEnvSetting["TEST_MAX_EPS"]
         self._RAND_EPS = self._configuredEnvSetting["RAND_EPS"]
 
     def instantiateAgents(self):
@@ -83,8 +81,6 @@ class RunnerBase():
         loadSave = setupType == "test"
         self.setupEnvSetting(loadSave, envSetting)
         render = getVerbose() != 0
-        noised = (self._noised or noiseLevel) and (setupType != "train")
-
         agents = self.instantiateAgents()
         agentSetting = None
         if setupType == "test":
@@ -93,22 +89,30 @@ class RunnerBase():
             agent.setNoiseHandling(noiseHandlingMode)
             if agentSetting:
                 agent.loadSetting(agentSetting[i])
-        verbPrint(f"Environment Noised: {noised}", 1)
-        if noised:
-            if noiseLevel:
+
+        noised = self._noised
+        if setupType == "test":
+            noised = noiseLevel is not None
+            if noised:
                 self._noiseP = noiseLevel
-            verbPrint(f"Noise level: {self._noiseP}", 1)
+            else:
+                self._noiseP = 0
+        # print(f"Channel Noised: {self._noised}")
+            # verbPrint(f"Noise level: {self._noiseP}", 1)
+        print(f"Noised: {noised}")
+        # print(f"Noise level: {self._noiseP}")
         verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
         self._channel = CommChannel(agents, self._noiseP, noised)
         self._channel.setupChannel()
-        env = CommGridEnv(self._row, self._column, agents, self._treatNum,
-                          render)
+        env = FindingTreat(self._row, self._column, agents, self._treatNum,
+                           render)
+        print("Running on environment: ", env.envName())
 
         return agents, env
 
     def doStep(self, agents, env: CommGridEnv, state):
-        verbPrint(
-            "=================================================================\n", 1)
+        # verbPrint(
+        #     "=================================================================\n", 1)
         guide = agents[GUIDEID]
         verbPrint("SENDING CURRENT STATE ONLY", 2)
         for scoutID in range(startingScoutID, len(agents)):

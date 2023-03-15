@@ -2,7 +2,7 @@ import numpy as np
 
 
 class CommChannel():
-    def __init__(self, agents, noiseP, noised=False) -> None:
+    def __init__(self, agents, noiseP: float, noised=False) -> None:
         self._noised = noised
         self.setNoiseP(noiseP)
         self._agents = agents
@@ -11,7 +11,7 @@ class CommChannel():
         for agent in self._agents:
             agent.setChannel(self)
 
-    def setNoiseP(self, noiseP):
+    def setNoiseP(self, noiseP:float):
         # print(f"Setting noisep: {noiseP}")
         self._noiseP = noiseP
 

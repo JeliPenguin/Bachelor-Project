@@ -2,5 +2,6 @@ gym
 torch
 numpy
 matplotlib
+seaborn
 pygame
 wandb

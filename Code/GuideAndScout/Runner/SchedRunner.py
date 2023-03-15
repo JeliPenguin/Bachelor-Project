@@ -1,5 +1,5 @@
 from Runner.RunnerBase import RunnerBase
-from const import setVerbose,trainSeed
+from const import setVerbose, trainSeed
 from Environment.EnvUtilities import *
 from tqdm import tqdm
 from joblib import dump
@@ -11,8 +11,8 @@ class SchedRunner(RunnerBase):
         Runner with varied p for the binary symmetric channel when training
     """
 
-    def __init__(self, saveName, eval=False) -> None:
-        super().__init__(saveName, eval)
+    def __init__(self, saveName) -> None:
+        super().__init__(saveName)
 
     def train(self, envSetting=None, verbose=0, wandbLog=False):
         """
@@ -31,7 +31,8 @@ class SchedRunner(RunnerBase):
         for eps in tqdm(range(self._TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State only observerd by the guide
-            self._channel.setNoiseP(random.random())
+            noiseP = random.uniform(0, 0.5)
+            self._channel.setNoiseP(noiseP)
             state = env.reset()
             done = False
             episodicReward = 0
