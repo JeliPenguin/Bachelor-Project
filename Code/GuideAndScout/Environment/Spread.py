@@ -1,14 +1,16 @@
 from Environment.CommGridEnv import CommGridEnv
 from Agents.CommAgent import CommAgent
 from typing import Tuple
+from Environment.EnvUtilities import *
+import numpy as np
 
 
 class Spread(CommGridEnv):
     def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True) -> None:
-        super().__init__(row, column, agents, treatNum, render, numpify,envName="Spread")
-    
+        super().__init__(row, column, agents, treatNum, render, numpify, envName="Spread")
+
     def rewardFunction(self, sPrimes, ateTreatRecord, doneRecord):
-        # """ 
+        # """
         # Calculate reward in simulatneous manner and returns a unified team reward
         # ateTreat: Boolean indicating whether a treat has been eaten
         # done: Boolean indicating state of the game
@@ -34,4 +36,26 @@ class Spread(CommGridEnv):
         # # reward -= self.distanceToTreats()
 
         # return reward
+        pass
+
+    def agentStep(self, agentID: int, action: int):
+        """
+        Taking one step for an agent specified by its ID
+        """
+        # s = self._agentInfo[agentID]["state"]
+        # sPrime = self.takeAction(s, action)
+        # ateTreat = False
+        # agentSymbol = self._agentInfo[agentID]["symbol"]
+        # done = False
+        # if s != sPrime:
+        #     self._agentInfo[agentID]["state"] = sPrime
+        #     self._grid[s[0]][s[1]] = EMPTY
+        #     if self._grid[sPrime[0]][sPrime[1]] == TREAT:
+        #         self._treatLocations.remove(sPrime)
+        #         ateTreat = True
+        #         self._treatCount -= 1
+        #     done = self._treatCount <= 0
+        #     self._grid[sPrime[0]][sPrime[1]] = agentSymbol
+
+        # return sPrime, ateTreat, done
         pass
