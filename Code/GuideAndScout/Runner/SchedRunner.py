@@ -1,5 +1,5 @@
 from Runner.RunnerBase import RunnerBase
-from const import setVerbose, trainSeed
+from const import setVerbose, trainSeed, evalNoiseLevels
 from Environment.EnvUtilities import *
 from tqdm import tqdm
 from joblib import dump
@@ -31,7 +31,7 @@ class SchedRunner(RunnerBase):
         for eps in tqdm(range(self._TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State only observerd by the guide
-            noiseP = random.uniform(0, 0.5)
+            noiseP = random.choice(evalNoiseLevels)
             self._channel.setNoiseP(noiseP)
             state = env.reset()
             done = False
