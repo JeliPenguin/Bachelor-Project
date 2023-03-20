@@ -6,6 +6,18 @@ from Agents.CommAgent import CommAgent
 
 
 class CommGridEnv():
+    """
+    Gridworld with treats, a Guide agent and Scout agent(s)
+
+    Guide agent cannot move but can observe the environment and send messages
+
+    Scout agent can move but cannot observe the environment and send messages
+
+    Guide and scout need to cooporate through communication to obtain all treats
+
+    With additional scouts added, scouts themselves would also need to cooperate to obtain all treats in least amount
+    of time
+    """
     def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True, envName="Base") -> None:
         self._row = row
         self._column = column
@@ -108,30 +120,13 @@ class CommGridEnv():
         """
         movement = decodeAction(action)
         newState = transition(state, movement)
-        ''' If the new state is outside the grid then remain at same state
-            Allows agents to be on same state'''
+        ''' If the new state is outside the grid or collided with other agents then remain at same state'''
         if min(newState) < 0 or max(newState) > min(self._row-1, self._column-1) or self._grid[newState[0]][newState[1]] in self._agentSymbol:
             return state
         return newState
 
     def agentStep(self, agentID: int, action: int):
         raise NotImplementedError
-
-    # def rewardFunc(self, ateTreat: bool, done: bool) -> float:
-    #     """
-    #         ateTreat: Boolean indicating whether a treat has been eaten
-    #         done: Boolean indicating state of the game
-    #         Cannot set reward > 128 due to message encodings
-    #     """
-    #     # if done:
-    #     #     return self.doneReward
-    #     if ateTreat or done:
-    #         return self.treatReward
-    #     reward = self.time_penalty
-    #     # reward -= self.distanceToTreats()
-    #     # Penalise for remaining treats
-    #     reward += self.treat_penalty * self.treatCount
-    #     return reward
 
     def rewardFunction(self, sPrimes, ateTreatRecord, doneRecord):
         raise NotImplementedError
@@ -144,7 +139,7 @@ class CommGridEnv():
         ateTreatRecord = []
         doneRecord = []
         # Agents take turn to do their action
-        # Guide -> Scout1 -> Scout2
+        # Guide -> Remaining scouts in ascending id order
         for agentID, agentAction in enumerate(actions):
             self._agentInfo[agentID]["last-action"] = agentAction
             sPrime, ateTreat, done = self.agentStep(agentID, agentAction)
