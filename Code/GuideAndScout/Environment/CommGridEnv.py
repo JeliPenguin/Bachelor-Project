@@ -97,19 +97,21 @@ class CommGridEnv():
 
     def takeAction(self, state: tuple, action: int):
         """ 
-        Given current state as x,y coordinates and an action, return coordinate of resulting new state
+        Given current state as x,y coordinates and an action, return coordinate of resulting new state and flag for collision
         """
+        if action == STAY:
+            return state,False
         movement = decodeAction(action)
         newState = transition(state, movement)
         ''' If the new state is outside the grid or collided with other agents then remain at same state'''
         if min(newState) < 0 or max(newState) > min(self._row-1, self._column-1) or self._grid[newState[0]][newState[1]] in self._agentSymbol:
-            return state
-        return newState
+            return state,True
+        return newState,False
 
     def agentStep(self, agentID: int, action: int):
         raise NotImplementedError
 
-    def rewardFunction(self, sPrimes, ateTreatRecord, doneRecord):
+    def rewardFunction(self, eventRecord, doneRecord):
         raise NotImplementedError
 
     def step(self, actions: List[int]):
@@ -117,19 +119,20 @@ class CommGridEnv():
         Taking one step for all agents in the environment
         """
         sPrimes: List[tuple] = []
-        ateTreatRecord = []
+        eventRecord = []
         doneRecord = []
         # Agents take turn to do their action
         # Guide -> Remaining scouts in ascending id order
         for agentID, agentAction in enumerate(actions):
             self._agentInfo[agentID]["last-action"] = agentAction
-            sPrime, ateTreat, done = self.agentStep(agentID, agentAction)
-            sPrimes.append(sPrime)
-            ateTreatRecord.append(ateTreat)
+            sPrime, event, done = self.agentStep(agentID, agentAction)
             doneRecord.append(done)
+            sPrimes.append(sPrime)
+            eventRecord.append(event)
+        print(eventRecord)
         self._steps += 1
         self._teamReward = self.rewardFunction(
-            sPrimes, ateTreatRecord, doneRecord)
+            eventRecord, doneRecord)
         done = doneRecord[-1]
 
         if self._toRender:
@@ -159,6 +162,9 @@ class CommGridEnv():
         toWrite += f"Treats: {self._treatCount}"
         toWrite += f"\nTreat Pos: {self._treatLocations}"
         return toWrite
+    
+    def additionalAgentInfo(self,agentID):
+        return ""
 
     def formatAgentInfo(self):
         """
@@ -169,18 +175,11 @@ class CommGridEnv():
             agentState = self._agentInfo[agentID]["state"]
             lastAction = ACTIONSPACE[self._agentInfo[agentID]["last-action"]]
             symbol = self._agentInfo[agentID]["symbol"]
-            minDist = None
-            # indiReward = None
-            if "minDist" in self._agentInfo[agentID]:
-                minDist = self._agentInfo[agentID]["minDist"]
-            # if "indiReward" in self._agentInfo[agentID]:
-            #     indiReward = self._agentInfo[agentID]["indiReward"]
             aType = "Guide"
             if symbol != "G":
                 aType = "Scout"
             toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}"
-            if agentID != GUIDEID:
-                toWrite += f", min dist: {minDist}"
+            toWrite += self.additionalAgentInfo(agentID)
             toWrite += "\n"
         return toWrite
 

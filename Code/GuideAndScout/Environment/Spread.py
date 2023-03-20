@@ -30,31 +30,35 @@ class Spread(CommGridEnv):
             self._agentInfo[i]["minDist"] = minDist
         return sum(distances)
 
-    def rewardFunction(self, sPrimes, ateTreatRecord, doneRecord):
+    def rewardFunction(self, collisionRecord, doneRecord):
         # """
         # Calculate reward in simulatneous manner and returns a unified team reward
         # Cannot set reward > 128 and reward < -129 due to message encodings
         # """
 
         reward = 0
+        collisionPenalty = -2
+        # Penalised for collision
 
-        # # Penalised for taking extra timesteps
-        # reward += time_penalty
-        # # Penalise for remaining treats
-        # reward += treat_penalty * self._treatCount
+        for collision in collisionRecord[1:]:
+            if collision:
+                reward += collisionPenalty
 
-        # In worst case, given 5x5 grid for 2 scouts, distances = 120
-        distances = int(self.distanceToTreats() * 10)
-        reward -= distances
+        
+        distances = -int(self.distanceToTreats() * 10)
+        # In worst case, given 5x5 grid for 2 scouts, distances = -120 and collisions = -4
+        reward += distances
 
         return reward
+    
+
 
     def agentStep(self, agentID: int, action: int):
         """
         Taking one step for an agent specified by its ID
         """
         s = self._agentInfo[agentID]["state"]
-        sPrime = self.takeAction(s, action)
+        sPrime,collision = self.takeAction(s, action)
         agentSymbol = self._agentInfo[agentID]["symbol"]
         done = False
         if s != sPrime:
@@ -66,13 +70,17 @@ class Spread(CommGridEnv):
                 self._grid[s[0]][s[1]] = EMPTY
             if self._grid[sPrime[0]][sPrime[1]] == TREAT:
                 self._covered += 1
-            #     self._treatLocations.remove(sPrime)
-            #     self._treatCount -= 1
-            # done = self._treatCount <= 0
             done = self._covered == self._treatCount
             self._grid[sPrime[0]][sPrime[1]] = agentSymbol
-        else:
-            # Case collision, hence remained at same state
-            pass
 
-        return sPrime, False, done
+        return sPrime, collision, done
+    
+    def additionalAgentInfo(self,agentID):
+        toWrite = ""
+        minDist = None
+        if "minDist" in self._agentInfo[agentID]:
+            minDist = self._agentInfo[agentID]["minDist"]
+        if agentID != GUIDEID:
+            toWrite += f", min dist: {minDist}"
+
+        return toWrite

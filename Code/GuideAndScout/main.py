@@ -31,10 +31,12 @@ envSetting = {
 
 def quickTest():
     envSetting["TRAIN_EPS"] = 2
-    envSetting["TEST_MAX_EPS"] = 5
+    envSetting["TEST_MAX_EPS"] = 10
+    envSetting["row"] = 5
+    envSetting["column"] = 5
     myRun = Runner("Spread", saveName="Test")
-    myRun.train(envSetting,wandbLog=False)
-    myRun.test(verbose=2)
+    # myRun.train(envSetting,wandbLog=False)
+    myRun.test(verbose=1)
 
 
 def noisedRandomTest():

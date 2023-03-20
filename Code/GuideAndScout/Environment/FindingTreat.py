@@ -14,7 +14,7 @@ class FindingTreat(CommGridEnv):
         super().__init__(row, column, agents, treatNum,
                          render, numpify, envName="Finding Treat")
 
-    def rewardFunction(self, sPrimes, ateTreatRecord, doneRecord):
+    def rewardFunction(self, ateTreatRecord, doneRecord):
         """ 
         Calculate reward in simulatneous manner and returns a unified team reward
         Cannot set reward > 128 due to message encodings
@@ -40,7 +40,7 @@ class FindingTreat(CommGridEnv):
         Taking one step for an agent specified by its ID
         """
         s = self._agentInfo[agentID]["state"]
-        sPrime = self.takeAction(s, action)
+        sPrime,_ = self.takeAction(s, action)
         ateTreat = False
         agentSymbol = self._agentInfo[agentID]["symbol"]
         done = False
