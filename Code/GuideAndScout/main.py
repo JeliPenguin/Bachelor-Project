@@ -70,7 +70,6 @@ def randomRun():
 
 def schedTrain():
     envSetting["TRAIN_EPS"] = 100000
-    # envSetting["TRAIN_EPS"] = 10
     myRun = SchedRunner(saveName="Sched5X5")
     myRun.train(envSetting=envSetting)
     # myRun.test(verbose=1)
@@ -88,9 +87,10 @@ def evaluate():
 
 
 if __name__ == "__main__":
-    # noisedTest(0.3)
-    quickTest()
+    noisedTest(0.3)
+    # noisedRandomTest()
+    # quickTest()
     # randomRun()
     # actualRun()
     # evaluate()
-    # schedTrain()
+    schedTrain()
