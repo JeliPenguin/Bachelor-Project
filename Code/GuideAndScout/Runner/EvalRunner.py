@@ -3,8 +3,8 @@ from const import evalSeed
 
 
 class EvalRunner(RunnerBase):
-    def __init__(self, saveName) -> None:
-        super().__init__(saveName)
+    def __init__(self, envType,saveName) -> None:
+        super().__init__(envType,saveName)
         self.resetEvalSeed()
         self._currentSeed = self._initSeed
 

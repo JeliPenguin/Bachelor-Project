@@ -6,6 +6,18 @@ from Agents.CommAgent import CommAgent
 
 
 class CommGridEnv():
+    """
+    Gridworld with treats, a Guide agent and Scout agent(s)
+
+    Guide agent cannot move but can observe the environment and send messages
+
+    Scout agent can move but cannot observe the environment and send messages
+
+    Guide and scout need to cooporate through communication to obtain all treats
+
+    With additional scouts added, scouts themselves would also need to cooperate to obtain all treats in least amount
+    of time
+    """
     def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True, envName="Base") -> None:
         self._row = row
         self._column = column
@@ -48,7 +60,7 @@ class CommGridEnv():
                 "state": loc, "last-action": -1, "reward": 0, "symbol": agent.getSymbol()}
         if self._toRender:
             self.render()
-            self._toRender = False
+            # self._toRender = False
 
         if self._toNumpify:
             return self.numpifiedState()
@@ -63,25 +75,6 @@ class CommGridEnv():
         self._initLoc.add(loc)
         return loc
 
-    # def numpifiedState(self):
-    #     # Returns numpy array of shape (numComponents,row,column) for DQN
-    #     # numComponents being number of agents + 1 (treat)
-    #     state = np.zeros((self.agentNum+1, self.row, self.column))
-    #     layer = 0
-
-    #     for info in self.agentInfo.values():
-    #         agentLoc = info["state"]
-    #         x = agentLoc[1]
-    #         y = agentLoc[0]
-    #         state[layer][y][x] = 1
-    #         layer += 1
-
-    #     for treatLoc in self.treatLocations:
-    #         x = treatLoc[1]
-    #         y = treatLoc[0]
-    #         state[layer][y][x] = 1
-
-    #     return state
     def numpifiedState(self) -> np.ndarray:
         state = np.zeros((self._agentNum*2+self._treatNum*2,))
         index = 0
@@ -104,69 +97,21 @@ class CommGridEnv():
 
     def takeAction(self, state: tuple, action: int):
         """ 
-        Given current state as x,y coordinates and an action, return coordinate of resulting new state
+        Given current state as x,y coordinates and an action, return coordinate of resulting new state and flag for collision
         """
+        if action == STAY:
+            return state,False
         movement = decodeAction(action)
         newState = transition(state, movement)
-        ''' If the new state is outside the grid then remain at same state
-            Allows agents to be on same state'''
+        ''' If the new state is outside the grid or collided with other agents then remain at same state'''
         if min(newState) < 0 or max(newState) > min(self._row-1, self._column-1) or self._grid[newState[0]][newState[1]] in self._agentSymbol:
-            return state
-        return newState
+            return state,True
+        return newState,False
 
     def agentStep(self, agentID: int, action: int):
-        """
-        Taking one step for an agent specified by its ID
-        """
-        s = self._agentInfo[agentID]["state"]
-        sPrime = self.takeAction(s, action)
-        ateTreat = False
-        agentSymbol = self._agentInfo[agentID]["symbol"]
-        done = False
-        if s != sPrime:
-            self._agentInfo[agentID]["state"] = sPrime
-            self._grid[s[0]][s[1]] = EMPTY
-            if self._grid[sPrime[0]][sPrime[1]] == TREAT:
-                self._treatLocations.remove(sPrime)
-                ateTreat = True
-                self._treatCount -= 1
-            done = self._treatCount <= 0
-            self._grid[sPrime[0]][sPrime[1]] = agentSymbol
+        raise NotImplementedError
 
-        return sPrime, ateTreat, done
-
-    def distanceToTreats(self) -> float:
-        """ Returns maximum of all scout's euclidean distance to closest treat """
-        distances = []
-        for i in range(GUIDEID+1, self._agentNum):
-            sumDist = 0
-            for treatLoc in self._treatLocations:
-                crtAgentState = self._agentInfo[i]["state"]
-                euclidDistance = np.sqrt(
-                    (crtAgentState[0] - treatLoc[0])**2 + (crtAgentState[1] - treatLoc[1])**2)
-                sumDist += euclidDistance
-            distances.append(sumDist)
-            self._agentInfo[i]["sumDist"] = sumDist
-        # return 0
-        return int(max(distances))
-
-    # def rewardFunc(self, ateTreat: bool, done: bool) -> float:
-    #     """
-    #         ateTreat: Boolean indicating whether a treat has been eaten
-    #         done: Boolean indicating state of the game
-    #         Cannot set reward > 128 due to message encodings
-    #     """
-    #     # if done:
-    #     #     return self.doneReward
-    #     if ateTreat or done:
-    #         return self.treatReward
-    #     reward = self.time_penalty
-    #     # reward -= self.distanceToTreats()
-    #     # Penalise for remaining treats
-    #     reward += self.treat_penalty * self.treatCount
-    #     return reward
-
-    def rewardFunction(self, sPrimes, ateTreatRecord, doneRecord):
+    def rewardFunction(self, eventRecord, doneRecord):
         raise NotImplementedError
 
     def step(self, actions: List[int]):
@@ -174,19 +119,20 @@ class CommGridEnv():
         Taking one step for all agents in the environment
         """
         sPrimes: List[tuple] = []
-        ateTreatRecord = []
+        eventRecord = []
         doneRecord = []
         # Agents take turn to do their action
-        # Guide -> Scout1 -> Scout2
+        # Guide -> Remaining scouts in ascending id order
         for agentID, agentAction in enumerate(actions):
             self._agentInfo[agentID]["last-action"] = agentAction
-            sPrime, ateTreat, done = self.agentStep(agentID, agentAction)
-            sPrimes.append(sPrime)
-            ateTreatRecord.append(ateTreat)
+            sPrime, event, done = self.agentStep(agentID, agentAction)
             doneRecord.append(done)
+            sPrimes.append(sPrime)
+            eventRecord.append(event)
+        print(eventRecord)
         self._steps += 1
         self._teamReward = self.rewardFunction(
-            sPrimes, ateTreatRecord, doneRecord)
+            eventRecord, doneRecord)
         done = doneRecord[-1]
 
         if self._toRender:
@@ -216,6 +162,9 @@ class CommGridEnv():
         toWrite += f"Treats: {self._treatCount}"
         toWrite += f"\nTreat Pos: {self._treatLocations}"
         return toWrite
+    
+    def additionalAgentInfo(self,agentID):
+        return ""
 
     def formatAgentInfo(self):
         """
@@ -226,18 +175,11 @@ class CommGridEnv():
             agentState = self._agentInfo[agentID]["state"]
             lastAction = ACTIONSPACE[self._agentInfo[agentID]["last-action"]]
             symbol = self._agentInfo[agentID]["symbol"]
-            # sumDist = None
-            # indiReward = None
-            # if "sumDist" in self._agentInfo[agentID]:
-            #     sumDist = self._agentInfo[agentID]["sumDist"]
-            # if "indiReward" in self._agentInfo[agentID]:
-            #     indiReward = self._agentInfo[agentID]["indiReward"]
             aType = "Guide"
             if symbol != "G":
                 aType = "Scout"
             toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}"
-            # if agentID != GUIDEID:
-            #     toWrite += f", Sum dist: {sumDist}, Indi Reward: {indiReward}"
+            toWrite += self.additionalAgentInfo(agentID)
             toWrite += "\n"
         return toWrite
 

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
 import pandas as pd
+from const import evalNoiseLevels
 
 
 class Evaluator():
@@ -24,8 +25,7 @@ class Evaluator():
         self.modelToEvaluate = []
         self.models = [normNoisedModel, nhModel, normModel]
 
-        self.noiseLevels = [0, 0.001, 0.005, 0.01,
-                            0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1]
+        self.noiseLevels = evalNoiseLevels
         self.repetitions = 500
 
     def testRun(self, run, noiseLevel, noiseHandlingMode):
