@@ -3,18 +3,6 @@ import matplotlib.pyplot as plt
 from Runner.NormRunner import Runner
 from Runner.SchedRunner import SchedRunner
 from Evaluator import Evaluator
-"""
-Gridworld with treats, a Guide agent and Scout agent(s)
-
-Guide agent cannot move but can observe the environment and send messages
-
-Scout agent can move but cannot observe the environment and send messages
-
-Guide and scout need to cooporate through communication to obtain all treats
-
-With additional scouts added, scouts themselves would also need to cooperate to obtain all treats in least amount
-of time
-"""
 
 
 """
@@ -35,7 +23,7 @@ envSetting = {
     "row": 5,
     "column": 5,
     "RAND_EPS": 5,
-    "noised": True,
+    "noised": False,
     "scoutsNum": 2,
     "TEST_MAX_EPS": 20,
 }
@@ -44,9 +32,11 @@ envSetting = {
 def quickTest():
     envSetting["TRAIN_EPS"] = 2
     envSetting["TEST_MAX_EPS"] = 10
-    myRun = Runner(envSetting, saveName="Test")
-    myRun.train(wandbLog=False)
-    myRun.test(verbose=3)
+    envSetting["row"] = 5
+    envSetting["column"] = 5
+    myRun = Runner("Spread", saveName="Test")
+    # myRun.train(envSetting,wandbLog=False)
+    myRun.test(verbose=1)
 
 
 def noisedRandomTest():
@@ -89,29 +79,18 @@ def testTrained():
     myRun = Runner(saveName="Two5X5")
     myRun.test(verbose=3)
 
-
-def plotter():
-    norm = load("./Saves/Two5X5/episodicRewards")
-    noised = load("./Saves/Noised5X5/episodicRewards")
-    plt.plot(norm)
-    plt.plot(noised)
-    plt.show()
-
-
 def evaluate():
     norm = "Two5X5"
     noised = "Noised5X5"
     eT = Evaluator(norm, noised)
-    eT.evaluate(True, range=0.6)
+    eT.evaluate(False,range=0.6)
 
 
 if __name__ == "__main__":
-    # noisedTest(0.3)
+    noisedTest(0.3)
     # noisedRandomTest()
     # quickTest()
     # randomRun()
     # actualRun()
-    # testTrained()
-    # plotter()
     # evaluate()
     schedTrain()

@@ -11,8 +11,8 @@ class SchedRunner(RunnerBase):
         Runner with varied p for the binary symmetric channel when training
     """
 
-    def __init__(self, saveName) -> None:
-        super().__init__(saveName)
+    def __init__(self, envType,saveName) -> None:
+        super().__init__(envType,saveName)
 
     def train(self, envSetting=None, verbose=0, wandbLog=False):
         """

@@ -11,10 +11,11 @@ from datetime import datetime
 
 
 class RunnerBase():
-    def __init__(self, saveName) -> None:
+    def __init__(self, envType,saveName) -> None:
         """
 
         """
+        self.envType = envType
         self.saveName = saveName
         self.defaultEnvSetting = {
             "row": 5,
@@ -104,8 +105,15 @@ class RunnerBase():
         verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
         self._channel = CommChannel(agents, self._noiseP, noised)
         self._channel.setupChannel()
-        env = FindingTreat(self._row, self._column, agents, self._treatNum,
-                           render)
+        if self.envType == "FindingTreat":
+            env = FindingTreat(self._row, self._column, agents, self._treatNum,
+                            render)
+        elif self.envType == "Spread":
+            env = Spread(self._row, self._column, agents, self._treatNum,
+                            render)
+        else:
+            print("Invalid Environment Type")
+            exit()
         print("Running on environment: ", env.envName())
 
         return agents, env
