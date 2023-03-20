@@ -60,7 +60,7 @@ class CommGridEnv():
                 "state": loc, "last-action": -1, "reward": 0, "symbol": agent.getSymbol()}
         if self._toRender:
             self.render()
-            self._toRender = False
+            # self._toRender = False
 
         if self._toNumpify:
             return self.numpifiedState()
@@ -75,25 +75,6 @@ class CommGridEnv():
         self._initLoc.add(loc)
         return loc
 
-    # def numpifiedState(self):
-    #     # Returns numpy array of shape (numComponents,row,column) for DQN
-    #     # numComponents being number of agents + 1 (treat)
-    #     state = np.zeros((self.agentNum+1, self.row, self.column))
-    #     layer = 0
-
-    #     for info in self.agentInfo.values():
-    #         agentLoc = info["state"]
-    #         x = agentLoc[1]
-    #         y = agentLoc[0]
-    #         state[layer][y][x] = 1
-    #         layer += 1
-
-    #     for treatLoc in self.treatLocations:
-    #         x = treatLoc[1]
-    #         y = treatLoc[0]
-    #         state[layer][y][x] = 1
-
-    #     return state
     def numpifiedState(self) -> np.ndarray:
         state = np.zeros((self._agentNum*2+self._treatNum*2,))
         index = 0
@@ -188,18 +169,18 @@ class CommGridEnv():
             agentState = self._agentInfo[agentID]["state"]
             lastAction = ACTIONSPACE[self._agentInfo[agentID]["last-action"]]
             symbol = self._agentInfo[agentID]["symbol"]
-            # sumDist = None
+            minDist = None
             # indiReward = None
-            # if "sumDist" in self._agentInfo[agentID]:
-            #     sumDist = self._agentInfo[agentID]["sumDist"]
+            if "minDist" in self._agentInfo[agentID]:
+                minDist = self._agentInfo[agentID]["minDist"]
             # if "indiReward" in self._agentInfo[agentID]:
             #     indiReward = self._agentInfo[agentID]["indiReward"]
             aType = "Guide"
             if symbol != "G":
                 aType = "Scout"
             toWrite += f"{aType}: {symbol}, Current State: {agentState}, Last chose action: {lastAction}"
-            # if agentID != GUIDEID:
-            #     toWrite += f", Sum dist: {sumDist}, Indi Reward: {indiReward}"
+            if agentID != GUIDEID:
+                toWrite += f", min dist: {minDist}"
             toWrite += "\n"
         return toWrite
 
