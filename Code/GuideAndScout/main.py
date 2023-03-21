@@ -76,7 +76,9 @@ def schedTrain():
 
 
 def spreadTrain():
-    envSetting["TRAIN_EPS"] = 10
+    envSetting["TRAIN_EPS"] = 100000
+    envSetting["row"] = 4
+    envSetting["column"] = 4
     myRun = Runner("Spread", saveName="Spread5X5")
     myRun.train(envSetting)
     # myRun.test(verbose=1)
