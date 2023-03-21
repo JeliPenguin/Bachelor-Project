@@ -12,9 +12,14 @@ class Spread(CommGridEnv):
     with minimal time. Agents would be penalised for colliding into each other or with the wall.
     https://pettingzoo.farama.org/environments/mpe/simple_spread/
     """
+
     def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True) -> None:
         super().__init__(row, column, agents, treatNum, render, numpify, envName="Spread")
         self._covered = 0
+
+    def initGrid(self):
+        self._covered = 0
+        return super().initGrid()
 
     def distanceToTreats(self) -> float:
         """ Returns sum of minial distances from treats """
@@ -25,7 +30,7 @@ class Spread(CommGridEnv):
                 crtAgentState = self._agentInfo[i]["state"]
                 euclidDistance = np.sqrt(
                     (crtAgentState[0] - treatLoc[0])**2 + (crtAgentState[1] - treatLoc[1])**2)
-                minDist = min(euclidDistance,minDist)
+                minDist = min(euclidDistance, minDist)
             distances.append(minDist)
             self._agentInfo[i]["minDist"] = minDist
         return sum(distances)
@@ -44,21 +49,18 @@ class Spread(CommGridEnv):
             if collision:
                 reward += collisionPenalty
 
-        
         distances = -int(self.distanceToTreats() * 10)
         # In worst case, given 5x5 grid for 2 scouts, distances = -120 and collisions = -4
         reward += distances
 
         return reward
-    
-
 
     def agentStep(self, agentID: int, action: int):
         """
         Taking one step for an agent specified by its ID
         """
         s = self._agentInfo[agentID]["state"]
-        sPrime,collision = self.takeAction(s, action)
+        sPrime, collision = self.takeAction(s, action)
         agentSymbol = self._agentInfo[agentID]["symbol"]
         done = False
         if s != sPrime:
@@ -74,8 +76,8 @@ class Spread(CommGridEnv):
             self._grid[sPrime[0]][sPrime[1]] = agentSymbol
 
         return sPrime, collision, done
-    
-    def additionalAgentInfo(self,agentID):
+
+    def additionalAgentInfo(self, agentID):
         toWrite = ""
         minDist = None
         if "minDist" in self._agentInfo[agentID]:

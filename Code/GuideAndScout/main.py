@@ -75,22 +75,31 @@ def schedTrain():
     # myRun.test(verbose=1)
 
 
+def spreadTrain():
+    envSetting["TRAIN_EPS"] = 10
+    myRun = Runner("Spread", saveName="Spread5X5")
+    myRun.train(envSetting)
+    # myRun.test(verbose=1)
+
+
 def testTrained():
     myRun = Runner(saveName="Two5X5")
     myRun.test(verbose=3)
+
 
 def evaluate():
     norm = "Two5X5"
     noised = "Noised5X5"
     eT = Evaluator(norm, noised)
-    eT.evaluate(False,range=0.6)
+    eT.evaluate(False, range=0.6)
 
 
 if __name__ == "__main__":
-    noisedTest(0.3)
+    # noisedTest(0.3)
     # noisedRandomTest()
     # quickTest()
     # randomRun()
     # actualRun()
     # evaluate()
-    schedTrain()
+    # schedTrain()
+    spreadTrain()

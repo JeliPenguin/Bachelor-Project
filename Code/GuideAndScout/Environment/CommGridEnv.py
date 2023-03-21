@@ -129,7 +129,6 @@ class CommGridEnv():
             doneRecord.append(done)
             sPrimes.append(sPrime)
             eventRecord.append(event)
-        print(eventRecord)
         self._steps += 1
         self._teamReward = self.rewardFunction(
             eventRecord, doneRecord)
