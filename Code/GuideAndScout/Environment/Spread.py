@@ -23,7 +23,7 @@ class Spread(CommGridEnv):
 
     def distanceToTreats(self) -> float:
         """ Returns sum of minial distances from treats """
-        distances = []
+        distances = 0
         for i in range(GUIDEID+1, self._agentNum):
             minDist = np.inf
             for treatLoc in self._treatLocations:
@@ -31,9 +31,9 @@ class Spread(CommGridEnv):
                 euclidDistance = np.sqrt(
                     (crtAgentState[0] - treatLoc[0])**2 + (crtAgentState[1] - treatLoc[1])**2)
                 minDist = min(euclidDistance, minDist)
-            distances.append(minDist)
+            distances += (minDist)
             self._agentInfo[i]["minDist"] = minDist
-        return sum(distances)
+        return distances
 
     def rewardFunction(self, collisionRecord, doneRecord):
         # """
@@ -72,9 +72,9 @@ class Spread(CommGridEnv):
                 self._grid[s[0]][s[1]] = EMPTY
             if self._grid[sPrime[0]][sPrime[1]] == TREAT:
                 self._covered += 1
-            done = self._covered == self._treatCount
-            self._grid[sPrime[0]][sPrime[1]] = agentSymbol
 
+            self._grid[sPrime[0]][sPrime[1]] = agentSymbol
+        done = self._covered == self._treatCount
         return sPrime, collision, done
 
     def additionalAgentInfo(self, agentID):

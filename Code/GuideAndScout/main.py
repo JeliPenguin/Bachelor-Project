@@ -32,10 +32,10 @@ envSetting = {
 def quickTest():
     envSetting["TRAIN_EPS"] = 2
     envSetting["TEST_MAX_EPS"] = 10
-    envSetting["row"] = 5
-    envSetting["column"] = 5
+    envSetting["row"] = 4
+    envSetting["column"] = 4
     myRun = Runner("Spread", saveName="Test")
-    # myRun.train(envSetting,wandbLog=False)
+    myRun.train(envSetting, wandbLog=False)
     myRun.test(verbose=1)
 
 
@@ -77,11 +77,12 @@ def schedTrain():
 
 def spreadTrain():
     envSetting["TRAIN_EPS"] = 100000
-    envSetting["row"] = 4
-    envSetting["column"] = 4
-    myRun = Runner("Spread", saveName="Spread5X5")
-    myRun.train(envSetting)
-    # myRun.test(verbose=1)
+    dim = 4
+    envSetting["row"] = dim
+    envSetting["column"] = dim
+    myRun = Runner("Spread", saveName=f"Spread{dim}X{dim}")
+    # myRun.train(envSetting)
+    myRun.test(verbose=1)
 
 
 def testTrained():
@@ -99,9 +100,9 @@ def evaluate():
 if __name__ == "__main__":
     # noisedTest(0.3)
     # noisedRandomTest()
-    # quickTest()
+    quickTest()
     # randomRun()
     # actualRun()
     # evaluate()
     # schedTrain()
-    spreadTrain()
+    # spreadTrain()
