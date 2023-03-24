@@ -58,6 +58,7 @@ def testTrained():
 
 if __name__ == "__main__":
     # noisedTest(0.3)
+    # noisedTest(0.3)
     # noisedRandomTest()
     # spreadTrain()
     # randomRun()

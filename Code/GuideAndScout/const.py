@@ -26,8 +26,9 @@ def verbPrint(string, verbose):
 
 
 # Seed for randomness in envrionment init
-evalSeed = 20
+evalSeed = 30
 
-# evalNoiseLevels = [0, 0.001, 0.005, 0.01,0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1]
+evalNoiseLevels = [0, 0.001, 0.005, 0.01, 0.05,
+                   0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
 
-evalNoiseLevels = [0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+# evalNoiseLevels = [0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]

@@ -10,20 +10,21 @@ from const import evalNoiseLevels
 
 
 class Evaluator():
-    def __init__(self, normSaveName, noisedSaveName) -> None:
+    def __init__(self) -> None:
         # randModel = ("Test",None,"Random")
         # randModel2 = ("Test",None,"Random2")
         # randModel3 = ("Test2",None,"Random3")
         # self.modelToEvaluate = [randModel,randModel2,randModel3]
         # self.models =self.modelToEvaluate
-
+        normSaveName = "Two5X5"
         nhModel = (normSaveName, 0, "Noise_Handling")
         normNoisedModel = (normSaveName, None, "Norm_Noised")
         normModel = (normSaveName, None, "Norm")
-        # baseModel = (noisedSaveName, None, "Baseline")
         schedModel = ("Sched5x5", None, "Sched")
-        self.modelToEvaluate = []
-        self.models = [normNoisedModel, nhModel, normModel]
+        schedModel2 = ("Sched5x5", None, "Sched2")
+        self.modelToEvaluate = [normModel, schedModel,
+                                schedModel2, normNoisedModel, nhModel]
+        self.models = self.modelToEvaluate
 
         self.noiseLevels = evalNoiseLevels
         self.repetitions = 500
@@ -37,7 +38,7 @@ class Evaluator():
         modelName = model[0]
         noiseHandling = model[1]
         saveName = model[2]
-        run = EvalRunner(modelName)
+        run = EvalRunner("FindingTreat", modelName)
         print(f"Evaluating Model {saveName}:")
         epsDf = []
         rwdDf = []
