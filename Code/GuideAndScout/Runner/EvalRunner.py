@@ -3,8 +3,8 @@ from const import evalSeed
 
 
 class EvalRunner(RunnerBase):
-    def __init__(self, envType,saveName) -> None:
-        super().__init__(envType,saveName)
+    def __init__(self, envType, saveName) -> None:
+        super().__init__(envType, saveName)
         self.resetEvalSeed()
         self._currentSeed = self._initSeed
 
@@ -19,7 +19,7 @@ class EvalRunner(RunnerBase):
     def setupEnvSetting(self, loadSave, envSetting):
         super().setupEnvSetting(loadSave, envSetting)
         # Maximal step per episode for evaluation
-        self._TEST_MAX_EPS = 1000
+        self._TEST_MAX_EPS = 5000
 
     def test(self, verbose=2, noiseLevel=None, noiseHandlingMode=None):
         step, rewards = super().test(verbose, noiseLevel, noiseHandlingMode)

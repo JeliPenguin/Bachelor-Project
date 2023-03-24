@@ -79,18 +79,18 @@ def testTrained():
     myRun = Runner(saveName="Two5X5")
     myRun.test(verbose=3)
 
+
 def evaluate():
-    norm = "Two5X5"
-    noised = "Noised5X5"
-    eT = Evaluator(norm, noised)
-    eT.evaluate(False,range=0.6)
+
+    eT = Evaluator()
+    eT.evaluate(True)
 
 
 if __name__ == "__main__":
-    noisedTest(0.3)
+    # noisedTest(0.3)
     # noisedRandomTest()
     # quickTest()
     # randomRun()
     # actualRun()
-    # evaluate()
-    schedTrain()
+    evaluate()
+    # schedTrain()
