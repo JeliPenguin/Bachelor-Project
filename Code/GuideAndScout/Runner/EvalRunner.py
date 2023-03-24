@@ -11,12 +11,12 @@ class EvalRunner(Runner):
     def resetEvalSeed(self):
         self._initSeed = evalSeed
 
-    def setupRun(self, setupType, envSetting=None, noiseLevel=None, noiseHandlingMode=None):
-        agents, env = super().setupRun(setupType, envSetting, noiseLevel, noiseHandlingMode)
+    def setupRun(self, setupType, envSetting=None, noiseP=None, noiseHandlingMode=None):
+        agents, env = super().setupRun(setupType, envSetting, noiseP, noiseHandlingMode)
         env.setSeed(self._currentSeed)
         return agents, env
 
-    def test(self, verbose=2, noiseLevel=None, noiseHandlingMode=None, maxEps=30):
+    def test(self, verbose=-1, noiseLevel=None, noiseHandlingMode=None):
         step, rewards = super().test(verbose, noiseLevel, noiseHandlingMode)
         self._currentSeed += 1
         return step, rewards

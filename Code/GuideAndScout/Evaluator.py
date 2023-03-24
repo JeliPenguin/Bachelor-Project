@@ -21,17 +21,14 @@ class Evaluator():
         normNoisedModel = (normSaveName, None, "Norm_Noised")
         normModel = (normSaveName, None, "Norm")
         schedModel = ("Sched5x5", None, "Sched")
-        schedModel2 = ("Sched5x5", None, "Sched2")
-        self.modelToEvaluate = [normModel, schedModel,
-                                schedModel2, normNoisedModel, nhModel]
+        self.modelToEvaluate = [normModel,
+                                schedModel, normNoisedModel, nhModel]
         self.models = self.modelToEvaluate
-
-        self.noiseLevels = evalNoiseLevels
         self.repetitions = 500
 
     def testRun(self, run, noiseLevel, noiseHandlingMode):
         steps, reward = run.test(
-            verbose=0, noiseLevel=noiseLevel, noiseHandlingMode=noiseHandlingMode)
+            noiseLevel=noiseLevel, noiseHandlingMode=noiseHandlingMode)
         return steps, reward
 
     def reEvaluate(self, model):
@@ -42,10 +39,10 @@ class Evaluator():
         print(f"Evaluating Model {saveName}:")
         epsDf = []
         rwdDf = []
-        for noise in tqdm(self.noiseLevels):
+        for noise in tqdm(evalNoiseLevels):
             testNoise = noise
             if saveName == "Norm" or noise == 0:
-                testNoise = None
+                testNoise = 0
             for _ in range(self.repetitions):
                 epsE, epsR = self.testRun(run, testNoise, noiseHandling)
                 epsDf.append([noise, epsE])

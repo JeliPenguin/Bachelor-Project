@@ -41,27 +41,19 @@ def spreadTrain():
 
 
 def evaluate():
-    norm = "Two5X5"
-    noised = "Noised5X5"
-    eT = Evaluator(norm, noised)
-    eT.evaluate(False, range=0.6)
+    eT = Evaluator()
+    eT.evaluate(True)
 
 
 def testTrained():
-    dim = 3
-    envSetting["row"] = dim
-    envSetting["column"] = dim
-    run = Runner("Spread", "Spread3X3")
+    run = Runner("FindingTreat", "Two5X5")
     # run.train(envSetting, trainSetting)
     run.test(verbose=1)
 
 
 if __name__ == "__main__":
-    # noisedTest(0.3)
-    # noisedTest(0.3)
-    # noisedRandomTest()
     # spreadTrain()
     # randomRun()
-    # evaluate()
+    evaluate()
     # spreadTrain()
-    testTrained()
+    # testTrained()

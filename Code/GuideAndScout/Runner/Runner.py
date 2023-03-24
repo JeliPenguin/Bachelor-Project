@@ -54,8 +54,7 @@ class Runner():
             dump(configuredEnvSetting, self._envSaveDir)
 
         # print(self._configuredEnvSetting)
-        print(f"Environment Setting: ")
-        print(configuredEnvSetting)
+        verbPrint(f"Environment Setting: {configuredEnvSetting}", 0)
         return configuredEnvSetting
 
     def instantiateAgents(self, obsDim, scoutsNum, noised, noiseHandlingMode, loadSaved):
@@ -90,14 +89,14 @@ class Runner():
         agentNum = 1+scoutsNum
         obsDim = (agentNum, treatNum)
         noised = noiseP != 0
-        render = getVerbose() != 0
+        render = getVerbose() >= 0
         agents = self.instantiateAgents(
             obsDim, scoutsNum, noised, noiseHandlingMode, loadSave)
 
         # print(f"Channel Noised: {self._noised}")
         # verbPrint(f"Noise level: {self._noiseP}", 1)
-        print(f"Noised: {noised}")
-        print(f"Noise level: {noiseP}")
+        verbPrint(f"Noised: {noised}", 0)
+        verbPrint(f"Noise level: {noiseP}", 0)
         verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
         self._channel = CommChannel(agents, noiseP, noised)
         self._channel.setupChannel()
@@ -110,7 +109,7 @@ class Runner():
         else:
             print("Invalid Environment Type")
             exit()
-        print("Running on environment: ", env.envName())
+        verbPrint(f"Running on environment: {env.envName()}", 0)
 
         return agents, env
 
