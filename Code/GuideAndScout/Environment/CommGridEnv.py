@@ -19,7 +19,7 @@ class CommGridEnv():
     of time
     """
 
-    def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True, envName="Base") -> None:
+    def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render, numpify=True, envName="Base") -> None:
         self._row = row
         self._column = column
         self._treatNum = treatNum

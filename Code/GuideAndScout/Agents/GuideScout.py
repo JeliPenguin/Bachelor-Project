@@ -11,9 +11,8 @@ from collections import deque
 
 
 class ScoutAgent(CommAgent):
-    def __init__(self, id, obs_dim, actionSpace, noiseHandling, epsDecay) -> None:
-        super().__init__(id, obs_dim, actionSpace,
-                         noiseHandling=noiseHandling, epsDecay=epsDecay)
+    def __init__(self, id, obs_dim, actionSpace, noiseHandling, hyperParam) -> None:
+        super().__init__(id, obs_dim, actionSpace, noiseHandling, hyperParam)
         self._symbol = str(id)
         self._falseCount = 0
         self._recieveCount = 0
@@ -68,7 +67,7 @@ class ScoutAgent(CommAgent):
         if self._recieveCount >= self._MASampleSize:
             falseRatio = self._falseCount / self._recieveCount
             if falseRatio >= self._falseLimit:
-                self._majorityNum = min(self._majorityNum + 2,self._bandwidth)
+                self._majorityNum = min(self._majorityNum + 2, self._bandwidth)
                 verbPrint(
                     f"Increased majority num, now is : {self._majorityNum}", 4)
                 self._falseCount = 0
@@ -103,15 +102,14 @@ class ScoutAgent(CommAgent):
         self.broadcastSignal(np.array([0]))
 
     def recieveBroadcast(self, signal):
-        self._majorityNum = min(self._majorityNum + 2,self._bandwidth)
+        self._majorityNum = min(self._majorityNum + 2, self._bandwidth)
 
-    def parseState(self,state):
+    def parseState(self, state):
         guidePos = state[:2]
         treatsPos = state[self._n_observations - 2*self._totalTreatNum:]
         scout1Pos = state[2:4]
         scout2Pos = state[4:6]
-        return [guidePos,scout1Pos,scout2Pos,treatsPos]
-
+        return [guidePos, scout1Pos, scout2Pos, treatsPos]
 
     def formatHistory(self):
         history = self._messageReceived[0]
@@ -150,8 +148,9 @@ class ScoutAgent(CommAgent):
 
 
 class GuideAgent(CommAgent):
-    def __init__(self, id, obs_dim, actionSpace, noiseHandling) -> None:
-        super().__init__(id, obs_dim, actionSpace, noiseHandling=noiseHandling)
+    
+    def __init__(self, id, obs_dim, actionSpace, noiseHandling, hyperParam) -> None:
+        super().__init__(id, obs_dim, actionSpace, noiseHandling, hyperParam)
         self._symbol = "G"
 
     def choose_action(self) -> torch.Tensor:
@@ -166,7 +165,7 @@ class GuideAgent(CommAgent):
         return self.choose_action()
 
     def recieveBroadcast(self, signal):
-        self._majorityNum = min(self._majorityNum + 2,self._bandwidth)
+        self._majorityNum = min(self._majorityNum + 2, self._bandwidth)
 
     def sendMessage(self, recieverID: int):
         if getVerbose() >= 2:

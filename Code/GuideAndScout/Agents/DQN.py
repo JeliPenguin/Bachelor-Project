@@ -46,32 +46,33 @@ class ReplayMemory():
 
 
 class DQNAgent():
-    def __init__(self, id: int, n_observations: int, actionSpace: List[str], batchSize=128, gamma=0.99, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=1e-4) -> None:
+    def __init__(self, id: int, n_observations: int, actionSpace: List[str], hyperParam) -> None:
         self._id = id
         self._symbol = str(id)
         self._n_observations = n_observations
         self._n_actions = len(actionSpace)
-        self._batchSize = batchSize
-        self._gamma = gamma
-        self._epsStart = epsStart
-        self._epsEnd = epsEnd
-        self._epsDecay = epsDecay
-        self._tau = tau
-        self._lr = lr
+        self._batchSize = hyperParam["batchSize"]
+        self._gamma = hyperParam["gamma"]
+        self._epsStart = hyperParam["epsStart"]
+        self._epsEnd = hyperParam["epsEnd"]
+        self._epsDecay = hyperParam["epsDecay"]
+        self._tau = hyperParam["tau"]
+        self._lr = hyperParam["lr"]
         self._policy_net = DeepNetwork(
             n_observations, self._n_actions).to(device)
         self._target_net = DeepNetwork(
             n_observations, self._n_actions).to(device)
         self._target_net.load_state_dict(self._policy_net.state_dict())
-        self._optimizer = optim.Adam(self._policy_net.parameters(), lr=lr)
+        self._optimizer = optim.Adam(
+            self._policy_net.parameters(), lr=self._lr)
         self._memory = ReplayMemory(50000)
         self._eps_done = 0
 
     def getSetting(self):
-        return (self._policy_net, self._epsStart, self._epsEnd, self._epsDecay, self._eps_done)
+        return (self._policy_net, self._eps_done)
 
     def loadSetting(self, setting: tuple):
-        self._policy_net, self._epsStart, self._epsEnd, self._epsDecay, self._eps_done = setting
+        self._policy_net, self._eps_done = setting
 
     def getID(self):
         return self._id
