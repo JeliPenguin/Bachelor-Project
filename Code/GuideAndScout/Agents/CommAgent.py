@@ -7,12 +7,12 @@ from ErrorDetection.Checksum import Checksum
 
 
 class CommAgent(DQNAgent):
-    def __init__(self, id, obs_dim, actionSpace, noiseHandling=False, batchSize=128, gamma=1, epsStart=0.9, epsEnd=0.05, epsDecay=1000, tau=0.005, lr=0.0001) -> None:
+    def __init__(self, id, obs_dim, actionSpace, noiseHandling, hyperParam) -> None:
         self._agentNum = obs_dim[0]
         self._totalTreatNum = obs_dim[1]
         n_observations = 2 * (self._agentNum + self._totalTreatNum)
         super().__init__(id, n_observations, actionSpace,
-                         batchSize, gamma, epsStart, epsEnd, epsDecay, tau, lr)
+                         hyperParam)
 
         self.errorDetector = Checksum(8)
         self._majorityNum = 3

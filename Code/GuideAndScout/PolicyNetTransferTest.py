@@ -1,4 +1,4 @@
-from Runner.RunnerBase import Runner
+from Runner.Runner import Runner
 from joblib import load, dump
 
 

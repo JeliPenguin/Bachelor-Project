@@ -1,10 +1,10 @@
-from Runner.RunnerBase import RunnerBase
+from Runner.Runner import Runner
 from const import evalSeed
 
 
-class EvalRunner(RunnerBase):
-    def __init__(self, envType,saveName) -> None:
-        super().__init__(envType,saveName)
+class EvalRunner(Runner):
+    def __init__(self, envType, saveName) -> None:
+        super().__init__(envType, saveName)
         self.resetEvalSeed()
         self._currentSeed = self._initSeed
 
@@ -16,12 +16,7 @@ class EvalRunner(RunnerBase):
         env.setSeed(self._currentSeed)
         return agents, env
 
-    def setupEnvSetting(self, loadSave, envSetting):
-        super().setupEnvSetting(loadSave, envSetting)
-        # Maximal step per episode for evaluation
-        self._TEST_MAX_EPS = 1000
-
-    def test(self, verbose=2, noiseLevel=None, noiseHandlingMode=None):
+    def test(self, verbose=2, noiseLevel=None, noiseHandlingMode=None, maxEps=30):
         step, rewards = super().test(verbose, noiseLevel, noiseHandlingMode)
         self._currentSeed += 1
         return step, rewards

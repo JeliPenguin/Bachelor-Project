@@ -18,7 +18,8 @@ class CommGridEnv():
     With additional scouts added, scouts themselves would also need to cooperate to obtain all treats in least amount
     of time
     """
-    def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True, envName="Base") -> None:
+
+    def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render, numpify=True, envName="Base") -> None:
         self._row = row
         self._column = column
         self._treatNum = treatNum
@@ -100,13 +101,13 @@ class CommGridEnv():
         Given current state as x,y coordinates and an action, return coordinate of resulting new state and flag for collision
         """
         if action == STAY:
-            return state,False
+            return state, False
         movement = decodeAction(action)
         newState = transition(state, movement)
         ''' If the new state is outside the grid or collided with other agents then remain at same state'''
         if min(newState) < 0 or max(newState) > min(self._row-1, self._column-1) or self._grid[newState[0]][newState[1]] in self._agentSymbol:
-            return state,True
-        return newState,False
+            return state, True
+        return newState, False
 
     def agentStep(self, agentID: int, action: int):
         raise NotImplementedError
@@ -161,8 +162,8 @@ class CommGridEnv():
         toWrite += f"Treats: {self._treatCount}"
         toWrite += f"\nTreat Pos: {self._treatLocations}"
         return toWrite
-    
-    def additionalAgentInfo(self,agentID):
+
+    def additionalAgentInfo(self, agentID):
         return ""
 
     def formatAgentInfo(self):
