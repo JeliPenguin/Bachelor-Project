@@ -7,7 +7,7 @@ epsDecay = 12000
 rec = []
 
 
-for eps_done in range(100000):
+for eps_done in range(10000):
     epsThresh = epsEnd + (epsStart - epsEnd) * \
         np.exp(-1. * eps_done / epsDecay)
     rec.append(epsThresh)

@@ -10,7 +10,7 @@ envSetting = {
 
 trainSetting = {
     "method": "Norm",
-    "TRAIN_EPS": 10000,
+    "TRAIN_EPS": 100000,
     "batchSize": 128,
     "gamma": 0.99,
     "epsStart": 0.9,

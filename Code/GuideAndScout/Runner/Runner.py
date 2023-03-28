@@ -89,7 +89,7 @@ class Runner():
         agentNum = 1+scoutsNum
         obsDim = (agentNum, treatNum)
         noised = noiseP != 0
-        render = getVerbose() >= 0
+        render = getVerbose() > 0
         agents = self.instantiateAgents(
             obsDim, scoutsNum, noised, noiseHandlingMode, loadSave)
 

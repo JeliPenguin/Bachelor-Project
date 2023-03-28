@@ -16,7 +16,7 @@ class EvalRunner(Runner):
         env.setSeed(self._currentSeed)
         return agents, env
 
-    def test(self, verbose=-1, noiseLevel=None, noiseHandlingMode=None):
-        step, rewards = super().test(verbose, noiseLevel, noiseHandlingMode)
+    def test(self, verbose=-1, noiseP=0, noiseHandlingMode=None, maxEps=5000):
+        step, rewards = super().test(verbose, noiseP, noiseHandlingMode, maxEps)
         self._currentSeed += 1
         return step, rewards

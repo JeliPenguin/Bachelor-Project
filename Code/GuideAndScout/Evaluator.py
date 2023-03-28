@@ -26,9 +26,9 @@ class Evaluator():
         self.models = self.modelToEvaluate
         self.repetitions = 500
 
-    def testRun(self, run, noiseLevel, noiseHandlingMode):
+    def testRun(self, run, noiseP, noiseHandlingMode):
         steps, reward = run.test(
-            noiseLevel=noiseLevel, noiseHandlingMode=noiseHandlingMode)
+            noiseP=noiseP, noiseHandlingMode=noiseHandlingMode)
         return steps, reward
 
     def reEvaluate(self, model):
