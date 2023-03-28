@@ -18,7 +18,6 @@ trainSetting = {
     "epsDecay": 12000,
     "tau": 0.005,
     "lr": 1e-4,
-    "seed": 10
 }
 
 
@@ -51,9 +50,25 @@ def testTrained():
     run.test(verbose=1)
 
 
+def hyperParamTune():
+    lr = [1e-4, 1e-3, 1e-2, 0.1]
+    batchSize = [32, 64, 128,256]
+    epsDecay = [10000, 12000, 14000, 16000, 20000]
+    for l in lr:
+        for b in batchSize:
+            for e in epsDecay:
+                runName = f"HyperParam/FindingTreat_{l}_{b}_{e}"
+                trainSetting["batchSize"] = b
+                trainSetting["lr"] = l
+                trainSetting["epsDecay"] = e
+                run = Runner("FindingTreat", runName)
+                run.train(envSetting, trainSetting)
+
+
 if __name__ == "__main__":
     # spreadTrain()
     # randomRun()
-    evaluate()
+    # evaluate()
     # spreadTrain()
     # testTrained()
+    hyperParamTune()
