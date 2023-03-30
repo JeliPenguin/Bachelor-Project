@@ -5,6 +5,7 @@ class Seeder():
 
     def getTrainSeed(self):
         self._trainSeed += 2
+        # print("Train Seed: ",self._trainSeed)
         return self._trainSeed
 
     def getEvalSeed(self):
