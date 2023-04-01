@@ -51,8 +51,8 @@ def testTrained():
 
 
 def hyperParamTune():
-    lr = [1e-4, 1e-3, 1e-2, 0.1]
-    batchSize = [32, 64, 128,256]
+    lr = [1e-2, 0.1]
+    batchSize = [32, 64, 128, 256]
     epsDecay = [10000, 12000, 14000, 16000, 20000]
     for l in lr:
         for b in batchSize:
