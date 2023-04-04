@@ -6,6 +6,9 @@ import random
 from typing import List
 from const import device
 
+# https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+
+
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 

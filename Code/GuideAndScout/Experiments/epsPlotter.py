@@ -3,7 +3,7 @@ import numpy as np
 
 epsEnd = 0.05
 epsStart = 0.9
-epsDecays = [10000, 12000, 14000, 16000, 20000]
+epsDecays = [8000,10000, 12000, 14000, 16000, 20000]
 
 
 for epsDecay in epsDecays:

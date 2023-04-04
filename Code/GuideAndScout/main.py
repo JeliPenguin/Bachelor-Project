@@ -1,3 +1,4 @@
+import os
 from joblib import dump, load
 import matplotlib.pyplot as plt
 from Runner.Runner import Runner
@@ -51,18 +52,22 @@ def testTrained():
 
 
 def hyperParamTune():
-    lr = [1e-2, 0.1]
+    lr = [1e-4, 1e-3]
     batchSize = [32, 64, 128, 256]
-    epsDecay = [10000, 12000, 14000, 16000, 20000]
+    epsDecay = [8000, 10000, 12000, 14000, 16000, 20000]
+    tau = [0.0005, 0.001, 0.005, 0.01, 0.05]
     for l in lr:
         for b in batchSize:
             for e in epsDecay:
-                runName = f"HyperParam/FindingTreat_{l}_{b}_{e}"
-                trainSetting["batchSize"] = b
-                trainSetting["lr"] = l
-                trainSetting["epsDecay"] = e
-                run = Runner("FindingTreat", runName)
-                run.train(envSetting, trainSetting)
+                for t in tau:
+                    runName = f"HyperParam/FindingTreat_{l}_{b}_{e}_{t}"
+                    if not os.path.exists("./Saves/"+runName):
+                        trainSetting["batchSize"] = b
+                        trainSetting["lr"] = l
+                        trainSetting["epsDecay"] = e
+                        trainSetting["tau"] = t
+                        run = Runner("FindingTreat", runName)
+                        run.train(envSetting, trainSetting)
 
 
 if __name__ == "__main__":
