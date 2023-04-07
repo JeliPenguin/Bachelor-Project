@@ -23,12 +23,12 @@ trainSetting = {
 
 
 def quickTest():
-    envSetting["TRAIN_EPS"] = 2
-    envSetting["row"] = 4
-    envSetting["column"] = 4
+    trainSetting["TRAIN_EPS"] = 2
+    envSetting["row"] = 3
+    envSetting["column"] = 3
     myRun = Runner("Spread", saveName="Test")
-    myRun.train(envSetting, wandbLog=False)
-    myRun.test(verbose=1, maxEps=10)
+    myRun.train(envSetting, trainSetting)
+    myRun.test(verbose=1, maxEps=30)
 
 
 def spreadTrain():
@@ -76,4 +76,5 @@ if __name__ == "__main__":
     # evaluate()
     # spreadTrain()
     # testTrained()
-    hyperParamTune()
+    # hyperParamTune()
+    quickTest()
