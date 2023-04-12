@@ -35,12 +35,19 @@ def spreadTrain():
     dim = 4
     envSetting["row"] = dim
     envSetting["column"] = dim
+    trainSetting["batchSize"] = 256
+    trainSetting["epsDecay"] = 20000
     myRun = Runner("Spread", saveName=f"Spread{dim}X{dim}")
     myRun.train(envSetting, trainSetting)
     # myRun.test(verbose=1)
 
 
 def evaluate():
+    eT = Evaluator()
+    eT.evaluate(True)
+
+
+def hyperParamEval():
     eT = Evaluator()
     eT.evaluate(True)
 
@@ -77,4 +84,5 @@ if __name__ == "__main__":
     # spreadTrain()
     # testTrained()
     # hyperParamTune()
-    quickTest()
+    hyperParamEval()
+    # quickTest()

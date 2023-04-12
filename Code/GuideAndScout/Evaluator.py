@@ -7,6 +7,7 @@ import seaborn as sns
 from tqdm import tqdm
 import pandas as pd
 from const import evalNoiseLevels
+import os
 
 
 class Evaluator():
@@ -16,15 +17,21 @@ class Evaluator():
         # randModel3 = ("Test2",None,"Random3")
         # self.modelToEvaluate = [randModel,randModel2,randModel3]
         # self.models =self.modelToEvaluate
-        normSaveName = "Two5X5"
-        nhModel = (normSaveName, 0, "Noise_Handling")
-        normNoisedModel = (normSaveName, None, "Norm_Noised")
-        normModel = (normSaveName, None, "Norm")
-        schedModel = ("Sched5x5", None, "Sched")
-        self.modelToEvaluate = [normModel,
-                                schedModel, normNoisedModel, nhModel]
+        # normSaveName = "Two5X5"
+        # nhModel = (normSaveName, 0, "Noise_Handling")
+        # normNoisedModel = (normSaveName, None, "Norm_Noised")
+        # normModel = (normSaveName, None, "Norm")
+        # schedModel = ("Sched5x5", None, "Sched")
+        # self.modelToEvaluate = [normModel,
+        #                         schedModel, normNoisedModel, nhModel]
+        self.modelToEvaluate = []
+        for name in os.listdir("./Saves/HyperParam"):
+            # print(name)
+            saveName = "HyperParam/"+name
+            model = (saveName, 0, name)
+            self.modelToEvaluate.append(model)
         self.models = self.modelToEvaluate
-        self.repetitions = 500
+        self.repetitions = 50
 
     def testRun(self, run, noiseP, noiseHandlingMode):
         steps, reward = run.test(

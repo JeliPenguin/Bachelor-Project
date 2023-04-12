@@ -13,16 +13,35 @@ Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
 
+# class DeepNetwork(nn.Module):
+
+#     def __init__(self, n_observations, n_actions):
+#         super(DeepNetwork, self).__init__()
+#         self._model = nn.Sequential(
+#             nn.Linear(n_observations, 128),
+#             nn.ReLU(),
+#             nn.Linear(128, 128),
+#             nn.ReLU(),
+#             nn.Linear(128, n_actions)
+#         )
+
+#     def forward(self, x):
+#         return self._model(x)
+
 class DeepNetwork(nn.Module):
 
     def __init__(self, n_observations, n_actions):
         super(DeepNetwork, self).__init__()
         self._model = nn.Sequential(
-            nn.Linear(n_observations, 128),
+            nn.Linear(n_observations, 256),
             nn.ReLU(),
-            nn.Linear(128, 128),
+            nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Linear(128, n_actions)
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, n_actions)
         )
 
     def forward(self, x):
