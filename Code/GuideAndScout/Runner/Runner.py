@@ -108,6 +108,8 @@ class Runner():
         elif self._envType == "Spread":
             env = Spread(row, column, agents, treatNum,
                          render)
+            for agent in agents:
+                agent.setNetwork("Spread")
         else:
             print("Invalid Environment Type")
             exit()

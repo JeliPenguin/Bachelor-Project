@@ -13,25 +13,26 @@ Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
 
-# class DeepNetwork(nn.Module):
-
-#     def __init__(self, n_observations, n_actions):
-#         super(DeepNetwork, self).__init__()
-#         self._model = nn.Sequential(
-#             nn.Linear(n_observations, 128),
-#             nn.ReLU(),
-#             nn.Linear(128, 128),
-#             nn.ReLU(),
-#             nn.Linear(128, n_actions)
-#         )
-
-#     def forward(self, x):
-#         return self._model(x)
-
 class DeepNetwork(nn.Module):
 
     def __init__(self, n_observations, n_actions):
         super(DeepNetwork, self).__init__()
+        self._model = nn.Sequential(
+            nn.Linear(n_observations, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, n_actions)
+        )
+
+    def forward(self, x):
+        return self._model(x)
+
+
+class SpreadDeepNetwork(nn.Module):
+
+    def __init__(self, n_observations, n_actions):
+        super(SpreadDeepNetwork, self).__init__()
         self._model = nn.Sequential(
             nn.Linear(n_observations, 256),
             nn.ReLU(),
@@ -80,15 +81,25 @@ class DQNAgent():
         self._epsDecay = hyperParam["epsDecay"]
         self._tau = hyperParam["tau"]
         self._lr = hyperParam["lr"]
-        self._policy_net = DeepNetwork(
-            n_observations, self._n_actions).to(device)
-        self._target_net = DeepNetwork(
-            n_observations, self._n_actions).to(device)
+        self._memory = ReplayMemory(50000)
+        self._eps_done = 0
+        self.setNetwork("Default")
+
+    def setNetwork(self, type):
+        if type == "Spread":
+            print("Set network type to Spread for agent: ", self._id)
+            self._policy_net = SpreadDeepNetwork(
+                self._n_observations, self._n_actions).to(device)
+            self._target_net = SpreadDeepNetwork(
+                self._n_observations, self._n_actions).to(device)
+        else:
+            self._policy_net = DeepNetwork(
+                self._n_observations, self._n_actions).to(device)
+            self._target_net = DeepNetwork(
+                self._n_observations, self._n_actions).to(device)
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._optimizer = optim.Adam(
             self._policy_net.parameters(), lr=self._lr)
-        self._memory = ReplayMemory(50000)
-        self._eps_done = 0
 
     def getSetting(self):
         return (self._policy_net, self._eps_done)
