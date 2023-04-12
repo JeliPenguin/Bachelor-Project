@@ -11,27 +11,29 @@ import os
 
 
 class Evaluator():
-    def __init__(self) -> None:
-        # randModel = ("Test",None,"Random")
-        # randModel2 = ("Test",None,"Random2")
-        # randModel3 = ("Test2",None,"Random3")
-        # self.modelToEvaluate = [randModel,randModel2,randModel3]
-        # self.models =self.modelToEvaluate
-        # normSaveName = "Two5X5"
-        # nhModel = (normSaveName, 0, "Noise_Handling")
-        # normNoisedModel = (normSaveName, None, "Norm_Noised")
-        # normModel = (normSaveName, None, "Norm")
-        # schedModel = ("Sched5x5", None, "Sched")
-        # self.modelToEvaluate = [normModel,
-        #                         schedModel, normNoisedModel, nhModel]
-        self.modelToEvaluate = []
-        for name in os.listdir("./Saves/HyperParam"):
-            # print(name)
-            saveName = "HyperParam/"+name
-            model = (saveName, 0, name)
-            self.modelToEvaluate.append(model)
+    def __init__(self, hyperParam=False) -> None:
+        randModel = ("Test", None, "Random")
+        randModel2 = ("Test", None, "Random2")
+        randModel3 = ("Test2", None, "Random3")
+        self.modelToEvaluate = [randModel, randModel2, randModel3]
         self.models = self.modelToEvaluate
-        self.repetitions = 50
+        normSaveName = "Two5X5"
+        nhModel = (normSaveName, 0, "Noise_Handling")
+        normNoisedModel = (normSaveName, None, "Norm_Noised")
+        normModel = (normSaveName, None, "Norm")
+        schedModel = ("Sched5x5", None, "Sched")
+        self.modelToEvaluate = []
+        if hyperParam:
+            for name in os.listdir("./Saves/HyperParam"):
+                # print(name)
+                saveName = "HyperParam/"+name
+                model = (saveName, 0, name)
+                self.modelToEvaluate.append(model)
+        else:
+            self.modelToEvaluate = [normModel,
+                                    schedModel, normNoisedModel, nhModel]
+        self.models = self.modelToEvaluate
+        self.repetitions = 1
 
     def testRun(self, run, noiseP, noiseHandlingMode):
         steps, reward = run.test(

@@ -48,8 +48,8 @@ def evaluate():
 
 
 def hyperParamEval():
-    eT = Evaluator()
-    eT.evaluate(True)
+    eT = Evaluator(hyperParam=True)
+    eT.evaluate(False)
 
 
 def testTrained():
@@ -83,6 +83,6 @@ if __name__ == "__main__":
     # evaluate()
     # spreadTrain()
     # testTrained()
-    # hyperParamTune()
-    hyperParamEval()
+    hyperParamTune()
+    # hyperParamEval()
     # quickTest()
