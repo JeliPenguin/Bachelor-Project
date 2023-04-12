@@ -12,6 +12,7 @@ import wandb
 import random
 from tqdm import tqdm
 from const import evalNoiseLevels
+from Seeder import Seeder
 
 
 class Runner():
@@ -19,15 +20,16 @@ class Runner():
         """
 
         """
-        self.envType = envType
-        self.saveName = saveName
+        self._envType = envType
+        self._saveName = saveName
+        self._seeder = Seeder()
         self.constructSaves()
 
     def constructSaves(self):
         # now = datetime.now()
         # dt_string = now.strftime("-%m-%d_%H-%M")
         # saveFolderDir = "./Saves/" + saveName + dt_string + "/"
-        saveFolderDir = "./Saves/" + self.saveName + "/"
+        saveFolderDir = "./Saves/" + self._saveName + "/"
         if not os.path.exists(saveFolderDir):
             os.mkdir(saveFolderDir)
         self._agentSettingSaveDir = saveFolderDir + "agentSettings"
@@ -100,10 +102,10 @@ class Runner():
         verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
         self._channel = CommChannel(agents, noiseP, noised)
         self._channel.setupChannel()
-        if self.envType == "FindingTreat":
+        if self._envType == "FindingTreat":
             env = FindingTreat(row, column, agents, treatNum,
                                render)
-        elif self.envType == "Spread":
+        elif self._envType == "Spread":
             env = Spread(row, column, agents, treatNum,
                          render)
         else:
@@ -147,14 +149,14 @@ class Runner():
         print("Training Setting: ", trainSetting)
         setVerbose(verbose)
         TRAIN_EPS = trainSetting["TRAIN_EPS"]
-        trainSeed = trainSetting["seed"]
         trainMethod = trainSetting["method"]
         dump(trainSetting, self._agentTrainSettingSaveDir)
-        random.seed(trainSeed)
+
         # if wandbLog:
         #     wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
         agents, env = self.setupRun(
             "train", envSetting)
+        random.seed(self._seeder.getTrainSeed())
         scouts = agents[startingScoutID:]
         episodicRewards = []
         episodicSteps = []
@@ -163,6 +165,7 @@ class Runner():
         for eps in tqdm(range(TRAIN_EPS)):
             # Initialize the environment and get it's state
             # State only observerd by the guide
+            env.setSeed(self._seeder.getTrainSeed())
             if trainMethod == "Sched":
                 noiseP = random.choice(evalNoiseLevels)
                 self._channel.setNoiseP(noiseP)
@@ -189,6 +192,7 @@ class Runner():
             #     wandb.log({"episodicReward": episodicReward})
             episodicSteps.append(step)
             episodicRewards.append(episodicReward)
+
         for a in agents:
             a._memory.clear()
         agentSettings = [a.getSetting() for a in agents]
