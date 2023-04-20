@@ -32,16 +32,9 @@ def quickTest():
 
 
 def spreadTrain():
-    dim = 4
+    dim = 3
     envSetting["row"] = dim
     envSetting["column"] = dim
-    trainSetting["batchSize"] = 128
-    trainSetting["TRAIN_EPS"] = 500000
-    trainSetting["epsDecay"] = 60000
-    trainSetting["gamma"] = 1
-    # trainSetting["batchSize"] = 32
-    # trainSetting["TRAIN_EPS"] = 1000
-    # trainSetting["epsDecay"] = 90
     myRun = Runner("Spread", saveName=f"Spread{dim}X{dim}")
     myRun.train(envSetting, trainSetting)
     # myRun.test(verbose=1)
@@ -58,7 +51,7 @@ def hyperParamEval():
 
 
 def testTrained():
-    run = Runner("FindingTreat", "Two5X5")
+    run = Runner("Spread", "Spread3X3")
     # run.train(envSetting, trainSetting)
     run.test(verbose=1)
 
@@ -83,10 +76,10 @@ def hyperParamTune():
 
 
 if __name__ == "__main__":
-    # spreadTrain()
+    spreadTrain()
     # randomRun()
     # evaluate()
-    spreadTrain()
+    # spreadTrain()
     # testTrained()
     # hyperParamTune()
     # hyperParamEval()
