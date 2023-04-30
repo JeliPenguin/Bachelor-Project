@@ -11,7 +11,8 @@ import os
 
 
 class Evaluator():
-    def __init__(self, hyperParam=False) -> None:
+    def __init__(self, hyperParam=False, envType="FindingTreat") -> None:
+        self.envType = envType
         randModel = ("Test", None, "Random")
         randModel2 = ("Test", None, "Random2")
         randModel3 = ("Test2", None, "Random3")
@@ -32,8 +33,9 @@ class Evaluator():
         else:
             self.modelToEvaluate = [normModel,
                                     schedModel, normNoisedModel, nhModel]
+        self.modelToEvaluate = self.modelToEvaluate[:5]
         self.models = self.modelToEvaluate
-        self.repetitions = 1
+        self.repetitions = 50
 
     def testRun(self, run, noiseP, noiseHandlingMode):
         steps, reward = run.test(
@@ -44,7 +46,7 @@ class Evaluator():
         modelName = model[0]
         noiseHandling = model[1]
         saveName = model[2]
-        run = EvalRunner("FindingTreat", modelName)
+        run = EvalRunner(self.envType, modelName)
         print(f"Evaluating Model {saveName}:")
         epsDf = []
         rwdDf = []
@@ -60,13 +62,14 @@ class Evaluator():
         epsDf = pd.DataFrame(epsDf, columns=['Noise', 'Eps'])
         rwdDf = pd.DataFrame(rwdDf, columns=['Noise', 'Rwd'])
 
-        dump(epsDf, f"./Saves/Evaluation/{saveName}Eps")
-        dump(rwdDf, f"./Saves/Evaluation/{saveName}Rwd")
+        dump(epsDf, f"./Saves/Evaluation/{self.envType}/{saveName}Eps")
+        dump(rwdDf, f"./Saves/Evaluation/{self.envType}/{saveName}Rwd")
 
     def doPlot(self, plotType, range):
         for model in self.models:
             modelSaveName = model[2]
-            epsRecord = load(f"./Saves/Evaluation/{modelSaveName}{plotType}")
+            epsRecord = load(
+                f"./Saves/Evaluation/{self.envType}/{modelSaveName}{plotType}")
             if range:
                 epsRecord = epsRecord[epsRecord["Noise"] <= range]
             style = None

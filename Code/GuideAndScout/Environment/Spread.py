@@ -43,18 +43,18 @@ class Spread(CommGridEnv):
 
         reward = 0
         collisionPenalty = -2
-        # Penalised for collision
+        # # Penalised for collision
 
         for collision in collisionRecord[1:]:
             if collision:
                 reward += collisionPenalty
 
-        distances = -int(self.distanceToTreats() * 5)
+        distances = -int(self.distanceToTreats() * 10)
         # In worst case, given 5x5 grid for 2 scouts, distances = -120 and collisions = -4
         reward += distances
 
         if doneRecord[-1]:
-            reward += 20
+            reward += 100
 
         return reward
 
