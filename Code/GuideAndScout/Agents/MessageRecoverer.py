@@ -20,6 +20,7 @@ class MessageRecoverer():
             increment *= self._checksumWeight
         if type == "G":
             self._guidePosRecord[tuple(position)] += increment
+            print("Guide Pos: ", self._guidePosRecord)
             self._anchoredGuidePos = max(
                 self._guidePosRecord, key=self._guidePosRecord.get)
         else:

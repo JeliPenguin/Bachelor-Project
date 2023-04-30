@@ -54,7 +54,7 @@ def hyperParamEval():
 def testTrained():
     # run = Runner("Spread", "Spread3X3")
     run = Runner("FindingTreat", "HyperParam/FindingTreat_0.001_32_8000_0.01")
-    run.test(verbose=10, noiseP=0.2,noiseHandlingMode=1)
+    run.test(verbose=10, noiseP=0.3, noiseHandlingMode=1)
 
 
 def hyperParamTune():

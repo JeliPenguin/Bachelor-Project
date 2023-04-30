@@ -68,8 +68,8 @@ class ScoutAgent(CommAgent):
             falseRatio = self._falseCount / self._recieveCount
             if falseRatio >= self._falseLimit:
                 self._majorityNum = min(self._majorityNum + 2, self._bandwidth)
-                verbPrint(
-                    f"Increased majority num, now is : {self._majorityNum}", 4)
+                # verbPrint(
+                #     f"Increased majority num, now is : {self._majorityNum}", 4)
                 self._falseCount = 0
                 self._recieveCount = 0
                 self.broadcastMajority()
@@ -85,6 +85,11 @@ class ScoutAgent(CommAgent):
             msg = np.packbits(msg)
             decoded = self.decodeMessage(msg)
             verbPrint(f"Before recovery: {decoded}", 3)
+            state = decoded["state"]
+            guidePos = state[:2]
+            treatPos = state[self._n_observations - 2*self._totalTreatNum:]
+            self.recoverer.computeGuideAnchor(guidePos, msgChecksumPass)
+            self.recoverer.computeTreatAnchor(treatPos, msgChecksumPass)
             if not msgChecksumPass:
                 # If majority voting unable to fix noise, attempt recovery of message using previous history
                 decoded = self.recoverer.attemptRecovery(
@@ -128,16 +133,11 @@ class ScoutAgent(CommAgent):
         history = self.formatHistory()
         history["checksum"] = correctChecksum
         self._recievedHistory.append(history)
-        state = self._messageReceived[GUIDEID]["state"]
-        guidePos = state[:2]
-        treatPos = state[self._n_observations - 2*self._totalTreatNum:]
-        self.recoverer.computeGuideAnchor(guidePos, correctChecksum)
-        self.recoverer.computeTreatAnchor(treatPos, correctChecksum)
 
-        if getVerbose() >= 3:
-            print("Recieved history: ")
-            for hist in self._recievedHistory:
-                print(hist)
+        # if getVerbose() >= 3:
+        #     print("Recieved history: ")
+        #     for hist in self._recievedHistory:
+        #         print(hist)
 
     def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
         super().storeRecievedMessage(senderID, parse)
