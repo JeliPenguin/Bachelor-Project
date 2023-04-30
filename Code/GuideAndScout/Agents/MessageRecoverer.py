@@ -1,6 +1,5 @@
 import numpy as np
 from Environment.EnvUtilities import decodeAction, transition
-from const import verbPrint
 from collections import defaultdict
 
 
@@ -12,7 +11,7 @@ class MessageRecoverer():
         self._anchoredTreatPos = None
         self._id = id
         self._totalTreatNum = totalTreatNum
-        self._checksumWeight = 5
+        self._checksumWeight = 3
 
     def computeAnchor(self, type, correctChecksum, position):
         increment = 1
@@ -25,6 +24,7 @@ class MessageRecoverer():
                 self._guidePosRecord, key=self._guidePosRecord.get)
         else:
             self._treatPosRecord[tuple(position)] += increment
+            print("Treat Pos: ", self._treatPosRecord)
             self._anchoredTreatPos = max(
                 self._treatPosRecord, key=self._treatPosRecord.get)
 
@@ -97,10 +97,6 @@ class MessageRecoverer():
                                  action, hasSPrime, fixedsPrime)
 
             self.resolveOtherStates(recievedHistory, otherAgentID)
-
-            # verbPrint(f"Agent: {self._id}",-1)
-            # verbPrint("Other Agent States:",-1)
-            # verbPrint(otherAgentStates,-1)
 
         return {
             "state": fixedState,
