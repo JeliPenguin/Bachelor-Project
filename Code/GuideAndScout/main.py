@@ -35,9 +35,10 @@ def spreadTrain():
     dim = 3
     envSetting["row"] = dim
     envSetting["column"] = dim
+    trainSetting["TRAIN_EPS"] = 150000
+    trainSetting["epsDecay"] = 14000
     myRun = Runner("Spread", saveName=f"Spread{dim}X{dim}")
     myRun.train(envSetting, trainSetting)
-    # myRun.test(verbose=1)
 
 
 def evaluate():
@@ -47,13 +48,13 @@ def evaluate():
 
 def hyperParamEval():
     eT = Evaluator(hyperParam=True)
-    eT.evaluate(False)
+    eT.evaluate(True)
 
 
 def testTrained():
-    run = Runner("Spread", "Spread3X3")
-    # run.train(envSetting, trainSetting)
-    run.test(verbose=1)
+    # run = Runner("Spread", "Spread3X3")
+    run = Runner("FindingTreat", "HyperParam/FindingTreat_0.001_32_8000_0.01")
+    run.test(verbose=10, noiseP=0.2,noiseHandlingMode=1)
 
 
 def hyperParamTune():
@@ -76,11 +77,11 @@ def hyperParamTune():
 
 
 if __name__ == "__main__":
-    spreadTrain()
+    # spreadTrain()
     # randomRun()
     # evaluate()
     # spreadTrain()
-    # testTrained()
+    testTrained()
     # hyperParamTune()
     # hyperParamEval()
     # quickTest()

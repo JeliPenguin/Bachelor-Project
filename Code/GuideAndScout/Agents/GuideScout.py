@@ -17,7 +17,7 @@ class ScoutAgent(CommAgent):
         self._falseCount = 0
         self._recieveCount = 0
         self._MASampleSize = 3
-        self._falseLimit = 0.4
+        self._falseLimit = 0.3
         self.recoverer = MessageRecoverer(self._id, self._totalTreatNum)
         self._historySize = 5
         self._recievedHistory = deque(maxlen=self._historySize)
@@ -102,6 +102,7 @@ class ScoutAgent(CommAgent):
         self.broadcastSignal(np.array([0]))
 
     def recieveBroadcast(self, signal):
+        # Currently assumes the only signal broadcasted is for majority updates
         self._majorityNum = min(self._majorityNum + 2, self._bandwidth)
 
     def parseState(self, state):
@@ -127,13 +128,11 @@ class ScoutAgent(CommAgent):
         history = self.formatHistory()
         history["checksum"] = correctChecksum
         self._recievedHistory.append(history)
-        if correctChecksum:
-            # for id in self._messageReceived.keys():
-            state = self._messageReceived[GUIDEID]["state"]
-            guidePos = state[:2]
-            treatPos = state[self._n_observations - 2*self._totalTreatNum:]
-            self.recoverer.computeGuideAnchor(guidePos)
-            self.recoverer.computeTreatAnchor(treatPos)
+        state = self._messageReceived[GUIDEID]["state"]
+        guidePos = state[:2]
+        treatPos = state[self._n_observations - 2*self._totalTreatNum:]
+        self.recoverer.computeGuideAnchor(guidePos, correctChecksum)
+        self.recoverer.computeTreatAnchor(treatPos, correctChecksum)
 
         if getVerbose() >= 3:
             print("Recieved history: ")
@@ -148,7 +147,7 @@ class ScoutAgent(CommAgent):
 
 
 class GuideAgent(CommAgent):
-    
+
     def __init__(self, id, obs_dim, actionSpace, noiseHandling, hyperParam) -> None:
         super().__init__(id, obs_dim, actionSpace, noiseHandling, hyperParam)
         self._symbol = "G"
@@ -156,9 +155,6 @@ class GuideAgent(CommAgent):
     def choose_action(self) -> torch.Tensor:
         """ Returns STAY as Guide can only stay at allocated position"""
         return torch.tensor([[STAY]], device=device)
-
-    def recieveNoisyMessage(self):
-        return
 
     def choose_random_action(self) -> torch.Tensor:
         """ Returns STAY as Guide can only stay at allocated position"""
@@ -172,7 +168,7 @@ class GuideAgent(CommAgent):
             print("Sending to Agent: ", recieverID)
             print("Message sent: ", self._messageMemory)
         msgString = self.encodeMessage()
-        verbPrint(f"Encoded sent message: {msgString}", 5)
+        # verbPrint(f"Encoded sent message: {msgString}", 5)
         if self._noiseHandling:
             checksum = self.errorDetector.encode(msgString)
             # Checksum sent along with msg, hence can be noised as well
