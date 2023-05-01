@@ -38,22 +38,48 @@ class MessageRecoverer():
         # sets treat anchor position
         self.computeAnchor("T", correctChecksum, position)
 
+    def findRecallIndex(self,recievedHistory):
+        i = len(recievedHistory)
+        while i > 0:
+            i-=1
+            if recievedHistory[i]["checksum"]:
+                return i
+        return -1
+
+    def recall(self,recievedHistory,recallIndex):
+        s = recievedHistory[recallIndex]["state"][self._id]
+        sPrimes = recievedHistory[recallIndex]["sPrime"]
+        if sPrimes:
+            sPrime = sPrimes[self._id]
+        else:
+            sPrime = s
+        for i in range(recallIndex+1,len(recievedHistory)):
+            if recievedHistory[i]["sPrime"] is not None:
+                s = sPrime
+                actionTaken = decodeAction(recievedHistory[i]["action"][0])
+                sPrime = np.array(
+                    transition(tuple(s), actionTaken), dtype=np.uint8)
+
+        return sPrime
+            
+
     def resolveMyStates(self, recievedHistory, fixedState, action, hasSPrime, fixedsPrime):
         # Current scout's state and s' can be estimated using previous s and action
-        recentRecord = recievedHistory[-1]
-        recentState = recentRecord["state"]
-        recentsPrime = recentRecord["sPrime"]
-        history = recentsPrime
-        if history is None:
-            history = recentState
-        fixedState[self._id*2:self._id*2 +
-                   2] = history[self._id]
-        myState = history[self._id]
+
+        recallIndex = self.findRecallIndex(recievedHistory)
+        if recallIndex != -1:
+            s = self.recall(recievedHistory,recallIndex)
+        else:
+            recentRecord = recievedHistory[-1]
+            history = recentRecord["sPrime"] or recentRecord["state"]
+            s = history[self._id]
         actionTaken = decodeAction(action[0])
-        mySPrime = np.array(
-            transition(tuple(myState), actionTaken), dtype=np.uint8)
+        sPrime = np.array(
+            transition(tuple(s), actionTaken), dtype=np.uint8)
+        fixedState[self._id*2:self._id*2 +
+                    2] = s
         if hasSPrime:
-            fixedsPrime[self._id*2:self._id*2 + 2] = mySPrime
+            fixedsPrime[self._id*2:self._id*2 + 2] = sPrime
 
     def resolveOtherStates(self, recievedHistory, otherAgentID):
         # resolving other agents' s and s'
@@ -72,11 +98,9 @@ class MessageRecoverer():
         # Attempt in recovering original message by looking at history of correctly received messages
         # Could be checksum got corrupted, msg got corrupted or both
         fixedState = parse["state"]
-        fixedReward = parse["reward"]
         fixedsPrime = parse["sPrime"]
         hasSPrime = fixedsPrime is not None
-        treatStart = len(fixedState) - 2*self._totalTreatNum
-
+    
         # currently hardcoded for 2 scouts environment but can be extended to more agent scenarios
         if self._id == 1:
             otherAgentID = 2
@@ -90,6 +114,7 @@ class MessageRecoverer():
                 fixedsPrime[0:2] = self._anchoredGuidePos
 
         if self._anchoredTreatPos is not None:
+            treatStart = len(fixedState) - 2*self._totalTreatNum
             fixedState[treatStart:] = self._anchoredTreatPos
             if hasSPrime:
                 fixedsPrime[treatStart:] = self._anchoredTreatPos
@@ -102,6 +127,6 @@ class MessageRecoverer():
 
         return {
             "state": fixedState,
-            "reward": fixedReward,
+            "reward": parse["reward"],
             "sPrime": fixedsPrime
         }

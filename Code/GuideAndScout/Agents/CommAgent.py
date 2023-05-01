@@ -17,7 +17,7 @@ class CommAgent(DQNAgent):
 
         # self.errorDetector = AdditiveChecksum()
         self.errorDetector = CRC()
-        self._majorityNum = 3
+        self._majorityNum = 5
         self._noiseHandling = noiseHandling
         self._bandwidth = 10
         self.reset()

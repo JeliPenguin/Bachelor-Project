@@ -18,7 +18,7 @@ class ScoutAgent(CommAgent):
         self._MASampleSize = 3
         self._falseLimit = 0.3
         self.recoverer = MessageRecoverer(self._id, self._totalTreatNum)
-        self._historySize = 5
+        self._historySize = 10
         self._recievedHistory = deque(maxlen=self._historySize)
 
     def choose_greedy_action(self) -> torch.Tensor:
@@ -93,13 +93,10 @@ class ScoutAgent(CommAgent):
                 # If majority voting unable to fix noise, attempt recovery of message using previous history
                 decoded = self.recoverer.attemptRecovery(
                     senderID, decoded, self._recievedHistory, self._action)
-                # reEncode = self.encodeMessage()
-                # checksumRecheck = False
-                # verbPrint(f"Checksum check after recovery: {checksumRecheck}",3)
             self.majorityAdjust(noError)
-            verbPrint("Anchors:", 3)
-            verbPrint(f"Guide Pos: {self.recoverer._anchoredGuidePos}", 3)
-            verbPrint(f"Treat Pos: {self.recoverer._anchoredTreatPos}", 3)
+            # verbPrint("Anchors:", 3)
+            # verbPrint(f"Guide Pos: {self.recoverer._anchoredGuidePos}", 3)
+            # verbPrint(f"Treat Pos: {self.recoverer._anchoredTreatPos}", 3)
             self.storeRecievedMessage(senderID, decoded, noError)
 
     def broadcastMajority(self):
@@ -133,10 +130,10 @@ class ScoutAgent(CommAgent):
         history["checksum"] = correctChecksum
         self._recievedHistory.append(history)
 
-        # if getVerbose() >= 3:
-        #     print("Recieved history: ")
-        #     for hist in self._recievedHistory:
-        #         print(hist)
+        if getVerbose() >= 3:
+            print("Recieved history: ")
+            for hist in self._recievedHistory:
+                print(hist)
 
     def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
         super().storeRecievedMessage(senderID, parse)
@@ -172,7 +169,7 @@ class GuideAgent(CommAgent):
             errorDetectionCode = self.errorDetector.encode(msgString)
             # error detection code sent along with msg
             msgString = np.concatenate([errorDetectionCode, msgString])
-            verbPrint(f"Error Detection Code Sent: {errorDetectionCode}", 5)
+            # verbPrint(f"Error Detection Code Sent: {errorDetectionCode}", 5)
             for _ in range(self._majorityNum):
                 self._channel.sendMessage(self._id, recieverID, msgString)
         else:
