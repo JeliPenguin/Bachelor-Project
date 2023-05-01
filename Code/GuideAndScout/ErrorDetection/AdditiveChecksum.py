@@ -1,8 +1,8 @@
 from ErrorDetection.ErrorDetector import ErrorDetector
 import numpy as np
 
-class Checksum(ErrorDetector):
-    def __init__(self,k) -> None:
+class AdditiveChecksum(ErrorDetector):
+    def __init__(self,k=8) -> None:
         super().__init__()
         self._k = k
 
@@ -21,6 +21,7 @@ class Checksum(ErrorDetector):
     def encode(self, encoded):
         # Normal encoded length 168
         # Terminal state encoded length 88
+        # Divisible by 8
         res = []
         encoded = self.stringify(encoded)
         digitSum = self.calcDigitsum(encoded)

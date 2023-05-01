@@ -24,8 +24,8 @@ trainSetting = {
 
 def quickTest():
     trainSetting["TRAIN_EPS"] = 2
-    envSetting["row"] = 4
-    envSetting["column"] = 4
+    envSetting["row"] = 3
+    envSetting["column"] = 3
     myRun = Runner("Spread", saveName="Test")
     myRun.train(envSetting, trainSetting)
     myRun.test(verbose=3, maxEps=10)
@@ -53,8 +53,9 @@ def hyperParamEval():
 
 def testTrained():
     # run = Runner("Spread", "Spread3X3")
-    run = Runner("FindingTreat", "HyperParam/FindingTreat_0.001_32_8000_0.01")
-    run.test(verbose=10, noiseP=0.2,noiseHandlingMode=1)
+    # run = Runner("FindingTreat", "HyperParam/FindingTreat_0.001_32_8000_0.01")
+    run = Runner("FindingTreat", "Test")
+    run.test(verbose=10, noiseP=0.2, noiseHandlingMode=1,maxEps=15)
 
 
 def hyperParamTune():
@@ -81,7 +82,7 @@ if __name__ == "__main__":
     # randomRun()
     # evaluate()
     # spreadTrain()
-    testTrained()
+    # testTrained()
     # hyperParamTune()
     # hyperParamEval()
-    # quickTest()
+    quickTest()
