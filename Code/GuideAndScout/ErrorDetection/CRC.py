@@ -10,7 +10,8 @@ class CRC(ErrorDetector):
         self._codeLength = 9
 
     def encode(self, msg):
-        binEncode = bytes(msg)
+        binEncode = bytes(self.stringify(msg),"utf8")
+        # print("Encoding Message: ",binEncode,type(binEncode))
         code = self._calculator.checksum(binEncode)
         return np.array(list(f'{code:0{self._codeLength}b}'),dtype=np.uint8)
     
@@ -24,5 +25,8 @@ class CRC(ErrorDetector):
     def decode(self, msg):
         code = self.binToDec(msg[:self._codeLength])
         content = msg[self._codeLength:]
-        correct = self._calculator.verify(content,code)
+        binEncode = bytes(self.stringify(content),"utf8")
+        # print("Code recieved: ",msg[:self._codeLength])
+        # print("Recived: ",binEncode,type(binEncode))
+        correct = self._calculator.verify(binEncode,code)
         return correct,content

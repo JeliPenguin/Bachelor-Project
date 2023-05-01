@@ -172,7 +172,7 @@ class GuideAgent(CommAgent):
             errorDetectionCode = self.errorDetector.encode(msgString)
             # error detection code sent along with msg
             msgString = np.concatenate([errorDetectionCode, msgString])
-            verbPrint(f"Error Detection Code: {errorDetectionCode}", 5)
+            verbPrint(f"Error Detection Code Sent: {errorDetectionCode}", 5)
             for _ in range(self._majorityNum):
                 self._channel.sendMessage(self._id, recieverID, msgString)
         else:
