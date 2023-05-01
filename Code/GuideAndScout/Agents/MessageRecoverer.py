@@ -1,5 +1,5 @@
 import numpy as np
-from Environment.EnvUtilities import decodeAction, transition
+from Environment.EnvUtilities import decodeAction, transition,ACTIONSPACE
 from collections import defaultdict
 
 def defaultVal():
@@ -80,29 +80,34 @@ class MessageRecoverer():
             transition(tuple(s), actionTaken,strict=True), dtype=np.uint8)
         
         return s,sPrime
-
-    def resolveOtherStates(self, recievedHistory, otherAgentID,recallIndex,recallEps):
-        # resolving other agents' s and s'
-        # otherAgentStates = []
-        # startRecall = False
-        s = recievedHistory[recallIndex]["state"][otherAgentID]
-        sPrimes = recievedHistory[recallIndex]["sPrime"]
-        if sPrimes is not None:
-            sPrime = sPrimes[otherAgentID]
-        else:
-            sPrime = s
     
+    def euclidDist(self,tup1,tup2):
+        return np.sqrt((tup1[0] - tup2[0])**2 + (tup1[1] - tup2[1])**2)
         
-        # for record in recievedHistory:
-        #     startRecall = startRecall or record["checksum"]
-        #     if startRecall:
-        #         agentS = record["state"][otherAgentID]
-        #         agentSPrime = record["sPrime"]
-        #         if agentSPrime is not None:
-        #             agentSPrime = agentSPrime[otherAgentID]
-        #         otherAgentStates.append([agentS, agentSPrime])
+    def optimisticPosition(self,steps,s,mySPrime):
+        optimisticS = s
+        treat1 = self._anchoredTreatPos[:2]
+        treat1Dist = self.euclidDist(treat1,mySPrime)
+        treat2 = self._anchoredTreatPos[2:]
+        treat2Dist = self.euclidDist(treat2,mySPrime)
+        if treat1Dist < treat2Dist:
+            target = treat2
+        else:
+            target = treat1
 
-        return s,sPrime
+        for _ in range(steps):
+            minDist = np.inf
+            optS = None
+            for a in range(len(ACTIONSPACE)):
+                testS = transition(optimisticS,decodeAction(a),strict=True)
+                distance = self.euclidDist(testS,target)
+                if distance < minDist:
+                    minDist = distance
+                    optS = testS
+            optimisticS = optS
+
+        return optimisticS
+        
 
     def attemptRecovery(self,parse, recievedHistory, action):
         # Attempt in recovering original message by looking at history of correctly received messages
@@ -139,9 +144,10 @@ class MessageRecoverer():
                 fixedsPrime[self._id*2:self._id*2 + 2] = mySPrime
             
             if recallIndex != -1:
-                otherAgentS,otherAgentSPrime = self.resolveOtherStates(recievedHistory, otherAgentID,recallIndex,recallEps)
-                fixedState[otherAgentID*2:otherAgentID*2 +
-                        2] = otherAgentS
+                s = recievedHistory[recallIndex]["state"][otherAgentID]
+                otherAgentS = otherAgentSPrime = self.optimisticPosition(recallEps-1,s,mySPrime)
+                print(otherAgentS)
+                fixedState[otherAgentID*2:otherAgentID*2 + 2] = otherAgentS
                 if hasSPrime:
                     fixedsPrime[otherAgentID*2:otherAgentID*2 + 2] = otherAgentSPrime
 
