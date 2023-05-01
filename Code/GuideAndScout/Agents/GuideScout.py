@@ -129,10 +129,10 @@ class ScoutAgent(CommAgent):
         history["checksum"] = correctChecksum
         self._recievedHistory.append(history)
 
-        if getVerbose() >= 3:
-            print("Recieved history: ")
-            for hist in self._recievedHistory:
-                print(hist)
+        # if getVerbose() >= 3:
+        #     print("Recieved history: ")
+        #     for hist in self._recievedHistory:
+        #         print(hist)
 
     def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
         super().storeRecievedMessage(senderID, parse)

@@ -28,9 +28,8 @@ class Spread(CommGridEnv):
             minDist = np.inf
             for treatLoc in self._treatLocations:
                 crtAgentState = self._agentInfo[i]["state"]
-                euclidDistance = np.sqrt(
-                    (crtAgentState[0] - treatLoc[0])**2 + (crtAgentState[1] - treatLoc[1])**2)
-                minDist = min(euclidDistance, minDist)
+                dist = euclidDistance(crtAgentState,treatLoc)
+                minDist = min(dist, minDist)
             distances += (minDist)
             self._agentInfo[i]["minDist"] = minDist
         return distances

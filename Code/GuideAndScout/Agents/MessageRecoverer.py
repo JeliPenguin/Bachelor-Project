@@ -1,5 +1,5 @@
 import numpy as np
-from Environment.EnvUtilities import decodeAction, transition,ACTIONSPACE
+from Environment.EnvUtilities import decodeAction, transition,ACTIONSPACE,euclidDistance
 from collections import defaultdict
 
 def defaultVal():
@@ -80,16 +80,13 @@ class MessageRecoverer():
             transition(tuple(s), actionTaken,strict=True), dtype=np.uint8)
         
         return s,sPrime
-    
-    def euclidDist(self,tup1,tup2):
-        return np.sqrt((tup1[0] - tup2[0])**2 + (tup1[1] - tup2[1])**2)
         
     def optimisticPosition(self,steps,s,mySPrime):
         optimisticS = s
         treat1 = self._anchoredTreatPos[:2]
-        treat1Dist = self.euclidDist(treat1,mySPrime)
+        treat1Dist = self.euclidDistance(treat1,mySPrime)
         treat2 = self._anchoredTreatPos[2:]
-        treat2Dist = self.euclidDist(treat2,mySPrime)
+        treat2Dist = self.euclidDistance(treat2,mySPrime)
         if treat1Dist < treat2Dist:
             target = treat2
         else:
@@ -100,7 +97,7 @@ class MessageRecoverer():
             optS = None
             for a in range(len(ACTIONSPACE)):
                 testS = transition(optimisticS,decodeAction(a),strict=True)
-                distance = self.euclidDist(testS,target)
+                distance = self.euclidDistance(testS,target)
                 if distance < minDist:
                     minDist = distance
                     optS = testS

@@ -1,3 +1,5 @@
+import numpy as np
+
 EMPTY = "-"
 TREAT = "$"
 
@@ -24,6 +26,9 @@ def transition(initStateTuple, actionTuple,strict=False):
     if strict:
         return tuple(max(0,x + y) for x, y in zip(initStateTuple, actionTuple))
     return tuple(x + y for x, y in zip(initStateTuple, actionTuple))
+
+def euclidDistance(tup1,tup2):
+    return np.sqrt((tup1[0] - tup2[0])**2 + (tup1[1] - tup2[1])**2)
 
 
 GUIDEID = 0

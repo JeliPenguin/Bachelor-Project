@@ -24,9 +24,9 @@ trainSetting = {
 
 def quickTest():
     trainSetting["TRAIN_EPS"] = 2
-    # envSetting["row"] = 5
-    # envSetting["column"] = 5
-    myRun = Runner("FindingTreat", saveName="Test")
+    envSetting["row"] = 3
+    envSetting["column"] = 3
+    myRun = Runner("Spread", saveName="Test")
     myRun.train(envSetting, trainSetting)
     myRun.test(verbose=3, maxEps=10)
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # randomRun()
     # evaluate()
     # spreadTrain()
-    testTrained()
+    # testTrained()
     # hyperParamTune()
     # hyperParamEval()
-    # quickTest()
+    quickTest()
