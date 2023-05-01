@@ -18,7 +18,7 @@ class ScoutAgent(CommAgent):
         self._MASampleSize = 3
         self._falseLimit = 0.3
         self.recoverer = MessageRecoverer(self._id, self._totalTreatNum)
-        self._historySize = 10
+        self._historySize = 20
         self._recievedHistory = deque(maxlen=self._historySize)
 
     def choose_greedy_action(self) -> torch.Tensor:
@@ -91,8 +91,7 @@ class ScoutAgent(CommAgent):
             self.recoverer.computeTreatAnchor(treatPos, noError)
             if not noError:
                 # If majority voting unable to fix noise, attempt recovery of message using previous history
-                decoded = self.recoverer.attemptRecovery(
-                    senderID, decoded, self._recievedHistory, self._action)
+                decoded = self.recoverer.attemptRecovery(decoded, self._recievedHistory, self._action)
             self.majorityAdjust(noError)
             # verbPrint("Anchors:", 3)
             # verbPrint(f"Guide Pos: {self.recoverer._anchoredGuidePos}", 3)

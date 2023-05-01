@@ -40,13 +40,17 @@ class MessageRecoverer():
 
     def findRecallIndex(self,recievedHistory):
         i = len(recievedHistory)
+        eps = 0
         while i > 0:
             i-=1
+            if recievedHistory[i]["sPrime"] is not None:
+                eps += 1
             if recievedHistory[i]["checksum"]:
-                return i
-        return -1
+                return i,eps
+        return -1,0
 
-    def recall(self,recievedHistory,recallIndex):
+    def myRecall(self,recievedHistory,recallIndex):
+        print(recallIndex)
         s = recievedHistory[recallIndex]["state"][self._id]
         sPrimes = recievedHistory[recallIndex]["sPrime"]
         if sPrimes:
@@ -58,43 +62,49 @@ class MessageRecoverer():
                 s = sPrime
                 actionTaken = decodeAction(recievedHistory[i]["action"][0])
                 sPrime = np.array(
-                    transition(tuple(s), actionTaken), dtype=np.uint8)
+                    transition(tuple(s), actionTaken,strict=True), dtype=np.uint8)
 
         return sPrime
             
 
-    def resolveMyStates(self, recievedHistory, fixedState, action, hasSPrime, fixedsPrime):
+    def resolveMyStates(self, recievedHistory, recallIndex, action):
         # Current scout's state and s' can be estimated using previous s and action
-
-        recallIndex = self.findRecallIndex(recievedHistory)
         if recallIndex != -1:
-            s = self.recall(recievedHistory,recallIndex)
+            s = self.myRecall(recievedHistory,recallIndex)
         else:
             recentRecord = recievedHistory[-1]
             history = recentRecord["sPrime"] or recentRecord["state"]
             s = history[self._id]
         actionTaken = decodeAction(action[0])
         sPrime = np.array(
-            transition(tuple(s), actionTaken), dtype=np.uint8)
-        fixedState[self._id*2:self._id*2 +
-                    2] = s
-        if hasSPrime:
-            fixedsPrime[self._id*2:self._id*2 + 2] = sPrime
+            transition(tuple(s), actionTaken,strict=True), dtype=np.uint8)
+        
+        return s,sPrime
 
-    def resolveOtherStates(self, recievedHistory, otherAgentID):
+    def resolveOtherStates(self, recievedHistory, otherAgentID,recallIndex,recallEps):
         # resolving other agents' s and s'
-        otherAgentStates = []
-        startRecall = False
-        for record in recievedHistory:
-            startRecall = startRecall or record["checksum"]
-            if startRecall:
-                agentS = record["state"][otherAgentID]
-                agentSPrime = record["sPrime"]
-                if agentSPrime is not None:
-                    agentSPrime = agentSPrime[otherAgentID]
-                otherAgentStates.append([agentS, agentSPrime])
+        # otherAgentStates = []
+        # startRecall = False
+        s = recievedHistory[recallIndex]["state"][otherAgentID]
+        sPrimes = recievedHistory[recallIndex]["sPrime"]
+        if sPrimes is not None:
+            sPrime = sPrimes[otherAgentID]
+        else:
+            sPrime = s
+    
+        
+        # for record in recievedHistory:
+        #     startRecall = startRecall or record["checksum"]
+        #     if startRecall:
+        #         agentS = record["state"][otherAgentID]
+        #         agentSPrime = record["sPrime"]
+        #         if agentSPrime is not None:
+        #             agentSPrime = agentSPrime[otherAgentID]
+        #         otherAgentStates.append([agentS, agentSPrime])
 
-    def attemptRecovery(self, senderID, parse, recievedHistory, action):
+        return s,sPrime
+
+    def attemptRecovery(self,parse, recievedHistory, action):
         # Attempt in recovering original message by looking at history of correctly received messages
         # Could be checksum got corrupted, msg got corrupted or both
         fixedState = parse["state"]
@@ -120,10 +130,20 @@ class MessageRecoverer():
                 fixedsPrime[treatStart:] = self._anchoredTreatPos
 
         if recievedHistory:
-            self.resolveMyStates(recievedHistory, fixedState,
-                                 action, hasSPrime, fixedsPrime)
-
-            self.resolveOtherStates(recievedHistory, otherAgentID)
+            recallIndex,recallEps = self.findRecallIndex(recievedHistory)
+            myS,mySPrime = self.resolveMyStates(recievedHistory, recallIndex, action)
+            
+            fixedState[self._id*2:self._id*2 +
+                    2] = myS
+            if hasSPrime:
+                fixedsPrime[self._id*2:self._id*2 + 2] = mySPrime
+            
+            if recallIndex != -1:
+                otherAgentS,otherAgentSPrime = self.resolveOtherStates(recievedHistory, otherAgentID,recallIndex,recallEps)
+                fixedState[otherAgentID*2:otherAgentID*2 +
+                        2] = otherAgentS
+                if hasSPrime:
+                    fixedsPrime[otherAgentID*2:otherAgentID*2 + 2] = otherAgentSPrime
 
         return {
             "state": fixedState,

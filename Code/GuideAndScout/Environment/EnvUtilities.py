@@ -20,7 +20,9 @@ def decodeAction(num: int):
     return mapping[num]
 
 
-def transition(initStateTuple, actionTuple):
+def transition(initStateTuple, actionTuple,strict=False):
+    if strict:
+        return tuple(max(0,x + y) for x, y in zip(initStateTuple, actionTuple))
     return tuple(x + y for x, y in zip(initStateTuple, actionTuple))
 
 
