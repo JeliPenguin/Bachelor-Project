@@ -3,7 +3,8 @@ from Environment.CommChannel import CommChannel
 import numpy as np
 import torch
 from const import *
-from ErrorDetection.Checksum import Checksum
+from ErrorDetection.AdditiveChecksum import AdditiveChecksum
+from ErrorDetection.CRC import CRC
 
 
 class CommAgent(DQNAgent):
@@ -14,7 +15,8 @@ class CommAgent(DQNAgent):
         super().__init__(id, n_observations, actionSpace,
                          hyperParam)
 
-        self.errorDetector = Checksum(8)
+        # self.errorDetector = AdditiveChecksum()
+        self.errorDetector = CRC()
         self._majorityNum = 3
         self._noiseHandling = noiseHandling
         self._bandwidth = 10

@@ -18,6 +18,6 @@ class ErrorDetector():
         """
         Returns tuple (correct,msg)
         correct: Whether the decoded message passes the test
-        msg: The original message without the detection code
+        msg: The message without the error detection code
         """
         pass

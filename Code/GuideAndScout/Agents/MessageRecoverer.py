@@ -2,11 +2,13 @@ import numpy as np
 from Environment.EnvUtilities import decodeAction, transition
 from collections import defaultdict
 
+def defaultVal():
+    return 0
 
 class MessageRecoverer():
     def __init__(self, id, totalTreatNum) -> None:
-        self._guidePosRecord = defaultdict(lambda: 0)
-        self._treatPosRecord = defaultdict(lambda: 0)
+        self._guidePosRecord = defaultdict(defaultVal)
+        self._treatPosRecord = defaultdict(defaultVal)
         self._anchoredGuidePos = None
         self._anchoredTreatPos = None
         self._id = id
@@ -19,12 +21,12 @@ class MessageRecoverer():
             increment *= self._checksumWeight
         if type == "G":
             self._guidePosRecord[tuple(position)] += increment
-            print("Guide Pos: ", self._guidePosRecord)
+            # print("Guide Pos: ", self._guidePosRecord)
             self._anchoredGuidePos = max(
                 self._guidePosRecord, key=self._guidePosRecord.get)
         else:
             self._treatPosRecord[tuple(position)] += increment
-            print("Treat Pos: ", self._treatPosRecord)
+            # print("Treat Pos: ", self._treatPosRecord)
             self._anchoredTreatPos = max(
                 self._treatPosRecord, key=self._treatPosRecord.get)
 
