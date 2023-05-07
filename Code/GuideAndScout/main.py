@@ -32,30 +32,26 @@ def quickTest():
 
 
 def spreadTrain():
-    dim = 3
+    dim = 4
     envSetting["row"] = dim
     envSetting["column"] = dim
     trainSetting["TRAIN_EPS"] = 150000
     trainSetting["epsDecay"] = 14000
     myRun = Runner("Spread", saveName=f"Spread{dim}X{dim}")
-    myRun.train(envSetting, trainSetting)
+    myRun.train(envSetting, trainSetting, showInterTrain=True)
 
 
 def evaluate():
     eT = Evaluator()
-    eT.evaluate(True)
-
-
-def hyperParamEval():
-    eT = Evaluator(hyperParam=True)
+    # eT = Evaluator(hyperParam=True)
     eT.evaluate(True)
 
 
 def testTrained():
     # run = Runner("Spread", "Spread3X3")
     # run = Runner("FindingTreat", "HyperParam/FindingTreat_0.001_32_8000_0.01")
-    run = Runner("FindingTreat", "Test")
-    run.test(verbose=10, noiseP=0.2, noiseHandlingMode=1,maxEps=15)
+    run = Runner("Spread", "Spread3X3")
+    run.test(verbose=1, maxEps=30)
 
 
 def hyperParamTune():
@@ -63,17 +59,26 @@ def hyperParamTune():
     batchSize = [32, 64, 128, 256]
     epsDecay = [8000, 10000, 12000, 14000, 16000, 20000]
     tau = [0.0005, 0.001, 0.005, 0.01, 0.05]
+    # env = "FindingTreat"
+    env = "Spread"
+    if env == "Spread":
+        dim = 3
+        envSetting["row"] = dim
+        envSetting["column"] = dim
+        trainSetting["TRAIN_EPS"] = 150000
+        batchSize = [64, 128, 256]
+        epsDecay = [14000, 16000, 18000, 20000]
     for l in lr:
         for b in batchSize:
             for e in epsDecay:
                 for t in tau:
-                    runName = f"HyperParam/FindingTreat_{l}_{b}_{e}_{t}"
+                    runName = f"HyperParam/{env}/{env}_{l}_{b}_{e}_{t}"
                     if not os.path.exists("./Saves/"+runName):
                         trainSetting["batchSize"] = b
                         trainSetting["lr"] = l
                         trainSetting["epsDecay"] = e
                         trainSetting["tau"] = t
-                        run = Runner("FindingTreat", runName)
+                        run = Runner(env, runName)
                         run.train(envSetting, trainSetting)
 
 
@@ -83,6 +88,5 @@ if __name__ == "__main__":
     # evaluate()
     # spreadTrain()
     # testTrained()
-    # hyperParamTune()
-    # hyperParamEval()
-    quickTest()
+    hyperParamTune()
+    # quickTest()

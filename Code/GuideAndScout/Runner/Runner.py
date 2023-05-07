@@ -108,8 +108,9 @@ class Runner():
         elif self._envType == "Spread":
             env = Spread(row, column, agents, treatNum,
                          render)
-            for agent in agents:
-                agent.setNetwork("Spread")
+            if not loadSave:
+                for agent in agents:
+                    agent.setNetwork("Spread")
         else:
             print("Invalid Environment Type")
             exit()
@@ -144,7 +145,24 @@ class Runner():
 
         return sPrime, reward, done, info
 
-    def train(self, envSetting, trainSetting, verbose=0, wandbLog=True):
+    def intermediateShow(self, agents, env):
+        setVerbose(1)
+        env._toRender = True
+        env.setSeed(self._seeder.getEvalSeed())
+        state = env.reset()
+        step = 0
+        done = False
+        while not done:
+            sPrime, reward, done, _ = self.doStep(
+                agents, env, state)
+            state = sPrime
+            step += 1
+        print(
+            f"===================================================\nCompleted in {step} steps\n===================================================")
+        setVerbose(0)
+        env._toRender = False
+
+    def train(self, envSetting, trainSetting, verbose=0, showInterTrain=False):
         """
         Run training with given environment settings
         """
@@ -194,6 +212,9 @@ class Runner():
             #     wandb.log({"episodicReward": episodicReward})
             episodicSteps.append(step)
             episodicRewards.append(episodicReward)
+
+            if showInterTrain and eps % 100 == 0:
+                self.intermediateShow(agents, env)
 
         for a in agents:
             a._memory.clear()

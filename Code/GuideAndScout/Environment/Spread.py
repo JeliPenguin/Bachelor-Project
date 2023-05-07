@@ -28,7 +28,7 @@ class Spread(CommGridEnv):
             minDist = np.inf
             for treatLoc in self._treatLocations:
                 crtAgentState = self._agentInfo[i]["state"]
-                dist = euclidDistance(crtAgentState,treatLoc)
+                dist = euclidDistance(crtAgentState, treatLoc)
                 minDist = min(dist, minDist)
             distances += (minDist)
             self._agentInfo[i]["minDist"] = minDist
@@ -40,7 +40,7 @@ class Spread(CommGridEnv):
         # Cannot set reward > 128 and reward < -129 due to message encodings
         # """
 
-        reward = 0
+        reward = -1
         collisionPenalty = -2
         # # Penalised for collision
 
