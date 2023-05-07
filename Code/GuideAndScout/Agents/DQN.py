@@ -34,7 +34,9 @@ class SpreadDeepNetwork(nn.Module):
     def __init__(self, n_observations, n_actions):
         super(SpreadDeepNetwork, self).__init__()
         self._model = nn.Sequential(
-            nn.Linear(n_observations, 128),
+            nn.Linear(n_observations, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
