@@ -28,7 +28,8 @@ def transition(initStateTuple, actionTuple,strict=False):
     return tuple(x + y for x, y in zip(initStateTuple, actionTuple))
 
 def euclidDistance(tup1,tup2):
-    return np.sqrt((tup1[0] - tup2[0])**2 + (tup1[1] - tup2[1])**2)
+    distance = np.sqrt((int(tup1[0]) - int(tup2[0]))**2 + (int(tup1[1]) - int(tup2[1]))**2)
+    return distance
 
 
 GUIDEID = 0

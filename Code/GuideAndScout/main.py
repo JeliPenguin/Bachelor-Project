@@ -42,9 +42,9 @@ def spreadTrain():
 
 
 def evaluate():
-    eT = Evaluator()
-    # eT = Evaluator(hyperParam=True)
-    eT.evaluate(True)
+    # eT = Evaluator()
+    eT = Evaluator(hyperParam=True)
+    eT.evaluate()
 
 
 def testTrained():
@@ -85,8 +85,8 @@ def hyperParamTune():
 if __name__ == "__main__":
     # spreadTrain()
     # randomRun()
-    # evaluate()
+    evaluate()
     # spreadTrain()
     # testTrained()
-    hyperParamTune()
+    # hyperParamTune()
     # quickTest()
