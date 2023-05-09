@@ -43,7 +43,8 @@ def spreadTrain():
 
 def evaluate():
     # eT = Evaluator()
-    eT = Evaluator(hyperParam=True)
+    # eT = Evaluator(hyperParam=True)
+    eT = Evaluator(hyperParam=True,envType="Spread")
     eT.evaluate()
 
 
