@@ -26,9 +26,6 @@ class Runner():
         self.constructSaves()
 
     def constructSaves(self):
-        # now = datetime.now()
-        # dt_string = now.strftime("-%m-%d_%H-%M")
-        # saveFolderDir = "./Saves/" + saveName + dt_string + "/"
         saveFolderDir = "./Saves/" + self._saveName + "/"
         if not os.path.exists(saveFolderDir):
             os.mkdir(saveFolderDir)
@@ -60,7 +57,11 @@ class Runner():
         return configuredEnvSetting
 
     def instantiateAgents(self, obsDim, scoutsNum, noised, noiseHandlingMode, loadSaved):
+        """
+        Initialising agents, whether it's loading pretained configuations or instantiating new agents
+        """
         trainedAgent = None
+        # Load pretrained config
         if loadSaved:
             trainedAgent = load(self._agentSettingSaveDir)
         trainSetting = load(self._agentTrainSettingSaveDir)
@@ -82,6 +83,9 @@ class Runner():
         return agents
 
     def setupRun(self, setupType, envSetting=None, noiseP=0, noiseHandlingMode=None):
+        """
+        Configure environment and communication channel settings for current run, initialise agents
+        """
         loadSave = setupType == "test"
         configuredEnvSetting = self.setupEnvSetting(loadSave, envSetting)
         row = configuredEnvSetting["row"]
@@ -119,8 +123,7 @@ class Runner():
         return agents, env
 
     def doStep(self, agents, env: CommGridEnv, state):
-        # verbPrint(
-        #     "=================================================================\n", 1)
+        """ Do a single timestep of the environment"""
         guide = agents[GUIDEID]
         verbPrint("SENDING CURRENT STATE ONLY", 2)
         for scoutID in range(startingScoutID, len(agents)):
@@ -171,9 +174,6 @@ class Runner():
         TRAIN_EPS = trainSetting["TRAIN_EPS"]
         trainMethod = trainSetting["method"]
         dump(trainSetting, self._agentTrainSettingSaveDir)
-
-        # if wandbLog:
-        #     wandb.init(project="Comm-Noised MARL", entity="jelipenguin")
         agents, env = self.setupRun(
             "train", envSetting)
         random.seed(self._seeder.getTrainSeed())
@@ -206,16 +206,13 @@ class Runner():
 
             for scout in scouts:
                 scout.updateEps()
-
-            # if wandbLog:
-            #     wandb.log({"episodicStep": step})
-            #     wandb.log({"episodicReward": episodicReward})
             episodicSteps.append(step)
             episodicRewards.append(episodicReward)
 
             if showInterTrain and eps % 100 == 0:
                 self.intermediateShow(agents, env)
 
+        # Dumping trained agents configurations and training stats
         for a in agents:
             a._memory.clear()
         agentSettings = [a.getSetting() for a in agents]
@@ -244,6 +241,9 @@ class Runner():
         return step, rewards
 
     def randomRun(self, verbose=1, maxEps=3):
+        """
+        All agents do random actions, for debugging
+        """
         setVerbose(verbose)
         agents, env = self.setupRun("random")
         stp = 0
