@@ -28,7 +28,7 @@ class Evaluator():
         else:
             self.modelToEvaluate = [normModel,
                                     schedModel, normNoisedModel, nhModel]
-        # self.modelToEvaluate = self.modelToEvaluate[:4]
+        # self.modelToEvaluate = self.modelToEvaluate[1:10]
         self.models = self.modelToEvaluate
         self.repetitions = 100
         self.savePath = f"./Saves/Evaluation/{self.envType}/"
