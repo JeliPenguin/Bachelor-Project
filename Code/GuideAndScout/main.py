@@ -22,32 +22,22 @@ trainSetting = {
 }
 
 
-def quickTest():
-    trainSetting["TRAIN_EPS"] = 2
-    envSetting["row"] = 3
-    envSetting["column"] = 3
-    myRun = Runner("Spread", saveName="Test")
+def quickTrain():
+    myRun = Runner("FindingTreat", saveName="Checksum")
+    trainSetting["batchSize"] = 32
+    trainSetting["lr"] = 0.001
+    trainSetting["epsDecay"] = 16000
+    trainSetting["tau"] = 0.005
     myRun.train(envSetting, trainSetting)
-    myRun.test(verbose=3, maxEps=10)
-
-
-def spreadTrain():
-    dim = 4
-    envSetting["row"] = dim
-    envSetting["column"] = dim
-    trainSetting["TRAIN_EPS"] = 150000
-    trainSetting["epsDecay"] = 14000
-    myRun = Runner("Spread", saveName=f"Spread{dim}X{dim}")
-    myRun.train(envSetting, trainSetting, showInterTrain=True)
 
 
 def evaluate():
     eT = Evaluator(envType="FindingTreat")
     # eT = Evaluator(envType="Spread")
     # eT.evaluate()
-    eT.plotAll()
+    # eT.plotAll()
     # eT.plotBest()
-    # eT.normNoiseCompare()
+    eT.normNoiseCompare()
 
 
 def hyperParamTune():
