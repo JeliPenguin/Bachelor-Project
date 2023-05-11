@@ -4,7 +4,6 @@ from Agents.CommAgent import CommAgent
 from Agents.MessageRecoverer import MessageRecoverer
 import torch
 import numpy as np
-from typing import Tuple
 import scipy.stats
 from collections import deque
 
@@ -80,10 +79,8 @@ class ScoutAgent(CommAgent):
             # Majority vote the messages
             msg = self.majorityVote()
             noError, msg = self.errorDetector.decode(msg)
-            verbPrint(f"No error detected in message: {noError}", 2)
             msg = np.packbits(msg)
             decoded = self.decodeMessage(msg)
-            verbPrint(f"Before recovery: {decoded}", 3)
             state = decoded["state"]
             guidePos = state[:2]
             treatPos = state[self._n_observations - 2*self._totalTreatNum:]
@@ -91,11 +88,9 @@ class ScoutAgent(CommAgent):
             self.recoverer.computeTreatAnchor(treatPos, noError)
             if not noError:
                 # If majority voting unable to fix noise, attempt recovery of message using previous history
-                decoded = self.recoverer.attemptRecovery(decoded, self._recievedHistory, self._action)
+                decoded = self.recoverer.attemptRecovery(
+                    decoded, self._recievedHistory, self._action)
             self.majorityAdjust(noError)
-            # verbPrint("Anchors:", 3)
-            # verbPrint(f"Guide Pos: {self.recoverer._anchoredGuidePos}", 3)
-            # verbPrint(f"Treat Pos: {self.recoverer._anchoredTreatPos}", 3)
             self.storeRecievedMessage(senderID, decoded, noError)
 
     def broadcastMajority(self):
@@ -159,16 +154,11 @@ class GuideAgent(CommAgent):
         self._majorityNum = min(self._majorityNum + 2, self._bandwidth)
 
     def sendMessage(self, recieverID: int):
-        if getVerbose() >= 2:
-            print("Sending to Agent: ", recieverID)
-            print("Message sent: ", self._messageMemory)
         msgString = self.encodeMessage()
-        # verbPrint(f"Encoded sent message: {msgString}", 5)
         if self._noiseHandling:
             errorDetectionCode = self.errorDetector.encode(msgString)
             # error detection code sent along with msg
             msgString = np.concatenate([errorDetectionCode, msgString])
-            # verbPrint(f"Error Detection Code Sent: {errorDetectionCode}", 5)
             for _ in range(self._majorityNum):
                 self._channel.sendMessage(self._id, recieverID, msgString)
         else:

@@ -11,23 +11,14 @@ import os
 
 
 class Evaluator():
-    def __init__(self, hyperParam=False, envType="FindingTreat") -> None:
+    def __init__(self, envType="FindingTreat") -> None:
         self.envType = envType
-        normSaveName = "Two5X5"
-        nhModel = (normSaveName, 0, "Noise_Handling")
-        normNoisedModel = (normSaveName, None, "Norm_Noised")
-        normModel = (normSaveName, None, "Norm")
-        schedModel = ("Sched5x5", None, "Sched")
-        self.modelToEvaluate = [normModel]
-        if hyperParam:
-            for name in os.listdir(f"./Saves/HyperParam/{envType}"):
-                # print(name)
-                saveName = f"HyperParam/{envType}/{name}"
-                model = (saveName, 0, name)
-                self.modelToEvaluate.append(model)
-        else:
-            self.modelToEvaluate = [normModel,
-                                    schedModel, normNoisedModel, nhModel]
+        self.modelToEvaluate = []
+        for name in os.listdir(f"./Saves/HyperParam/{envType}"):
+            # print(name)
+            saveName = f"HyperParam/{envType}/{name}"
+            model = (saveName, 0, name)
+            self.modelToEvaluate.append(model)
         # self.modelToEvaluate = self.modelToEvaluate[1:10]
         self.models = self.modelToEvaluate
         self.repetitions = 100
@@ -66,13 +57,32 @@ class Evaluator():
             dump(
                 rwdDf, f"{fullSavePath}/Rwd")
 
-    def doPlot(self, plotType, range):
-        for model in self.models:
-            modelSaveName = model[2]
+    def findBest(self, best):
+        models = {}
+        for model in os.listdir(self.savePath):
+            if model != "Norm_Noised" and model != "Norm":
+                epsRecord = load(f"{self.savePath}{model}/Eps")
+                groupMean = epsRecord["Eps"].mean()
+                models[model] = groupMean
+        topModel = [k for k in sorted(models, key=models.get)][:best]
+        return (topModel)
+
+    def plotBest(self, best):
+        models = self.findBest(best)
+        self.doPlot("Eps", models)
+
+    def plotAll(self):
+        models = os.listdir(self.savePath)
+        if "Norm" in models:
+            models.remove("Norm")
+        if "Norm_Noised" in models:
+            models.remove("Norm_Noised")
+        self.doPlot("Eps", models)
+
+    def doPlot(self, plotType, models):
+        for modelSaveName in models:
             epsRecord = load(
                 f"{self.savePath}{modelSaveName}/{plotType}")
-            if range:
-                epsRecord = epsRecord[epsRecord["Noise"] <= range]
             style = None
             if modelSaveName == "Norm":
                 style = "dashed"
@@ -85,11 +95,16 @@ class Evaluator():
         plt.legend(loc="upper left")
         plt.show()
 
-    def checkSaved(self, range):
-        self.doPlot("Eps", range)
-        # self.doPlot("Rwd")
+    def normNoiseCompare(self):
+        bestModel = self.findBest(1)[0]
+        print(bestModel)
+        models = f"HyperParam/{self.envType}/{bestModel}"
+        normNoisedModel = (models, None, "Norm_Noised")
+        normModel = (models, None, "Norm")
+        self.modelEval(normNoisedModel, reEval=False)
+        self.modelEval(normModel, reEval=False)
+        self.doPlot("Eps", [bestModel, "Norm", "Norm_Noised"])
 
-    def evaluate(self, reEval=False, range=None):
+    def evaluate(self, reEval=False):
         for model in self.modelToEvaluate:
             self.modelEval(model, reEval)
-        self.checkSaved(range)

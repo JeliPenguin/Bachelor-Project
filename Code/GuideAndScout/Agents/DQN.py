@@ -6,7 +6,7 @@ import random
 from typing import List
 from const import device
 
-# https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+# Taken code from https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html for network optimization experience replay
 
 
 Transition = namedtuple('Transition',
@@ -84,6 +84,9 @@ class DQNAgent():
         self.setNetwork("Default")
 
     def setNetwork(self, type):
+        """
+        Setting different network architecture depending on the task type
+        """
         if type == "Spread":
             print("Set network type to Spread for agent: ", self._id)
             self._policy_net = SpreadDeepNetwork(
@@ -156,23 +159,17 @@ class DQNAgent():
         with torch.no_grad():
             next_state_values[non_final_mask] = self._target_net(
                 non_final_next_states).max(1)[0]
-        # Compute the expected Q values
         expected_state_action_values = (
             next_state_values * self._gamma) + reward_batch
-
-        # Compute Huber loss
         criterion = nn.MSELoss()
         loss = criterion(state_action_values,
                          expected_state_action_values.unsqueeze(1))
 
-        # Optimize the model
         self._optimizer.zero_grad()
         loss.backward()
-        # In-place gradient clipping
         torch.nn.utils.clip_grad_value_(self._policy_net.parameters(), 100)
         self._optimizer.step()
-        # Soft update of the target network's weights
-        # θ′ ← τ θ + (1 −τ )θ′
+        # Soft update target network's weights
         target_net_state_dict = self._target_net.state_dict()
         policy_net_state_dict = self._policy_net.state_dict()
         for key in policy_net_state_dict:

@@ -42,17 +42,12 @@ def spreadTrain():
 
 
 def evaluate():
-    # eT = Evaluator()
-    # eT = Evaluator(hyperParam=True)
-    eT = Evaluator(hyperParam=True,envType="Spread")
-    eT.evaluate()
-
-
-def testTrained():
-    # run = Runner("Spread", "Spread3X3")
-    # run = Runner("FindingTreat", "HyperParam/FindingTreat_0.001_32_8000_0.01")
-    run = Runner("Spread", "Spread3X3")
-    run.test(verbose=1, maxEps=30)
+    eT = Evaluator(envType="FindingTreat")
+    # eT = Evaluator(envType="Spread")
+    # eT.evaluate()
+    eT.plotAll()
+    # eT.plotBest()
+    # eT.normNoiseCompare()
 
 
 def hyperParamTune():
@@ -85,7 +80,6 @@ def hyperParamTune():
 
 if __name__ == "__main__":
     # spreadTrain()
-    # randomRun()
     evaluate()
     # spreadTrain()
     # testTrained()
