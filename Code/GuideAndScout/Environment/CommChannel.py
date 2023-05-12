@@ -11,11 +11,12 @@ class CommChannel():
         for agent in self._agents:
             agent.setChannel(self)
 
-    def setNoiseP(self, noiseP:float):
+    def setNoiseP(self, noiseP: float):
         # print(f"Setting noisep: {noiseP}")
         self._noiseP = noiseP
 
     def addNoise(self, msg):
+        """Implementing the binary symmetric channel"""
         noise = np.random.random(msg.shape) < self._noiseP
         noiseAdded = []
         for m, n in zip(msg, noise):

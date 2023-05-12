@@ -9,14 +9,15 @@ from ErrorDetection.CRC import CRC
 
 class CommAgent(DQNAgent):
     def __init__(self, id, obs_dim, actionSpace, noiseHandling, hyperParam) -> None:
+        """Parent class for guide and scout"""
         self._agentNum = obs_dim[0]
         self._totalTreatNum = obs_dim[1]
         n_observations = 2 * (self._agentNum + self._totalTreatNum)
         super().__init__(id, n_observations, actionSpace,
                          hyperParam)
 
-        self.errorDetector = AdditiveChecksum()
-        # self.errorDetector = CRC()
+        # self.errorDetector = AdditiveChecksum()
+        self.errorDetector = CRC()
         self._majorityNum = 5
         self._noiseHandling = noiseHandling
         self._bandwidth = 10
@@ -43,6 +44,7 @@ class CommAgent(DQNAgent):
         self.reset()
 
     def tensorize(self, msg):
+        """Convert data into tensors for DNN"""
         stateTensor = None
         actionTensor = None
         sPrimeTensor = None

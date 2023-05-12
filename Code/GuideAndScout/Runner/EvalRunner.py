@@ -2,6 +2,7 @@ from Runner.Runner import Runner
 
 
 class EvalRunner(Runner):
+    """Runner for evaluation that uses evaluation seeds for environment initialization and has 5000 timestep limit"""
     def __init__(self, envType, saveName) -> None:
         super().__init__(envType, saveName)
 

@@ -7,8 +7,6 @@ from joblib import dump, load
 from Environment.CommChannel import CommChannel
 from typing import List
 import os
-from datetime import datetime
-import wandb
 import random
 from tqdm import tqdm
 from const import evalNoiseLevels
@@ -26,6 +24,7 @@ class Runner():
         self.constructSaves()
 
     def constructSaves(self):
+        """Construct save file for current run"""
         saveFolderDir = "./Saves/" + self._saveName + "/"
         if not os.path.exists(saveFolderDir):
             os.mkdir(saveFolderDir)
@@ -98,9 +97,6 @@ class Runner():
         render = getVerbose() > 0
         agents = self.instantiateAgents(
             obsDim, scoutsNum, noised, noiseHandlingMode, loadSave)
-
-        # print(f"Channel Noised: {self._noised}")
-        # verbPrint(f"Noise level: {self._noiseP}", 1)
         verbPrint(f"Noised: {noised}", 0)
         verbPrint(f"Noise level: {noiseP}", 0)
         verbPrint(f"Noise Handling Mode: {noiseHandlingMode}", 1)
@@ -125,7 +121,6 @@ class Runner():
     def doStep(self, agents, env: CommGridEnv, state):
         """ Do a single timestep of the environment"""
         guide = agents[GUIDEID]
-        verbPrint("SENDING CURRENT STATE ONLY", 2)
         for scoutID in range(startingScoutID, len(agents)):
             # Other part of the message kept as None
             guide.clearPreparedMessage()
@@ -139,7 +134,6 @@ class Runner():
             sPrime = None
 
         guide: GuideAgent = agents[GUIDEID]
-        verbPrint("MSG SENT:", 2)
         for scoutID in range(startingScoutID, len(agents)):
             agents[scoutID].rememberAction([actions[scoutID]])
             guide.prepareMessage([reward], "reward")
@@ -236,8 +230,6 @@ class Runner():
             state = sPrime
             step += 1
             rewards += reward
-        verbPrint(
-            f"===================================================\nCompleted in {step} steps\n===================================================", 1)
         return step, rewards
 
     def randomRun(self, verbose=1, maxEps=3):

@@ -13,10 +13,6 @@ class CommGridEnv():
 
     Scout agent can move but cannot observe the environment and send messages
 
-    Guide and scout need to cooporate through communication to obtain all treats
-
-    With additional scouts added, scouts themselves would also need to cooperate to obtain all treats in least amount
-    of time
     """
 
     def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render, numpify=True, envName="Base") -> None:
@@ -42,6 +38,7 @@ class CommGridEnv():
         np.random.seed(self._seed)
 
     def initGrid(self) -> List[tuple]:
+        """Initialise initial configuration base on a seed"""
         self._teamReward = None
         self._steps = 0
         self._treatCount = self._treatNum
@@ -77,6 +74,7 @@ class CommGridEnv():
         return loc
 
     def numpifiedState(self) -> np.ndarray:
+        """Encode states as a 1-D numpy array"""
         state = np.zeros((self._agentNum*2+self._treatNum*2,))
         index = 0
         for info in self._agentInfo.values():

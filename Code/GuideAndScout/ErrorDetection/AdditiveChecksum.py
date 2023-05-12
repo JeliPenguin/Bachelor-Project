@@ -1,8 +1,9 @@
 from ErrorDetection.ErrorDetector import ErrorDetector
 import numpy as np
 
+
 class AdditiveChecksum(ErrorDetector):
-    def __init__(self,k=8) -> None:
+    def __init__(self, k=8) -> None:
         super().__init__()
         self._k = k
 
@@ -12,8 +13,9 @@ class AdditiveChecksum(ErrorDetector):
             digitSum += int(binString[self._k*i:self._k*(i+1)], 2)
         digitSum = bin(digitSum)[2:]
         return digitSum
-    
-    def handleOverflow(self,digitSum):
+
+    def handleOverflow(self, digitSum):
+        """Add overflow to sum"""
         x = len(digitSum)-self._k
         newdigitSum = bin(int(digitSum[0:x], 2)+int(digitSum[x:], 2))[2:]
         return newdigitSum
@@ -48,5 +50,5 @@ class AdditiveChecksum(ErrorDetector):
             if(i == '1'):
                 continue
             else:
-                return False,receivedMsg[self._k:]
-        return True,receivedMsg[self._k:]
+                return False, receivedMsg[self._k:]
+        return True, receivedMsg[self._k:]

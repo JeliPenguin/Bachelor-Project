@@ -27,14 +27,11 @@ class ScoutAgent(CommAgent):
             return self._policy_net(stateTensor).max(1)[1].view(1, 1)
 
     def choose_action(self) -> torch.Tensor:
-        """ 
-            Ordinary Epsilon greedy 
-        """
+        """ Ordinary Epsilon greedy """
         p = np.random.random()
         epsThresh = self._epsEnd + \
             (self._epsStart - self._epsEnd) * \
             np.exp(-1. * self._eps_done / self._epsDecay)
-        # print(f"EpsThresh: {epsThresh} Eps done: {self._eps_done}")
         if p > epsThresh:
             return self.choose_greedy_action()
         return self.choose_random_action()
@@ -59,6 +56,7 @@ class ScoutAgent(CommAgent):
         return res
 
     def majorityAdjust(self, checksumCheck):
+        """Adjust majority vote num base on channel status"""
         self._recieveCount += 1
         if not checksumCheck:
             self._falseCount += 1
@@ -66,8 +64,6 @@ class ScoutAgent(CommAgent):
             falseRatio = self._falseCount / self._recieveCount
             if falseRatio >= self._falseLimit:
                 self._majorityNum = min(self._majorityNum + 2, self._bandwidth)
-                # verbPrint(
-                #     f"Increased majority num, now is : {self._majorityNum}", 4)
                 self._falseCount = 0
                 self._recieveCount = 0
                 self.broadcastMajority()
@@ -123,11 +119,6 @@ class ScoutAgent(CommAgent):
         history = self.formatHistory()
         history["checksum"] = correctChecksum
         self._recievedHistory.append(history)
-
-        # if getVerbose() >= 3:
-        #     print("Recieved history: ")
-        #     for hist in self._recievedHistory:
-        #         print(hist)
 
     def storeRecievedMessage(self, senderID, parse, correctChecksum=True):
         super().storeRecievedMessage(senderID, parse)

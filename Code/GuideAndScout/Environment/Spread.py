@@ -10,7 +10,6 @@ class Spread(CommGridEnv):
     An envrionment simulating the MPE Simple Spread problem in gridworld.
     There would be N Agents (Guide + N-1 scouts) and N-1 landmarks, scouts must learn to cover all landmarks
     with minimal time. Agents would be penalised for colliding into each other or with the wall.
-    https://pettingzoo.farama.org/environments/mpe/simple_spread/
     """
 
     def __init__(self, row: int, column: int, agents: Tuple[CommAgent], treatNum, render=True, numpify=True) -> None:

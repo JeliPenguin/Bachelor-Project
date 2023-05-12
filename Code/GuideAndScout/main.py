@@ -1,6 +1,4 @@
 import os
-from joblib import dump, load
-import matplotlib.pyplot as plt
 from Runner.Runner import Runner
 from Evaluator import Evaluator
 
@@ -23,10 +21,22 @@ trainSetting = {
 
 
 def quickTrain():
-    myRun = Runner("FindingTreat", saveName="Checksum")
-    trainSetting["batchSize"] = 32
+    """An example function showing how to train a model"""
+    # myRun = Runner("FindingTreat", saveName="ChecksumFindingTreat")
+    # trainSetting["batchSize"] = 32
+    # trainSetting["lr"] = 0.001
+    # trainSetting["epsDecay"] = 16000
+    # trainSetting["tau"] = 0.005
+    # myRun.train(envSetting, trainSetting)
+
+    myRun = Runner("Spread", saveName="ChecksumFindingSpread")
+    dim = 3
+    envSetting["row"] = dim
+    envSetting["column"] = dim
+    trainSetting["TRAIN_EPS"] = 150000
     trainSetting["lr"] = 0.001
-    trainSetting["epsDecay"] = 16000
+    trainSetting["batchSize"] = 128
+    trainSetting["epsDecay"] = 14000
     trainSetting["tau"] = 0.005
     myRun.train(envSetting, trainSetting)
 
@@ -36,8 +46,9 @@ def evaluate():
     # eT = Evaluator(envType="Spread")
     # eT.evaluate()
     # eT.plotAll()
-    # eT.plotBest()
+    # eT.plotBest(3)
     eT.normNoiseCompare()
+    # eT.showNumericalFigure(3)
 
 
 def hyperParamTune():
@@ -69,9 +80,6 @@ def hyperParamTune():
 
 
 if __name__ == "__main__":
-    # spreadTrain()
     evaluate()
-    # spreadTrain()
-    # testTrained()
     # hyperParamTune()
-    # quickTest()
+    # quickTrain()

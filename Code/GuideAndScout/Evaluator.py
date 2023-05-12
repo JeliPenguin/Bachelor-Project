@@ -1,7 +1,6 @@
 
 from Runner.EvalRunner import EvalRunner
 from joblib import dump, load
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
@@ -11,7 +10,7 @@ import os
 
 
 class Evaluator():
-    def __init__(self, envType="FindingTreat") -> None:
+    def __init__(self, envType) -> None:
         self.envType = envType
         self.modelToEvaluate = []
         for name in os.listdir(f"./Saves/HyperParam/{envType}"):
@@ -30,6 +29,7 @@ class Evaluator():
         return steps, reward
 
     def modelEval(self, model, reEval):
+        """Evaluate specified model and storing experiment results"""
         modelName = model[0]
         noiseHandling = model[1]
         saveName = model[2]
@@ -58,6 +58,7 @@ class Evaluator():
                 rwdDf, f"{fullSavePath}/Rwd")
 
     def findBest(self, best):
+        """Search for the best performing models"""
         models = {}
         for model in os.listdir(self.savePath):
             if model != "Norm_Noised" and model != "Norm":
@@ -72,6 +73,7 @@ class Evaluator():
         self.doPlot("Eps", models)
 
     def plotAll(self):
+        """Plot results of all models in save path"""
         models = os.listdir(self.savePath)
         if "Norm" in models:
             models.remove("Norm")
@@ -96,6 +98,7 @@ class Evaluator():
         plt.show()
 
     def normNoiseCompare(self):
+        """Generates comparison figure between the top model, checksum, norm and norm_noised"""
         bestModel = self.findBest(1)[0]
         print(bestModel)
         models = f"HyperParam/{self.envType}/{bestModel}"
@@ -103,7 +106,18 @@ class Evaluator():
         normModel = (models, None, "Norm")
         self.modelEval(normNoisedModel, reEval=False)
         self.modelEval(normModel, reEval=False)
-        self.doPlot("Eps", [bestModel, "Norm", "Norm_Noised"])
+        self.doPlot("Eps", [bestModel, "Norm",
+                    "Norm_Noised", "Checksum"])
+
+    def showNumericalFigure(self, best):
+        """ Showing numerical results Of Norm, Norm_Noised and top  performing models"""
+        bestModels = self.findBest(best)
+        models = bestModels + ["Norm", "Norm_Noised"]
+        for modelSaveName in models:
+            epsRecord = load(
+                f"{self.savePath}{modelSaveName}/Eps")
+            print(modelSaveName)
+            print(epsRecord.groupby("Noise")["Eps"].mean().tolist())
 
     def evaluate(self, reEval=False):
         for model in self.modelToEvaluate:

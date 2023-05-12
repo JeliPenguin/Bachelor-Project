@@ -3,6 +3,7 @@ from crc import Calculator,Crc8
 import numpy as np
 
 class CRC(ErrorDetector):
+    """Uses the crc library from https://pypi.org/project/crc/"""
     def __init__(self) -> None:
         super().__init__()
         self._calculator = Calculator(Crc8.CCITT)

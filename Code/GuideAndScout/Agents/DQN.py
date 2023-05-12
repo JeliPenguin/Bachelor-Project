@@ -6,7 +6,7 @@ import random
 from typing import List
 from const import device
 
-# Taken code from https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html for network optimization experience replay
+# Taken code from https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html for network optimization and experience replay
 
 
 Transition = namedtuple('Transition',
@@ -129,6 +129,7 @@ class DQNAgent():
         raise NotImplementedError
 
     def optimize(self):
+        """code from https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html"""
         if len(self._memory) < self._batchSize:
             return
         transitions = self._memory.sample(self._batchSize)

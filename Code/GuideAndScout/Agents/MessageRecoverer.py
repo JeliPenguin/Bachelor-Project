@@ -82,6 +82,7 @@ class MessageRecoverer():
         return s, sPrime
 
     def optimisticPosition(self, steps, s, mySPrime):
+        """Agent prxoimity heuristic"""
         optimisticS = s
         treat1 = self._anchoredTreatPos[:2]
         treat1Dist = euclidDistance(treat1, mySPrime)

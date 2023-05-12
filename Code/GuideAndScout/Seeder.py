@@ -1,5 +1,8 @@
 class Seeder():
+    """Seed generator for training and evaluation"""
+
     def __init__(self, initSeed=0) -> None:
+        """Avoids duplication of train and eval seeds"""
         self._trainSeed = initSeed
         self._evalSeed = initSeed + 1
 
