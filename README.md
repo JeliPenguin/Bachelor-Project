@@ -2,7 +2,7 @@
 
 ## Abstract
 
-A novel MARL algorithm is introduced to tackle the Guide and Scout Grid world problem, emphasizing effective cooperation and coordination among Scout agents. To assess the algorithm's effectiveness, rigorous testing and analysis are conducted in two fully cooperative instances of the problem: Finding-Treat and Spread both using Binary Symmetric Channel with parameter 𝓅.
+A novel MARL algorithm is introduced to tackle the Guide and Scout Grid world problem, emphasizing effective cooperation and coordination among Scout agents while having to communicate under a noisy communication channel. To assess the algorithm's effectiveness, rigorous testing and analysis are conducted in two fully cooperative instances of the problem: Finding-Treat and Spread both using Binary Symmetric Channel with parameter 𝓅.
 
 ## Libraries and Hardware
 
